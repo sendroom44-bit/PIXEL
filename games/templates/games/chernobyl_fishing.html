@@ -1,0 +1,1424 @@
+﻿
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PIXEL: CHERNOBYL — Fishing Survival</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #101411;
+    color: #e5e9df;
+    font-family: Arial, sans-serif;
+}
+
+button {
+    border: 0;
+    cursor: pointer;
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 11px 15px;
+    background: #526d45;
+    transition: .15s;
+}
+
+button:hover {
+    filter: brightness(1.2);
+}
+
+button:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+}
+
+header {
+    padding: 17px 22px;
+    background: #1b241d;
+    border-bottom: 1px solid #394a3b;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.logo {
+    font-size: 21px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.logo span {
+    color: #a0c477;
+}
+
+.header-info {
+    color: #9eaa9b;
+    font-size: 13px;
+}
+
+.container {
+    max-width: 1450px;
+    margin: auto;
+    padding: 18px;
+}
+
+.stats {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.stat {
+    background: #1c251e;
+    border: 1px solid #354437;
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.stat-name {
+    color: #9eaa9b;
+    font-size: 12px;
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 19px;
+    font-weight: bold;
+}
+
+.bar {
+    height: 7px;
+    background: #303a31;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 8px;
+}
+
+.bar-fill {
+    height: 100%;
+    width: 100%;
+    background: #81ae65;
+    transition: width .3s;
+}
+
+.main {
+    display: grid;
+    grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr);
+    gap: 15px;
+}
+
+.panel {
+    background: #1b241d;
+    border: 1px solid #354437;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 15px;
+}
+
+.panel h2 {
+    margin: 0 0 13px;
+    font-size: 17px;
+}
+
+.scene {
+    height: 340px;
+    border-radius: 10px;
+    position: relative;
+    overflow: hidden;
+    background:
+        linear-gradient(180deg, #78836c 0%, #53654e 36%, #384d3b 37%, #263e37 55%, #172e30 56%, #101f23 100%);
+    border: 1px solid #53634e;
+}
+
+.scene::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 55%;
+    height: 45%;
+    background:
+        repeating-linear-gradient(
+            178deg,
+            transparent 0px,
+            transparent 18px,
+            rgba(160,190,160,.08) 20px,
+            transparent 22px
+        );
+    animation: water 5s linear infinite;
+}
+
+@keyframes water {
+    from { background-position: 0 0; }
+    to { background-position: 150px 0; }
+}
+
+.sun {
+    position: absolute;
+    top: 35px;
+    right: 90px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #c1b47c;
+    box-shadow: 0 0 35px rgba(193,180,124,.3);
+}
+
+.trees {
+    position: absolute;
+    top: 70px;
+    left: 0;
+    right: 0;
+    height: 145px;
+    display: flex;
+    justify-content: space-around;
+    align-items: end;
+}
+
+.tree {
+    width: 0;
+    height: 0;
+    border-left: 30px solid transparent;
+    border-right: 30px solid transparent;
+    border-bottom: 120px solid #253d2b;
+    position: relative;
+}
+
+.tree::after {
+    content: "";
+    position: absolute;
+    top: 85px;
+    left: -6px;
+    width: 12px;
+    height: 42px;
+    background: #423a2a;
+}
+
+.ruin {
+    position: absolute;
+    top: 100px;
+    left: 37%;
+    width: 120px;
+    height: 92px;
+    background: #56574a;
+    border-top: 12px solid #343b32;
+    opacity: .8;
+}
+
+.ruin::before {
+    content: "";
+    position: absolute;
+    left: 17px;
+    top: 25px;
+    width: 22px;
+    height: 28px;
+    background: #222c26;
+    box-shadow: 48px 0 #222c26;
+}
+
+.pier {
+    position: absolute;
+    bottom: 39%;
+    left: 9%;
+    width: 38%;
+    height: 13px;
+    background: #65543b;
+    transform: skewY(-4deg);
+}
+
+.pier::after {
+    content: "";
+    position: absolute;
+    left: 20px;
+    top: 8px;
+    width: 9px;
+    height: 55px;
+    background: #493e2e;
+    box-shadow: 75px 4px #493e2e, 150px 7px #493e2e;
+}
+
+.fisher {
+    position: absolute;
+    bottom: 42%;
+    left: 22%;
+    font-size: 42px;
+    filter: drop-shadow(2px 3px 2px #111);
+}
+
+.location-label {
+    position: absolute;
+    top: 13px;
+    left: 13px;
+    background: rgba(0,0,0,.55);
+    border: 1px solid rgba(255,255,255,.15);
+    padding: 8px 12px;
+    border-radius: 7px;
+    font-size: 13px;
+}
+
+.scene-caption {
+    position: absolute;
+    bottom: 12px;
+    left: 13px;
+    color: #d1d8ce;
+    font-size: 12px;
+    text-shadow: 1px 1px 3px black;
+}
+
+.fishing-status {
+    margin-top: 13px;
+    padding: 12px;
+    background: #131b15;
+    border: 1px solid #354437;
+    border-radius: 8px;
+    min-height: 44px;
+    color: #c2d0bc;
+    font-size: 14px;
+}
+
+.actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.primary {
+    background: #66884f;
+}
+
+.secondary {
+    background: #394b3b;
+}
+
+.danger {
+    background: #74483e;
+}
+
+.gold {
+    background: #8a7540;
+}
+
+.location-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 9px;
+}
+
+.location {
+    background: #263229;
+    border: 1px solid #435345;
+    padding: 12px;
+    border-radius: 8px;
+    text-align: left;
+    color: #e5e9df;
+}
+
+.location.active {
+    border-color: #a0c477;
+    background: #354a35;
+}
+
+.location small {
+    display: block;
+    color: #aab6a4;
+    margin-top: 5px;
+    font-weight: normal;
+}
+
+.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin-bottom: 13px;
+}
+
+.tab {
+    background: #303c32;
+    padding: 9px 12px;
+    font-size: 13px;
+}
+
+.tab.active {
+    background: #66884f;
+}
+
+.content-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: #263229;
+    border-radius: 8px;
+    border: 1px solid #394a3b;
+    font-size: 13px;
+}
+
+.item small {
+    display: block;
+    color: #aab6a4;
+    margin-top: 4px;
+}
+
+.item button {
+    padding: 8px 11px;
+    white-space: nowrap;
+}
+
+.log {
+    height: 180px;
+    overflow-y: auto;
+    font-size: 13px;
+    color: #aebca8;
+    line-height: 1.6;
+}
+
+.log-entry {
+    border-bottom: 1px solid #303b32;
+    padding: 5px 0;
+}
+
+.bad {
+    color: #dc8d79;
+}
+
+.good {
+    color: #a7ca80;
+}
+
+.mini-title {
+    color: #a0c477;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.fishing-box {
+    display: none;
+    margin-top: 13px;
+    background: #101a14;
+    border: 1px solid #54684b;
+    padding: 13px;
+    border-radius: 9px;
+}
+
+.fishing-box.show {
+    display: block;
+}
+
+.meter {
+    height: 12px;
+    border-radius: 10px;
+    background: #303b32;
+    overflow: hidden;
+    margin: 8px 0;
+}
+
+.meter-fill {
+    height: 100%;
+    width: 0;
+    background: #a2c875;
+    transition: width .2s;
+}
+
+.tension-fill {
+    height: 100%;
+    width: 0;
+    background: #bd8050;
+    transition: width .2s;
+}
+
+.footer {
+    text-align: center;
+    color: #677568;
+    font-size: 11px;
+    padding: 18px;
+}
+
+@media(max-width: 850px) {
+    .main {
+        grid-template-columns: 1fr;
+    }
+
+    .stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .scene {
+        height: 280px;
+    }
+}
+
+@media(max-width: 430px) {
+    .container {
+        padding: 10px;
+    }
+
+    .stats {
+        gap: 7px;
+    }
+
+    .stat {
+        padding: 9px;
+    }
+
+    .stat-value {
+        font-size: 16px;
+    }
+
+    .location-list {
+        grid-template-columns: 1fr;
+    }
+
+    .scene {
+        height: 230px;
+    }
+
+    button {
+        padding: 10px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">PIXEL <span>CHERNOBYL</span></div>
+    <div class="header-info">FISHING SURVIVAL · ЗОНА ОТЧУЖДЕНИЯ</div>
+</header>
+
+<div class="container">
+
+    <div class="stats">
+        <div class="stat">
+            <div class="stat-name">❤️ Здоровье</div>
+            <div class="stat-value" id="healthText">100</div>
+            <div class="bar"><div class="bar-fill" id="healthBar"></div></div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-name">☢ Игровая радиация</div>
+            <div class="stat-value" id="radiationText">0</div>
+            <div class="bar"><div class="bar-fill" id="radiationBar"></div></div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-name">🍞 Голод</div>
+            <div class="stat-value" id="hungerText">100</div>
+            <div class="bar"><div class="bar-fill" id="hungerBar"></div></div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-name">⚡ Энергия</div>
+            <div class="stat-value" id="energyText">100</div>
+            <div class="bar"><div class="bar-fill" id="energyBar"></div></div>
+        </div>
+
+        <div class="stat">
+            <div class="stat-name">₽ Деньги</div>
+            <div class="stat-value" id="moneyText">500</div>
+            <div class="bar"><div class="bar-fill" id="moneyBar"></div></div>
+        </div>
+    </div>
+
+    <div class="main">
+
+        <div>
+            <div class="panel">
+                <h2>📍 Текущая территория</h2>
+
+                <div class="scene" id="scene">
+                    <div class="sun"></div>
+                    <div class="trees" id="trees">
+                        <div class="tree"></div>
+                        <div class="tree"></div>
+                        <div class="tree"></div>
+                        <div class="tree"></div>
+                    </div>
+                    <div class="ruin" id="ruin"></div>
+                    <div class="pier"></div>
+                    <div class="fisher">🧍</div>
+
+                    <div class="location-label" id="sceneName">
+                        Старый причал
+                    </div>
+
+                    <div class="scene-caption">
+                        PIXEL CHERNOBYL · 1990s
+                    </div>
+                </div>
+
+                <div class="fishing-status" id="status">
+                    Ты находишься у старого причала. Можно начинать рыбалку.
+                </div>
+
+                <div class="actions">
+                    <button class="primary" id="castBtn" onclick="castRod()">
+                        🎣 Забросить удочку
+                    </button>
+
+                    <button class="secondary" onclick="sellFish()">
+                        💰 Продать улов
+                    </button>
+
+                    <button class="secondary" onclick="rest()">
+                        🏕 Отдохнуть
+                    </button>
+                </div>
+
+                <div class="fishing-box" id="fishingBox">
+                    <div class="mini-title" id="fishingTitle">Рыбалка</div>
+
+                    <div id="fishingDescription">
+                        Ждём поклёвку...
+                    </div>
+
+                    <div class="meter">
+                        <div class="meter-fill" id="progressBar"></div>
+                    </div>
+
+                    <div class="mini-title">Натяжение лески</div>
+
+                    <div class="meter">
+                        <div class="tension-fill" id="tensionBar"></div>
+                    </div>
+
+                    <div class="actions">
+                        <button class="gold" id="hookBtn" onclick="hookFish()" disabled>
+                            Подсечь!
+                        </button>
+
+                        <button class="primary" id="reelBtn" onclick="reelFish()" disabled>
+                            Подтянуть леску
+                        </button>
+
+                        <button class="danger" onclick="stopFishing()">
+                            Отпустить
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>🗺 Выбор локации</h2>
+
+                <div class="location-list" id="locationList">
+                    <button class="location active" onclick="changeLocation(0)">
+                        ⚓ Старый причал
+                        <small>Спокойная вода. Обычная рыба.</small>
+                    </button>
+
+                    <button class="location" onclick="changeLocation(1)">
+                        🏚 Заброшенная деревня
+                        <small>Тихое место. Можно найти редкий улов.</small>
+                    </button>
+
+                    <button class="location" onclick="changeLocation(2)">
+                        🌲 Лесное озеро
+                        <small>Много рыбы. Требуется больше энергии.</small>
+                    </button>
+
+                    <button class="location" onclick="changeLocation(3)">
+                        🏭 Ржавый канал
+                        <small>Необычные игровые находки.</small>
+                    </button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>📜 Журнал событий</h2>
+                <div class="log" id="log"></div>
+            </div>
+        </div>
+
+        <div>
+            <div class="panel">
+                <h2>🎒 Снаряжение и магазин</h2>
+
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab('shop',this)">Магазин</button>
+                    <button class="tab" onclick="showTab('inventory',this)">Инвентарь</button>
+                    <button class="tab" onclick="showTab('equipment',this)">Снаряжение</button>
+                </div>
+
+                <div id="shop" class="content-list"></div>
+                <div id="inventory" class="content-list" style="display:none"></div>
+                <div id="equipment" class="content-list" style="display:none"></div>
+            </div>
+
+            <div class="panel">
+                <h2>📊 Статистика</h2>
+
+                <div class="item">
+                    <span>Уровень рыбака</span>
+                    <b id="levelText">1</b>
+                </div>
+
+                <div class="item">
+                    <span>Опыт</span>
+                    <b id="xpText">0 / 100</b>
+                </div>
+
+                <div class="item">
+                    <span>Поймано рыб</span>
+                    <b id="caughtText">0</b>
+                </div>
+
+                <div class="item">
+                    <span>Поездок</span>
+                    <b id="tripsText">0</b>
+                </div>
+
+                <div class="item">
+                    <span>Лучший улов</span>
+                    <b id="bestText">Нет</b>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>💾 Сохранение</h2>
+                <div class="actions">
+                    <button class="primary" onclick="saveGame()">Сохранить</button>
+                    <button class="danger" onclick="resetGame()">Сбросить игру</button>
+                </div>
+                <div style="font-size:12px;color:#899789;margin-top:10px">
+                    Прогресс сохраняется в браузере на этом устройстве.
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="footer">
+    PIXEL CHERNOBYL · FISHING SURVIVAL · FICTIONAL GAME
+</div>
+
+<script>
+const defaultState = {
+    health: 100,
+    radiation: 0,
+    hunger: 100,
+    energy: 100,
+    money: 500,
+
+    level: 1,
+    xp: 0,
+    caught: 0,
+    trips: 0,
+    best: "Нет",
+
+    location: 0,
+
+    rod: 1,
+    suit: 0,
+    mask: 0,
+    bait: 5,
+
+    food: 2,
+    medkits: 1,
+    fictionalMedicine: 0,
+
+    fish: [],
+
+    fishing: false,
+    phase: "idle",
+    progress: 0,
+    tension: 0,
+
+    equipmentNames: []
+};
+
+let state = {...defaultState};
+
+let biteTimer = null;
+let biteTimeout = null;
+let decayTimer = null;
+
+const locations = [
+    {
+        name: "Старый причал",
+        description: "Спокойная вода. Здесь часто встречается обычная рыба.",
+        emoji: "⚓",
+        fish: ["Карась","Окунь","Плотва","Карп"]
+    },
+    {
+        name: "Заброшенная деревня",
+        description: "Тихое место среди старых построек.",
+        emoji: "🏚",
+        fish: ["Карась","Линь","Карп","Сом"]
+    },
+    {
+        name: "Лесное озеро",
+        description: "Глубокое озеро среди деревьев.",
+        emoji: "🌲",
+        fish: ["Окунь","Щука","Сом","Линь"]
+    },
+    {
+        name: "Ржавый канал",
+        description: "Необычное место с редкими игровыми находками.",
+        emoji: "🏭",
+        fish: ["Окунь","Щука","Мутант-окунь","Рыба-призрак"]
+    }
+];
+
+const fishData = {
+    "Карась": {price:35, xp:12, weight:[0.2,1.5], emoji:"🐟"},
+    "Окунь": {price:55, xp:18, weight:[0.3,2.2], emoji:"🐟"},
+    "Плотва": {price:25, xp:10, weight:[0.1,0.8], emoji:"🐟"},
+    "Щука": {price:120, xp:35, weight:[1,6], emoji:"🐠"},
+    "Линь": {price:85, xp:28, weight:[0.5,3], emoji:"🐟"},
+    "Сом": {price:180, xp:55, weight:[2,12], emoji:"🐡"},
+    "Карп": {price:100, xp:30, weight:[1,5], emoji:"🐠"},
+    "Мутант-окунь": {price:250, xp:70, weight:[0.5,4], emoji:"☢"},
+    "Рыба-призрак": {price:400, xp:100, weight:[1,5], emoji:"👻"}
+};
+
+const shopItems = [
+    {id:"rod",name:"Удочка улучшенная",desc:"Повышает шанс поймать крупную рыбу.",price:350,type:"upgrade"},
+    {id:"suit",name:"Игровой защитный костюм",desc:"Уменьшает игровые очки радиации.",price:600,type:"upgrade"},
+    {id:"mask",name:"Игровая маска",desc:"Дополнительная защита в игровой механике.",price:300,type:"upgrade"},
+    {id:"bait",name:"Набор наживки ×5",desc:"Нужен для заброса удочки.",price:80,type:"consumable"},
+    {id:"food",name:"Полевой паёк",desc:"Восстанавливает голод.",price:60,type:"consumable"},
+    {id:"medkits",name:"Аптечка",desc:"Восстанавливает здоровье.",price:120,type:"consumable"},
+    {id:"fictionalMedicine",name:"Игровой антирад-комплект",desc:"Снижает вымышленный показатель радиации.",price:180,type:"consumable"}
+];
+
+function $(id) {
+    return document.getElementById(id);
+}
+
+function log(message, type="") {
+    const entry = document.createElement("div");
+    entry.className = "log-entry " + type;
+    entry.textContent = "› " + message;
+
+    $("log").prepend(entry);
+
+    while ($("log").children.length > 35) {
+        $("log").lastChild.remove();
+    }
+}
+
+function setStatus(message) {
+    $("status").textContent = message;
+}
+
+function updateBar(id, value, color) {
+    const bar = $(id);
+    bar.style.width = Math.max(0,Math.min(100,value)) + "%";
+
+    if (color) {
+        bar.style.background = color;
+    }
+}
+
+function updateUI() {
+    $("healthText").textContent = Math.round(state.health);
+    $("radiationText").textContent = Math.round(state.radiation);
+    $("hungerText").textContent = Math.round(state.hunger);
+    $("energyText").textContent = Math.round(state.energy);
+    $("moneyText").textContent = state.money + " ₽";
+
+    updateBar("healthBar",state.health);
+    updateBar("radiationBar",state.radiation,"#b3a65e");
+    updateBar("hungerBar",state.hunger,"#c49b56");
+    updateBar("energyBar",state.energy,"#78a7bd");
+    updateBar("moneyBar",Math.min(100,state.money/10),"#b7a36b");
+
+    $("levelText").textContent = state.level;
+    $("xpText").textContent = state.xp + " / " + (state.level * 100);
+    $("caughtText").textContent = state.caught;
+    $("tripsText").textContent = state.trips;
+    $("bestText").textContent = state.best;
+
+    $("sceneName").textContent = locations[state.location].name;
+    $("castBtn").disabled = state.fishing;
+
+    updateLocations();
+    renderInventory();
+    renderEquipment();
+}
+
+function updateLocations() {
+    document.querySelectorAll(".location").forEach((button,index) => {
+        button.classList.toggle("active",index === state.location);
+    });
+}
+
+function changeLocation(index) {
+    if (state.fishing) {
+        setStatus("Сначала закончи рыбалку.");
+        return;
+    }
+
+    if (state.energy < 10) {
+        setStatus("Слишком мало энергии для перехода.");
+        return;
+    }
+
+    state.location = index;
+    state.energy = Math.max(0,state.energy - 10);
+    state.trips++;
+
+    const location = locations[index];
+
+    setStatus("Ты прибыл: " + location.name + ".");
+    log("Новая локация: " + location.name);
+
+    updateUI();
+    saveGame();
+}
+
+function addXP(amount) {
+    state.xp += amount;
+
+    while (state.xp >= state.level * 100) {
+        state.xp -= state.level * 100;
+        state.level++;
+
+        state.money += 100;
+
+        log("Новый уровень! Теперь ты рыбак " + state.level + " уровня. Бонус: 100 ₽.","good");
+    }
+}
+
+function castRod() {
+    if (state.fishing) return;
+
+    if (state.energy < 5) {
+        setStatus("Недостаточно энергии.");
+        return;
+    }
+
+    if (state.bait <= 0) {
+        setStatus("Нет наживки. Купи её в магазине.");
+        return;
+    }
+
+    if (state.health <= 0) {
+        setStatus("Слишком плохое состояние. Отдохни.");
+        return;
+    }
+
+    state.fishing = true;
+    state.phase = "waiting";
+    state.progress = 0;
+    state.tension = 0;
+
+    state.bait--;
+    state.energy = Math.max(0,state.energy - 5);
+
+    $("fishingBox").classList.add("show");
+    $("fishingTitle").textContent = "Ожидание поклёвки";
+    $("fishingDescription").textContent = "Поплавок спокойно покачивается на воде...";
+    $("hookBtn").disabled = true;
+    $("reelBtn").disabled = true;
+
+    setStatus("Удочка заброшена. Ждём...");
+    log("Ты забросил удочку.");
+
+    updateUI();
+
+    biteTimer = setTimeout(() => {
+        if (!state.fishing || state.phase !== "waiting") return;
+
+        state.phase = "bite";
+
+        $("fishingTitle").textContent = "ПОКЛЁВКА!";
+        $("fishingDescription").textContent = "Поплавок резко ушёл под воду! Нажми «Подсечь!»";
+        $("hookBtn").disabled = false;
+
+        setStatus("Кажется, на крючке рыба!");
+        log("Поклёвка! Нужно подсечь.");
+
+        biteTimeout = setTimeout(() => {
+            if (state.phase === "bite") {
+                stopFishing();
+                setStatus("Рыба сорвалась. Ты слишком долго ждал.");
+                log("Рыба сорвалась с крючка.","bad");
+            }
+        },3500);
+
+    },2500 + Math.random() * 4500);
+}
+
+function hookFish() {
+    if (state.phase !== "bite") return;
+
+    clearTimeout(biteTimeout);
+
+    state.phase = "reeling";
+    state.progress = 0;
+    state.tension = 20;
+
+    $("fishingTitle").textContent = "Вываживание";
+    $("fishingDescription").textContent = "Нажимай «Подтянуть леску». Следи за натяжением!";
+    $("hookBtn").disabled = true;
+    $("reelBtn").disabled = false;
+
+    setStatus("Рыба на крючке! Аккуратно подтягивай.");
+    log("Ты подсёк рыбу. Начинается вываживание!");
+    updateFishingBars();
+}
+
+function reelFish() {
+    if (state.phase !== "reeling") return;
+
+    state.progress += 12 + Math.random() * 5;
+    state.tension += 9 + Math.random() * 8;
+
+    if (state.tension > 88) {
+        state.phase = "idle";
+        state.fishing = false;
+
+        clearTimeout(biteTimer);
+        $("fishingBox").classList.remove("show");
+
+        setStatus("Леска не выдержала натяжения!");
+        log("Рыба сорвалась! Слишком сильное натяжение.","bad");
+
+        updateUI();
+        saveGame();
+        return;
+    }
+
+    if (state.progress >= 100) {
+        catchFish();
+        return;
+    }
+
+    updateFishingBars();
+
+    $("fishingDescription").textContent =
+        "Рыба сопротивляется! Прогресс: " +
+        Math.round(state.progress) + "%";
+}
+
+function updateFishingBars() {
+    $("progressBar").style.width = Math.min(100,state.progress) + "%";
+    $("tensionBar").style.width = Math.min(100,state.tension) + "%";
+}
+
+function catchFish() {
+    state.phase = "idle";
+    state.fishing = false;
+
+    const pool = locations[state.location].fish;
+    let name = pool[Math.floor(Math.random() * pool.length)];
+
+    if (Math.random() < 0.06) {
+        name = state.location === 3 ? "Рыба-призрак" : "Мутант-окунь";
+    }
+
+    const data = fishData[name];
+
+    const bonus = state.rod * 0.15;
+    const weight = data.weight[0] +
+        Math.random() * (data.weight[1] - data.weight[0]) +
+        bonus;
+
+    const fish = {
+        name: name,
+        weight: Number(weight.toFixed(2)),
+        price: Math.round(data.price * weight)
+    };
+
+    state.fish.push(fish);
+    state.caught++;
+    state.money += 0;
+    state.best = fish.weight + " кг — " + fish.name;
+
+    addXP(data.xp);
+
+    $("fishingBox").classList.remove("show");
+
+    setStatus("Поймано: " + fish.name + " (" + fish.weight + " кг)!");
+    log("Улов: " + fish.name + ", " + fish.weight + " кг. Цена: " + fish.price + " ₽.","good");
+
+    updateUI();
+    saveGame();
+}
+
+function stopFishing() {
+    clearTimeout(biteTimer);
+    clearTimeout(biteTimeout);
+
+    state.fishing = false;
+    state.phase = "idle";
+
+    $("fishingBox").classList.remove("show");
+
+    setStatus("Рыбалка завершена.");
+    updateUI();
+}
+
+function sellFish() {
+    if (state.fish.length === 0) {
+        setStatus("У тебя пока нет рыбы для продажи.");
+        return;
+    }
+
+    let total = 0;
+
+    state.fish.forEach(fish => {
+        total += fish.price;
+    });
+
+    state.money += total;
+    const count = state.fish.length;
+    state.fish = [];
+
+    setStatus("Продано " + count + " рыб на сумму " + total + " ₽.");
+    log("Продан весь улов. Получено " + total + " ₽.","good");
+
+    updateUI();
+    saveGame();
+}
+
+function rest() {
+    if (state.fishing) {
+        setStatus("Сначала закончи рыбалку.");
+        return;
+    }
+
+    if (state.energy >= 100 && state.health >= 100) {
+        setStatus("Ты уже полностью отдохнул.");
+        return;
+    }
+
+    state.energy = Math.min(100,state.energy + 35);
+    state.health = Math.min(100,state.health + 10);
+    state.hunger = Math.max(0,state.hunger - 8);
+
+    setStatus("Ты отдохнул. Энергия восстановлена.");
+    log("Отдых: +35 энергии, +10 здоровья.","good");
+
+    updateUI();
+    saveGame();
+}
+
+function buyItem(id) {
+    const item = shopItems.find(x => x.id === id);
+
+    if (!item) return;
+
+    if (state.money < item.price) {
+        setStatus("Недостаточно денег.");
+        return;
+    }
+
+    if (item.type === "upgrade") {
+        if (state[id] >= (id === "rod" ? 3 : 1)) {
+            setStatus("Это улучшение уже куплено на максимальном уровне.");
+            return;
+        }
+
+        state[id]++;
+    } else {
+        state[id] += id === "bait" ? 5 : 1;
+    }
+
+    state.money -= item.price;
+
+    log("Куплено: " + item.name,"good");
+    setStatus("Покупка совершена: " + item.name);
+
+    updateUI();
+    saveGame();
+}
+
+function renderShop() {
+    const box = $("shop");
+    box.innerHTML = "";
+
+    shopItems.forEach(item => {
+        const current = state[item.id];
+
+        let disabled = false;
+        let label = "Купить";
+
+        if (item.type === "upgrade" &&
+            current >= (item.id === "rod" ? 3 : 1)) {
+            disabled = true;
+            label = "Максимум";
+        }
+
+        const row = document.createElement("div");
+        row.className = "item";
+
+        const info = document.createElement("div");
+        const name = document.createElement("b");
+        name.textContent = item.name;
+
+        const desc = document.createElement("small");
+        desc.textContent = item.desc + " Цена: " + item.price + " ₽";
+
+        info.append(name,desc);
+
+        const button = document.createElement("button");
+        button.textContent = label;
+        button.disabled = disabled;
+        button.onclick = () => buyItem(item.id);
+
+        row.append(info,button);
+        box.append(row);
+    });
+}
+
+function renderInventory() {
+    const box = $("inventory");
+    box.innerHTML = "";
+
+    const items = [
+        ["Наживка",state.bait],
+        ["Полевой паёк",state.food],
+        ["Аптечки",state.medkits],
+        ["Игровой антирад-комплект",state.fictionalMedicine]
+    ];
+
+    items.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "item";
+
+        const name = document.createElement("span");
+        name.textContent = item[0];
+
+        const amount = document.createElement("b");
+        amount.textContent = "×" + item[1];
+
+        row.append(name,amount);
+        box.append(row);
+    });
+
+    const fishTitle = document.createElement("div");
+    fishTitle.className = "mini-title";
+    fishTitle.textContent = "Пойманная рыба";
+    box.append(fishTitle);
+
+    if (state.fish.length === 0) {
+        const empty = document.createElement("div");
+        empty.className = "item";
+        empty.textContent = "Улов отсутствует.";
+        box.append(empty);
+    }
+
+    state.fish.forEach(fish => {
+        const row = document.createElement("div");
+        row.className = "item";
+
+        const name = document.createElement("span");
+        name.textContent = fish.name + " · " + fish.weight + " кг";
+
+        const price = document.createElement("b");
+        price.textContent = fish.price + " ₽";
+
+        row.append(name,price);
+        box.append(row);
+    });
+
+    const useTitle = document.createElement("div");
+    useTitle.className = "mini-title";
+    useTitle.textContent = "Использовать предметы";
+    box.append(useTitle);
+
+    const foodBtn = document.createElement("button");
+    foodBtn.textContent = "🍞 Съесть паёк";
+    foodBtn.disabled = state.food <= 0;
+    foodBtn.onclick = eatFood;
+    box.append(foodBtn);
+
+    const medBtn = document.createElement("button");
+    medBtn.textContent = "❤️ Использовать аптечку";
+    medBtn.disabled = state.medkits <= 0;
+    medBtn.onclick = useMedkit;
+    box.append(medBtn);
+
+    const radBtn = document.createElement("button");
+    radBtn.textContent = "☢ Использовать игровой комплект";
+    radBtn.disabled = state.fictionalMedicine <= 0;
+    radBtn.onclick = useFictionalMedicine;
+    box.append(radBtn);
+}
+
+function renderEquipment() {
+    const box = $("equipment");
+    box.innerHTML = "";
+
+    const items = [
+        ["Удочка",state.rod + " уровень"],
+        ["Игровой костюм",state.suit ? "Надет" : "Нет"],
+        ["Игровая маска",state.mask ? "Есть" : "Нет"]
+    ];
+
+    items.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "item";
+
+        const name = document.createElement("span");
+        name.textContent = item[0];
+
+        const value = document.createElement("b");
+        value.textContent = item[1];
+
+        row.append(name,value);
+        box.append(row);
+    });
+}
+
+function eatFood() {
+    if (state.food <= 0) return;
+
+    state.food--;
+    state.hunger = Math.min(100,state.hunger + 35);
+
+    setStatus("Ты съел паёк. Голод уменьшился.");
+    log("Использован полевой паёк.","good");
+
+    updateUI();
+    saveGame();
+}
+
+function useMedkit() {
+    if (state.medkits <= 0) return;
+
+    state.medkits--;
+    state.health = Math.min(100,state.health + 40);
+
+    setStatus("Аптечка использована. Здоровье восстановлено.");
+    log("Использована аптечка.","good");
+
+    updateUI();
+    saveGame();
+}
+
+function useFictionalMedicine() {
+    if (state.fictionalMedicine <= 0) return;
+
+    state.fictionalMedicine--;
+    state.radiation = Math.max(0,state.radiation - 25);
+
+    setStatus("Игровой показатель радиации снижен.");
+    log("Использован вымышленный игровой комплект.","good");
+
+    updateUI();
+    saveGame();
+}
+
+function showTab(tab,button) {
+    ["shop","inventory","equipment"].forEach(id => {
+        $(id).style.display = id === tab ? "flex" : "none";
+    });
+
+    document.querySelectorAll(".tab").forEach(x => {
+        x.classList.remove("active");
+    });
+
+    button.classList.add("active");
+
+    if (tab === "shop") renderShop();
+    if (tab === "inventory") renderInventory();
+    if (tab === "equipment") renderEquipment();
+}
+
+function saveGame() {
+    const saved = {...state};
+    saved.fishing = false;
+    saved.phase = "idle";
+
+    localStorage.setItem("pixel_chernobyl_save",JSON.stringify(saved));
+
+    log("Прогресс сохранён.","good");
+}
+
+function loadGame() {
+    try {
+        const saved = localStorage.getItem("pixel_chernobyl_save");
+
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            state = {...defaultState,...parsed};
+            state.fishing = false;
+            state.phase = "idle";
+        }
+    } catch(error) {
+        console.log("Ошибка загрузки сохранения",error);
+    }
+}
+
+function resetGame() {
+    if (!confirm("Точно начать игру заново? Сохранение будет удалено.")) {
+        return;
+    }
+
+    localStorage.removeItem("pixel_chernobyl_save");
+
+    state = {...defaultState};
+
+    stopFishing();
+    updateUI();
+    renderShop();
+
+    setStatus("Новая игра началась.");
+    log("Создано новое сохранение.");
+}
+
+function survivalTick() {
+    if (state.fishing) return;
+
+    state.hunger = Math.max(0,state.hunger - 0.35);
+
+    if (state.hunger <= 0) {
+        state.health = Math.max(0,state.health - 0.5);
+    }
+
+    if (state.radiation >= 80) {
+        state.health = Math.max(0,state.health - 0.3);
+    }
+
+    if (state.health <= 0) {
+        setStatus("Персонаж потерял сознание. Отдохни и восстанови здоровье.");
+    }
+
+    updateUI();
+}
+
+function startGame() {
+    loadGame();
+
+    renderShop();
+    updateUI();
+
+    log("Ты прибыл в Зону. Пора искать место для рыбалки.");
+    log("У тебя есть 500 рублей и немного снаряжения.");
+
+    setInterval(survivalTick,10000);
+
+    if (state.suit || state.mask) {
+        log("Твоё игровое снаряжение активно.");
+    }
+}
+
+startGame();
+</script>
+
+</body>
+</html>

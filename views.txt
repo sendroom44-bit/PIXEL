@@ -1,0 +1,22 @@
+﻿from django.shortcuts import render
+
+def home(request):
+    return render(request, 'games/home.html')
+
+def football(request):
+    return render(request, 'games/football.html')
+
+def basketball(request):
+    return render(request, 'games/basketball.html')
+
+def tictactoe(request):
+    return render(request, 'games/tictactoe.html')
+
+def simpsons(request):
+    return render(request, 'games/simpsons.html')
+
+def chess(request):
+    return render(request, 'games/chess.html')
+
+def breakout(request):
+    return render(request, 'games/breakout.html')

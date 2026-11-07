@@ -1,0 +1,1054 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Крестики-нолики</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            color: var(--text);
+
+            background:
+                radial-gradient(circle at top, var(--glow), transparent 45%),
+                var(--background);
+
+            transition:
+                background 0.3s,
+                color 0.3s;
+        }
+
+        :root {
+            --background: #151515;
+            --panel: #202020;
+            --cell: #292929;
+            --cell-hover: #363636;
+            --line: #777777;
+            --text: white;
+            --muted: #aaaaaa;
+            --accent: #7c6cff;
+            --accent2: #5146d9;
+            --glow: rgba(124, 108, 255, 0.18);
+            --win: #48d597;
+        }
+
+        body.theme-neon {
+            --background: #080d18;
+            --panel: #111a2c;
+            --cell: #17243b;
+            --cell-hover: #203252;
+            --line: #36b9ff;
+            --accent: #36b9ff;
+            --accent2: #1976d2;
+            --glow: rgba(54, 185, 255, 0.2);
+        }
+
+        body.theme-paper {
+            --background: #ddd5c5;
+            --panel: #eee7d8;
+            --cell: #f8f2e7;
+            --cell-hover: #e8decd;
+            --line: #705f49;
+            --text: #29241e;
+            --muted: #6f6558;
+            --accent: #8a6240;
+            --accent2: #67462e;
+            --glow: rgba(138, 98, 64, 0.16);
+        }
+
+        body.theme-mint {
+            --background: #10211e;
+            --panel: #18322e;
+            --cell: #20423c;
+            --cell-hover: #28564e;
+            --line: #63d8bd;
+            --accent: #63d8bd;
+            --accent2: #329d87;
+            --glow: rgba(99, 216, 189, 0.18);
+        }
+
+        body.theme-red {
+            --background: #1b0e10;
+            --panel: #2b171a;
+            --cell: #3b2024;
+            --cell-hover: #4c292e;
+            --line: #ff6b72;
+            --accent: #ff6b72;
+            --accent2: #c43f48;
+            --glow: rgba(255, 107, 114, 0.17);
+        }
+
+        body.lines-soft {
+            --line: #777777;
+        }
+
+        body.lines-bright {
+            --line: var(--accent);
+        }
+
+        body.lines-dark {
+            --line: #222222;
+        }
+
+        h1 {
+            margin: 30px 10px 8px;
+            font-size: 38px;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            margin-bottom: 20px;
+        }
+
+        .controls {
+            width: min(700px, calc(100% - 20px));
+            margin: auto;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+
+            background: var(--panel);
+            padding: 12px;
+            border-radius: 14px;
+        }
+
+        .controls label {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        select {
+            border: none;
+            border-radius: 8px;
+            padding: 9px 12px;
+            background: var(--cell);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .stats {
+            margin: 18px auto 5px;
+            width: min(500px, calc(100% - 30px));
+
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .stat {
+            background: var(--panel);
+            border-radius: 10px;
+            padding: 9px;
+        }
+
+        .stat-number {
+            font-size: 21px;
+            font-weight: bold;
+        }
+
+        .stat-name {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 3px;
+        }
+
+        #status {
+            font-size: 21px;
+            font-weight: bold;
+            margin: 18px;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 110px);
+            grid-template-rows: repeat(3, 110px);
+
+            gap: 7px;
+
+            justify-content: center;
+
+            margin: 20px auto;
+        }
+
+        .cell {
+            border: 3px solid var(--line);
+            border-radius: 12px;
+
+            background: var(--cell);
+            color: var(--text);
+
+            font-size: 46px;
+            font-weight: bold;
+
+            cursor: pointer;
+
+            transition:
+                background 0.15s,
+                transform 0.1s,
+                border-color 0.25s;
+        }
+
+        .cell:hover:not(:disabled) {
+            background: var(--cell-hover);
+            transform: scale(1.025);
+        }
+
+        .cell:disabled {
+            cursor: default;
+        }
+
+        .cell.win {
+            border-color: var(--win);
+            background: rgba(72, 213, 151, 0.16);
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin: 20px;
+        }
+
+        .buttons button {
+            border: none;
+            border-radius: 9px;
+            padding: 12px 20px;
+
+            background: var(--accent);
+            color: white;
+
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .buttons button:hover {
+            background: var(--accent2);
+        }
+
+        a {
+            display: block;
+            margin: 25px;
+            color: var(--muted);
+            text-decoration: none;
+        }
+
+        a:hover {
+            color: var(--text);
+        }
+
+        @media (max-width: 500px) {
+
+            h1 {
+                font-size: 28px;
+            }
+
+            .board {
+                grid-template-columns: repeat(3, 86px);
+                grid-template-rows: repeat(3, 86px);
+                gap: 6px;
+            }
+
+            .cell {
+                font-size: 36px;
+                border-width: 2px;
+            }
+
+            #status {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>❌ КРЕСТИКИ-НОЛИКИ ⭕</h1>
+
+<div class="subtitle">
+    Сыграй против бота
+</div>
+
+<div class="controls">
+
+    <label for="difficulty">Сложность:</label>
+
+    <select id="difficulty">
+        <option value="easy">Легко</option>
+        <option value="medium" selected>Средне</option>
+        <option value="hard">Сложно</option>
+    </select>
+
+    <label for="theme">Тема:</label>
+
+    <select id="theme">
+        <option value="dark">Тёмная</option>
+        <option value="neon">Неон</option>
+        <option value="paper">Бумага</option>
+        <option value="mint">Мята</option>
+        <option value="red">Красная</option>
+    </select>
+
+    <label for="lines">Линии:</label>
+
+    <select id="lines">
+        <option value="soft">Мягкие</option>
+        <option value="bright">Яркие</option>
+        <option value="dark">Тёмные</option>
+    </select>
+
+</div>
+
+<div class="stats">
+
+    <div class="stat">
+        <div class="stat-number" id="playerScore">0</div>
+        <div class="stat-name">ТЫ</div>
+    </div>
+
+    <div class="stat">
+        <div class="stat-number" id="drawScore">0</div>
+        <div class="stat-name">НИЧЬИ</div>
+    </div>
+
+    <div class="stat">
+        <div class="stat-number" id="botScore">0</div>
+        <div class="stat-name">БОТ</div>
+    </div>
+
+</div>
+
+<div id="status">
+    Твой ход — ❌
+</div>
+
+<div class="board">
+
+    <button class="cell"></button>
+    <button class="cell"></button>
+    <button class="cell"></button>
+
+    <button class="cell"></button>
+    <button class="cell"></button>
+    <button class="cell"></button>
+
+    <button class="cell"></button>
+    <button class="cell"></button>
+    <button class="cell"></button>
+
+</div>
+
+<div class="buttons">
+
+    <button id="restart">
+        🔄 НОВАЯ ИГРА
+    </button>
+
+    <button id="resetScore">
+        🗑 СБРОСИТЬ СЧЁТ
+    </button>
+
+</div>
+
+<a href="/">
+    ← Вернуться в MY GAMES
+</a>
+
+<script>
+
+const cells = document.querySelectorAll(".cell");
+const statusText = document.getElementById("status");
+
+const difficultySelect =
+    document.getElementById("difficulty");
+
+const themeSelect =
+    document.getElementById("theme");
+
+const linesSelect =
+    document.getElementById("lines");
+
+const playerScoreElement =
+    document.getElementById("playerScore");
+
+const botScoreElement =
+    document.getElementById("botScore");
+
+const drawScoreElement =
+    document.getElementById("drawScore");
+
+let board = [
+    "", "", "",
+    "", "", "",
+    "", "", ""
+];
+
+let gameOver = false;
+let playerTurn = true;
+
+let playerScore = 0;
+let botScore = 0;
+let drawScore = 0;
+
+const winningCombinations = [
+
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+
+    [0, 4, 8],
+    [2, 4, 6]
+
+];
+
+
+// -------------------------
+// ТЕМЫ
+// -------------------------
+
+themeSelect.addEventListener("change", function() {
+
+    document.body.classList.remove(
+        "theme-neon",
+        "theme-paper",
+        "theme-mint",
+        "theme-red"
+    );
+
+    if (this.value !== "dark") {
+        document.body.classList.add(
+            "theme-" + this.value
+        );
+    }
+
+});
+
+
+// -------------------------
+// ЛИНИИ
+// -------------------------
+
+linesSelect.addEventListener("change", function() {
+
+    document.body.classList.remove(
+        "lines-soft",
+        "lines-bright",
+        "lines-dark"
+    );
+
+    document.body.classList.add(
+        "lines-" + this.value
+    );
+
+});
+
+
+// -------------------------
+// ХОД ИГРОКА
+// -------------------------
+
+cells.forEach((cell, index) => {
+
+    cell.addEventListener("click", function() {
+
+        if (
+            gameOver ||
+            !playerTurn ||
+            board[index] !== ""
+        ) {
+            return;
+        }
+
+        board[index] = "X";
+
+        cell.textContent = "❌";
+
+        cell.disabled = true;
+
+        const winner = checkWinner();
+
+        if (winner) {
+
+            finishGame(winner);
+            return;
+        }
+
+        if (isDraw()) {
+
+            finishDraw();
+            return;
+        }
+
+        playerTurn = false;
+
+        statusText.textContent =
+            "🤖 Бот думает...";
+
+        setTimeout(botMove, 450);
+
+    });
+
+});
+
+
+// -------------------------
+// БОТ
+// -------------------------
+
+function botMove() {
+
+    if (gameOver) {
+        return;
+    }
+
+    let move;
+
+    const difficulty =
+        difficultySelect.value;
+
+    if (difficulty === "easy") {
+
+        move = easyMove();
+
+    } else if (difficulty === "medium") {
+
+        move = mediumMove();
+
+    } else {
+
+        move = hardMove();
+
+    }
+
+    if (move === -1) {
+        return;
+    }
+
+    board[move] = "O";
+
+    cells[move].textContent = "⭕";
+    cells[move].disabled = true;
+
+    const winner = checkWinner();
+
+    if (winner) {
+
+        finishGame(winner);
+        return;
+    }
+
+    if (isDraw()) {
+
+        finishDraw();
+        return;
+    }
+
+    playerTurn = true;
+
+    statusText.textContent =
+        "Твой ход — ❌";
+}
+
+
+// -------------------------
+// ЛЁГКИЙ БОТ
+// -------------------------
+
+function easyMove() {
+
+    const free = getFreeCells();
+
+    if (free.length === 0) {
+        return -1;
+    }
+
+    /*
+       Иногда бот специально играет случайно.
+       Но если может выиграть — выигрывает.
+    */
+
+    const winningMove =
+        findWinningMove("O");
+
+    if (
+        winningMove !== -1 &&
+        Math.random() < 0.75
+    ) {
+        return winningMove;
+    }
+
+    /*
+       Иногда блокирует игрока,
+       но не всегда.
+    */
+
+    const playerWinningMove =
+        findWinningMove("X");
+
+    if (
+        playerWinningMove !== -1 &&
+        Math.random() < 0.55
+    ) {
+        return playerWinningMove;
+    }
+
+    return free[
+        Math.floor(Math.random() * free.length)
+    ];
+}
+
+
+// -------------------------
+// СРЕДНИЙ БОТ
+// -------------------------
+
+function mediumMove() {
+
+    const winningMove =
+        findWinningMove("O");
+
+    if (winningMove !== -1) {
+        return winningMove;
+    }
+
+    const blockingMove =
+        findWinningMove("X");
+
+    if (blockingMove !== -1) {
+        return blockingMove;
+    }
+
+    /*
+       Иногда берём центр.
+    */
+
+    if (
+        board[4] === "" &&
+        Math.random() < 0.65
+    ) {
+        return 4;
+    }
+
+    /*
+       Углы.
+    */
+
+    const corners = [
+        0, 2, 6, 8
+    ].filter(i => board[i] === "");
+
+    if (
+        corners.length > 0 &&
+        Math.random() < 0.7
+    ) {
+
+        return corners[
+            Math.floor(
+                Math.random() * corners.length
+            )
+        ];
+
+    }
+
+    const free = getFreeCells();
+
+    return free[
+        Math.floor(Math.random() * free.length)
+    ];
+}
+
+
+// -------------------------
+// СЛОЖНЫЙ БОТ
+// -------------------------
+
+function hardMove() {
+
+    let bestScore = -Infinity;
+    let bestMoves = [];
+
+    for (let i = 0; i < 9; i++) {
+
+        if (board[i] !== "") {
+            continue;
+        }
+
+        board[i] = "O";
+
+        const score = minimax(
+            board,
+            0,
+            false
+        );
+
+        board[i] = "";
+
+        if (score > bestScore) {
+
+            bestScore = score;
+            bestMoves = [i];
+
+        } else if (score === bestScore) {
+
+            bestMoves.push(i);
+        }
+    }
+
+    if (bestMoves.length === 0) {
+        return -1;
+    }
+
+    /*
+       Если несколько одинаковых ходов —
+       выбираем случайный, чтобы бот
+       не выглядел полностью механическим.
+    */
+
+    return bestMoves[
+        Math.floor(
+            Math.random() * bestMoves.length
+        )
+    ];
+}
+
+
+// -------------------------
+// MINIMAX
+// -------------------------
+
+function minimax(
+    position,
+    depth,
+    maximizing
+) {
+
+    if (hasWinner(position, "O")) {
+        return 10 - depth;
+    }
+
+    if (hasWinner(position, "X")) {
+        return depth - 10;
+    }
+
+    if (
+        position.every(
+            cell => cell !== ""
+        )
+    ) {
+        return 0;
+    }
+
+    if (maximizing) {
+
+        let bestScore = -Infinity;
+
+        for (let i = 0; i < 9; i++) {
+
+            if (position[i] !== "") {
+                continue;
+            }
+
+            position[i] = "O";
+
+            const score =
+                minimax(
+                    position,
+                    depth + 1,
+                    false
+                );
+
+            position[i] = "";
+
+            bestScore =
+                Math.max(
+                    bestScore,
+                    score
+                );
+        }
+
+        return bestScore;
+
+    } else {
+
+        let bestScore = Infinity;
+
+        for (let i = 0; i < 9; i++) {
+
+            if (position[i] !== "") {
+                continue;
+            }
+
+            position[i] = "X";
+
+            const score =
+                minimax(
+                    position,
+                    depth + 1,
+                    true
+                );
+
+            position[i] = "";
+
+            bestScore =
+                Math.min(
+                    bestScore,
+                    score
+                );
+        }
+
+        return bestScore;
+    }
+}
+
+
+// -------------------------
+// ПОБЕДНЫЙ ХОД
+// -------------------------
+
+function findWinningMove(player) {
+
+    for (let i = 0; i < 9; i++) {
+
+        if (board[i] !== "") {
+            continue;
+        }
+
+        board[i] = player;
+
+        const win =
+            hasWinner(board, player);
+
+        board[i] = "";
+
+        if (win) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+
+// -------------------------
+// ПРОВЕРКА ПОБЕДИТЕЛЯ
+// -------------------------
+
+function checkWinner() {
+
+    if (hasWinner(board, "X")) {
+        return "X";
+    }
+
+    if (hasWinner(board, "O")) {
+        return "O";
+    }
+
+    return null;
+}
+
+
+function hasWinner(position, player) {
+
+    return winningCombinations.some(
+        combination => {
+
+            return combination.every(
+                index =>
+                    position[index] === player
+            );
+
+        }
+    );
+}
+
+
+// -------------------------
+// НИЧЬЯ
+// -------------------------
+
+function isDraw() {
+
+    return board.every(
+        cell => cell !== ""
+    );
+
+}
+
+
+// -------------------------
+// СВОБОДНЫЕ КЛЕТКИ
+// -------------------------
+
+function getFreeCells() {
+
+    const free = [];
+
+    for (let i = 0; i < 9; i++) {
+
+        if (board[i] === "") {
+            free.push(i);
+        }
+    }
+
+    return free;
+}
+
+
+// -------------------------
+// КОНЕЦ ИГРЫ
+// -------------------------
+
+function finishGame(winner) {
+
+    gameOver = true;
+
+    cells.forEach(cell => {
+        cell.disabled = true;
+    });
+
+    const combination =
+        winningCombinations.find(
+            combo =>
+                combo.every(
+                    index =>
+                        board[index] === winner
+                )
+        );
+
+    if (combination) {
+
+        combination.forEach(index => {
+            cells[index].classList.add("win");
+        });
+
+    }
+
+    if (winner === "X") {
+
+        playerScore++;
+
+        statusText.textContent =
+            "🎉 ТЫ ПОБЕДИЛ!";
+
+    } else {
+
+        botScore++;
+
+        statusText.textContent =
+            "🤖 БОТ ПОБЕДИЛ!";
+
+    }
+
+    updateScore();
+}
+
+
+function finishDraw() {
+
+    gameOver = true;
+
+    cells.forEach(cell => {
+        cell.disabled = true;
+    });
+
+    drawScore++;
+
+    statusText.textContent =
+        "🤝 НИЧЬЯ!";
+
+    updateScore();
+}
+
+
+// -------------------------
+// СЧЁТ
+// -------------------------
+
+function updateScore() {
+
+    playerScoreElement.textContent =
+        playerScore;
+
+    botScoreElement.textContent =
+        botScore;
+
+    drawScoreElement.textContent =
+        drawScore;
+}
+
+
+// -------------------------
+// НОВАЯ ИГРА
+// -------------------------
+
+function newGame() {
+
+    board = [
+        "", "", "",
+        "", "", "",
+        "", "", ""
+    ];
+
+    gameOver = false;
+    playerTurn = true;
+
+    cells.forEach(cell => {
+
+        cell.textContent = "";
+        cell.disabled = false;
+        cell.classList.remove("win");
+
+    });
+
+    statusText.textContent =
+        "Твой ход — ❌";
+}
+
+
+document
+    .getElementById("restart")
+    .addEventListener(
+        "click",
+        newGame
+    );
+
+
+// -------------------------
+// СБРОС СЧЁТА
+// -------------------------
+
+document
+    .getElementById("resetScore")
+    .addEventListener(
+        "click",
+        function() {
+
+            playerScore = 0;
+            botScore = 0;
+            drawScore = 0;
+
+            updateScore();
+            newGame();
+
+        }
+    );
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,193 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Симпсоны — Большой тест</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #151515;
+            color: white;
+            margin: 0;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 42px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 40px;
+        }
+
+        .menu {
+            max-width: 600px;
+            margin: auto;
+        }
+
+        .menu-item {
+            background: #252525;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .menu-item h2 {
+            margin-top: 0;
+            font-size: 27px;
+        }
+
+        .menu-item p {
+            color: #aaa;
+        }
+
+        .menu-item button {
+            margin-top: 10px;
+            padding: 12px 25px;
+            background: #444;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 17px;
+            cursor: pointer;
+        }
+
+        .menu-item button:hover {
+            background: #666;
+        }
+
+        #rules {
+            display: none;
+            background: #252525;
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        #rules p {
+            color: #bbb;
+            line-height: 1.6;
+        }
+
+        .back {
+            display: block;
+            text-align: center;
+            margin-top: 35px;
+            color: #aaa;
+            text-decoration: none;
+        }
+
+        .back:hover {
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>🍩 СИМПСОНЫ</h1>
+
+<p class="subtitle">Большой тест</p>
+
+<div class="menu">
+
+    <div class="menu-item">
+        <h2>🎬 Начать тест</h2>
+        <p>Ответь на вопросы и узнай, на кого из персонажей ты больше всего похож.</p>
+
+        <button onclick="startTest()">
+            НАЧАТЬ
+        </button>
+    </div>
+
+
+    <div class="menu-item">
+        <h2>🛒 Магазин</h2>
+        <p>Трать заработанные монеты на бонусы и подсказки.</p>
+
+        <button onclick="openShop()">
+            МАГАЗИН
+        </button>
+    </div>
+
+
+    <div class="menu-item">
+        <h2>📖 Правила</h2>
+        <p>Как работает тест?</p>
+
+        <button onclick="showRules()">
+            ПРАВИЛА
+        </button>
+    </div>
+
+
+    <div id="rules">
+
+        <h2>📖 Правила игры</h2>
+
+        <p>
+            Отвечай на вопросы теста и выбирай вариант,
+            который тебе больше подходит.
+        </p>
+
+        <p>
+            За каждый вопрос ты получаешь
+            <b>+25 монет</b>.
+        </p>
+
+        <p>
+            В магазине можно покупать различные бонусы.
+        </p>
+
+        <p>
+            В конце тест определит,
+            на кого из персонажей «Симпсонов»
+            ты больше всего похож:
+            Гомера, Барта, Лизу или Мардж.
+        </p>
+
+        <button onclick="hideRules()">
+            ЗАКРЫТЬ
+        </button>
+
+    </div>
+
+</div>
+
+
+<a class="back" href="/">
+    ← Вернуться в MY GAMES
+</a>
+
+
+<script>
+
+function startTest() {
+    alert("🎬 Тест скоро начнётся!");
+}
+
+
+function openShop() {
+    alert("🛒 Магазин скоро будет доступен!");
+}
+
+
+function showRules() {
+    document.getElementById("rules").style.display = "block";
+}
+
+
+function hideRules() {
+    document.getElementById("rules").style.display = "none";
+}
+
+</script>
+
+</body>
+</html>

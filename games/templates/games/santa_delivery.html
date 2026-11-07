@@ -1,0 +1,512 @@
+﻿
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>PIXEL Santa Delivery</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;overflow:hidden;background:#071426;color:white;font-family:Arial;touch-action:none}
+canvas{display:block;width:100vw;height:100vh}
+#top{position:absolute;top:12px;left:12px;right:12px;display:flex;gap:8px;justify-content:space-between;pointer-events:none;z-index:2}
+.panel{background:#091a30e8;border:1px solid #526b8c;border-radius:12px;padding:10px 13px;font-weight:bold;font-size:14px}
+#controls{position:absolute;bottom:16px;left:0;right:0;display:flex;justify-content:space-between;padding:0 12px;pointer-events:none}
+.group{display:flex;gap:6px;pointer-events:auto}
+button{height:52px;min-width:48px;border:1px solid #829bbd;border-radius:12px;background:#172e4d;color:white;font-size:22px;font-weight:bold;touch-action:none}
+button:active{background:#426a99}
+#drop{background:#a52c37;border-color:#ff8991;font-size:14px;padding:0 14px}
+#startScreen{position:absolute;inset:0;background:#030a17d9;display:flex;align-items:center;justify-content:center;padding:18px;z-index:5}
+#box{width:min(420px,100%);padding:27px;text-align:center;border-radius:20px;border:1px solid #7189ad;background:linear-gradient(145deg,#193655,#101b31)}
+#box h1{color:#ffe39a;margin:0 0 12px;font-size:29px}
+#box p{line-height:1.6;color:#d3e2f4}
+#play{width:100%;height:52px;background:#b52e3c;border-color:#ff9aa1;font-size:18px;margin-top:12px}
+.hidden{display:none!important}
+@media(max-width:600px){.panel{font-size:12px;padding:9px 10px}button{min-width:43px;height:48px}}
+</style>
+</head>
+<body>
+
+<canvas id="game"></canvas>
+
+<div id="top">
+ <div class="panel">🎁 В санях: <span id="inventory">3</span></div>
+ <div class="panel">⭐ Очки: <span id="score">0</span></div>
+ <div class="panel">❤️ <span id="lives">3</span></div>
+</div>
+
+<div id="controls">
+ <div class="group">
+  <button data-key="left">←</button>
+  <button data-key="right">→</button>
+  <button data-key="up">↑</button>
+  <button data-key="down">↓</button>
+ </div>
+ <button id="drop">🎁 БРОСИТЬ</button>
+</div>
+
+<div id="startScreen">
+ <div id="box">
+  <h1>🎅 SANTA DELIVERY</h1>
+  <p>Собирай подарки, пролетая рядом с ними.<br>
+  Затем сбрасывай их прямо в дымоходы!<br><br>
+  ← → ↑ ↓ — движение<br>Пробел — бросить подарок</p>
+  <button id="play">НАЧАТЬ ИГРУ</button>
+ </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+if(!ctx)return;
+
+const $=id=>document.getElementById(id);
+
+let W=0,H=0,dpr=1;
+let running=false,lastTime=0;
+let score=0,lives=3,inventory=3;
+let spawnTimer=0,obstacleTimer=0;
+let buildings=[],chimneys=[],snow=[],stars=[];
+let pickups=[],projectiles=[],obstacles=[],effects=[];
+let message="",messageTime=0;
+
+const keys={left:false,right:false,up:false,down:false};
+
+const santa={x:100,y:120,vx:0,vy:0,w:112,h:55,invincible:0};
+
+function resize(){
+ W=innerWidth;H=innerHeight;
+ dpr=Math.min(devicePixelRatio||1,1.5);
+ canvas.width=Math.floor(W*dpr);
+ canvas.height=Math.floor(H*dpr);
+ ctx.setTransform(dpr,0,0,dpr,0,0);
+ createCity();
+}
+
+function createCity(){
+ buildings=[];chimneys=[];snow=[];stars=[];
+ let x=-10,index=0;
+
+ while(x<W+80){
+  const width=75+Math.random()*75;
+  const height=110+Math.random()*Math.max(60,H*.25);
+  const roofY=H-height;
+  const b={
+   x,width,height,roofY,
+   color:["#172c45","#20334d","#26374e","#19283d","#293b50"][index%5],
+   roof:index%3!==1,
+   style:index%4
+  };
+  buildings.push(b);
+
+  if(b.roof){
+   const cx=x+width*(.25+Math.random()*.5);
+   chimneys.push({x:cx,y:roofY-23,w:18,h:23,delivered:0});
+  }
+  x+=width+5;
+  index++;
+ }
+
+ for(let i=0;i<90;i++){
+  snow.push({x:Math.random()*W,y:Math.random()*H,size:1+Math.random()*2,speed:25+Math.random()*65});
+ }
+ for(let i=0;i<75;i++){
+  stars.push({x:Math.random()*W,y:Math.random()*H*.65,size:1+Math.random()*2});
+ }
+}
+
+function rect(x,y,w,h,color){
+ ctx.fillStyle=color;
+ ctx.fillRect(Math.round(x),Math.round(y),w,h);
+}
+
+function drawBackground(dt){
+ const grad=ctx.createLinearGradient(0,0,0,H);
+ grad.addColorStop(0,"#071327");
+ grad.addColorStop(1,"#244b70");
+ ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+
+ ctx.fillStyle="#e5f1ff";
+ for(const s of stars){
+  ctx.globalAlpha=.5+Math.sin(Date.now()/500+s.x)*.3;
+  ctx.fillRect(s.x,s.y,s.size,s.size);
+ }
+ ctx.globalAlpha=1;
+
+ ctx.fillStyle="#fff0c7";
+ ctx.beginPath();ctx.arc(W*.78,H*.2,31,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle="#10223c";
+ ctx.beginPath();ctx.arc(W*.78+13,H*.2-10,29,0,Math.PI*2);ctx.fill();
+
+ for(const b of buildings){
+  const y=b.roofY;
+  rect(b.x,y,b.width,b.height,b.color);
+
+  // Разные крыши
+  if(b.style===0){
+   rect(b.x-4,y-9,b.width+8,10,"#344c66");
+  }else if(b.style===1){
+   rect(b.x+5,y-7,b.width-10,8,"#40516b");
+  }else if(b.style===2){
+   rect(b.x-3,y-5,b.width+6,6,"#52647a");
+  }else{
+   ctx.fillStyle="#344c66";
+   ctx.beginPath();ctx.moveTo(b.x-3,y);ctx.lineTo(b.x+b.width/2,y-13);ctx.lineTo(b.x+b.width+3,y);ctx.fill();
+  }
+
+  rect(b.x,y-3,b.width,4,"#dceaff");
+
+  // Окна с постоянным рисунком
+  for(let col=0;col<Math.floor(b.width/25);col++){
+   for(let row=0;row<6;row++){
+    const wx=b.x+10+col*23;
+    const wy=y+20+row*29;
+    if(wy<H-10 && wx<b.x+b.width-7){
+     const lit=((col*7+row*3+b.style)%4)!==0;
+     rect(wx,wy,9,13,lit?"#e9b95e":"#405a75");
+    }
+   }
+  }
+ }
+
+ // Дымоходы
+ for(const c of chimneys){
+  rect(c.x,c.y,c.w,c.h,"#75483e");
+  rect(c.x-3,c.y-4,c.w+6,5,"#b7c8d8");
+  rect(c.x+4,c.y+5,4,12,"#a96c55");
+ }
+
+ ctx.fillStyle="#edf7ff";
+ for(const s of snow){
+  s.y+=s.speed*dt;
+  s.x+=Math.sin(s.y*.02)*10*dt;
+  if(s.y>H){s.y=-4;s.x=Math.random()*W}
+  ctx.fillRect(s.x,s.y,s.size,s.size);
+ }
+}
+
+function drawReindeer(x,y){
+ rect(x,y+15,27,12,"#8a5638");
+ rect(x+21,y+7,10,12,"#a66c43");
+ rect(x+28,y+10,5,5,"#f0c5a0");
+ rect(x+4,y+26,4,10,"#53372f");
+ rect(x+20,y+26,4,10,"#53372f");
+ rect(x+23,y,3,9,"#d9c59b");
+ rect(x+19,y-2,3,5,"#d9c59b");
+ rect(x+29,y-4,3,6,"#d9c59b");
+ rect(x+29,y+10,2,2,"white");
+}
+
+function drawSanta(){
+ ctx.save();
+ ctx.translate(santa.x,santa.y);
+
+ ctx.fillStyle="#0005";ctx.fillRect(10,48,100,8);
+
+ drawReindeer(0,8);
+ drawReindeer(35,8);
+
+ ctx.strokeStyle="#d9ad54";ctx.lineWidth=2;
+ ctx.beginPath();ctx.moveTo(28,22);ctx.lineTo(48,35);ctx.lineTo(57,35);ctx.stroke();
+
+ // Сани
+ rect(49,30,61,13,"#a52334");
+ rect(57,22,35,12,"#d63a43");
+ rect(54,39,62,4,"#edc66e");
+ rect(60,43,45,3,"#e6b95b");
+
+ ctx.strokeStyle="#f4d78a";ctx.lineWidth=4;
+ ctx.beginPath();ctx.moveTo(53,46);ctx.quadraticCurveTo(80,57,112,45);ctx.stroke();
+
+ // Подарки в санях
+ for(let i=0;i<Math.min(inventory,5);i++){
+  const px=57+(i%3)*14;
+  const py=20-Math.floor(i/3)*10;
+  rect(px,py,11,9,["#2b9c69","#367bd0","#e23e50"][i%3]);
+  rect(px+4,py,3,9,"#ffe27b");
+ }
+
+ // Санта
+ rect(70,2,18,18,"#efbd91");
+ rect(67,0,22,7,"#bd2635");
+ rect(65,-2,24,5,"white");
+ rect(81,-6,9,6,"#bd2635");
+ rect(85,-8,6,5,"white");
+ rect(72,15,17,8,"white");
+ rect(76,21,10,4,"#e6e9ee");
+ rect(91,9,10,5,"#efbd91");
+
+ ctx.restore();
+}
+
+function drawPickup(p){
+ // Светящийся подарок
+ ctx.save();
+ ctx.shadowColor="#ffe47c";
+ ctx.shadowBlur=14;
+ rect(p.x,p.y,23,20,p.color);
+ rect(p.x+9,p.y,5,20,"#ffe27b");
+ rect(p.x,p.y+8,23,4,"#ffe27b");
+ ctx.restore();
+}
+
+function drawProjectile(p){
+ rect(p.x,p.y,18,16,p.color);
+ rect(p.x+7,p.y,4,16,"#ffe27b");
+ rect(p.x,p.y+6,18,3,"#ffe27b");
+}
+
+function spawnPickup(){
+ const colors=["#e23e50","#2b9c69","#367bd0","#e3a72e"];
+ pickups.push({
+  x:W+30,
+  y:65+Math.random()*Math.max(50,H*.45),
+  color:colors[Math.floor(Math.random()*colors.length)],
+  speed:75
+ });
+}
+
+function spawnObstacle(){
+ obstacles.push({
+  x:W+30,
+  y:65+Math.random()*Math.max(50,H*.45),
+  type:Math.random()>.5?"cloud":"bird",
+  speed:110+Math.random()*55
+ });
+}
+
+function drawObstacle(o){
+ if(o.type==="cloud"){
+  rect(o.x,o.y,38,13,"#b5c9dc");
+  rect(o.x+8,o.y-8,19,12,"#b5c9dc");
+  rect(o.x+23,o.y-4,16,9,"#b5c9dc");
+ }else{
+  rect(o.x,o.y,19,8,"#303d4f");
+  rect(o.x+5,o.y-5,9,6,"#455b72");
+  rect(o.x+17,o.y+2,8,3,"#bd7955");
+ }
+}
+
+function overlap(a,b,aw,ah,bw,bh){
+ return a.x<b.x+bw&&a.x+aw>b.x&&a.y<b.y+bh&&a.y+ah>b.y;
+}
+
+function showMessage(text){
+ message=text;messageTime=1.4;
+}
+
+function updateUI(){
+ $("inventory").textContent=inventory;
+ $("score").textContent=score;
+ $("lives").textContent=lives;
+}
+
+function update(dt){
+ const accel=520,max=280;
+
+ if(keys.left)santa.vx-=accel*dt;
+ if(keys.right)santa.vx+=accel*dt;
+ if(keys.up)santa.vy-=accel*dt;
+ if(keys.down)santa.vy+=accel*dt;
+
+ if(!keys.left&&!keys.right)santa.vx*=Math.pow(.05,dt);
+ if(!keys.up&&!keys.down)santa.vy*=Math.pow(.05,dt);
+
+ santa.vx=Math.max(-max,Math.min(max,santa.vx));
+ santa.vy=Math.max(-max,Math.min(max,santa.vy));
+
+ santa.x=Math.max(0,Math.min(W-santa.w,santa.x+santa.vx*dt));
+ santa.y=Math.max(45,Math.min(H-115,santa.y+santa.vy*dt));
+
+ if(santa.invincible>0)santa.invincible-=dt;
+ if(messageTime>0)messageTime-=dt;
+
+ spawnTimer+=dt;
+ obstacleTimer+=dt;
+
+ if(spawnTimer>2.7){spawnTimer=0;spawnPickup()}
+ if(obstacleTimer>3.2){obstacleTimer=0;spawnObstacle()}
+
+ // Подбор подарков
+ for(let i=pickups.length-1;i>=0;i--){
+  const p=pickups[i];
+  p.x-=p.speed*dt;
+  p.y+=Math.sin(Date.now()/250+p.x)*8*dt;
+
+  if(overlap(santa,{x:p.x,y:p.y},santa.w-15,santa.h-10,23,20)){
+   if(inventory<9){
+    inventory++;
+    showMessage("🎁 ПОДАРОК ПОДОБРАН!");
+   }else{
+    showMessage("Сани уже полны!");
+   }
+   pickups.splice(i,1);
+   updateUI();
+  }
+ }
+ pickups=pickups.filter(p=>p.x>-40);
+
+ // Препятствия
+ for(let i=obstacles.length-1;i>=0;i--){
+  const o=obstacles[i];
+  o.x-=o.speed*dt;
+  if(santa.invincible<=0&&overlap(santa,o,santa.w-15,santa.h-10,35,25)){
+   obstacles.splice(i,1);
+   lives--;
+   santa.invincible=1.6;
+   updateUI();
+   showMessage("Осторожно! Препятствие!");
+   if(lives<=0)endGame();
+   break;
+  }
+ }
+ obstacles=obstacles.filter(o=>o.x>-60);
+
+ // Полёт сброшенных подарков
+ for(let i=projectiles.length-1;i>=0;i--){
+  const p=projectiles[i];
+  p.vy+=650*dt;
+  p.y+=p.vy*dt;
+
+  let delivered=false;
+  for(const c of chimneys){
+   if(p.x+18>c.x-2&&p.x<c.x+c.w+2&&
+      p.y+16>=c.y-4&&p.y+16<=c.y+13&&p.vy>0){
+    score+=10;
+    c.delivered++;
+    delivered=true;
+    effects.push({x:c.x+8,y:c.y-10,t:0});
+    showMessage("🎄 ДОСТАВКА! +10");
+    updateUI();
+    break;
+   }
+  }
+  if(delivered||p.y>H+30)projectiles.splice(i,1);
+ }
+
+ for(const e of effects)e.t+=dt;
+ effects=effects.filter(e=>e.t<.7);
+}
+
+function draw(){
+ drawBackground(0);
+
+ for(const p of pickups)drawPickup(p);
+ for(const o of obstacles)drawObstacle(o);
+ for(const p of projectiles)drawProjectile(p);
+
+ for(const e of effects){
+  ctx.globalAlpha=1-e.t/.7;
+  ctx.fillStyle="#ffe47c";
+  ctx.font="bold 22px Arial";
+  ctx.fillText("★",e.x,e.y-e.t*35);
+  ctx.globalAlpha=1;
+ }
+
+ if(santa.invincible<=0||Math.floor(Date.now()/100)%2===0)drawSanta();
+
+ if(messageTime>0){
+  ctx.font="bold 20px Arial";
+  ctx.textAlign="center";
+  ctx.fillStyle="#ffe89a";
+  ctx.fillText(message,W/2,90);
+  ctx.textAlign="left";
+ }
+}
+
+function dropGift(){
+ if(!running)return;
+ if(inventory<=0){
+  showMessage("Нет подарков! Собери ещё!");
+  return;
+ }
+ inventory--;
+ projectiles.push({
+  x:santa.x+72,
+  y:santa.y+43,
+  vy:80,
+  color:"#e43c4d"
+ });
+ updateUI();
+}
+
+function endGame(){
+ running=false;
+ Object.keys(keys).forEach(k=>keys[k]=false);
+ $("box").innerHTML=
+  "<h1>🎄 ИГРА ОКОНЧЕНА</h1>"+
+  "<p>Доставлено подарков: <b>"+score/10+"</b><br>Очки: <b>"+score+"</b></p>"+
+  "<button id='play' onclick='window.startSantaGame()'>ИГРАТЬ СНОВА</button>";
+ $("startScreen").classList.remove("hidden");
+}
+
+function startGame(){
+ score=0;lives=3;inventory=3;
+ pickups=[];projectiles=[];obstacles=[];effects=[];
+ spawnTimer=0;obstacleTimer=0;
+ santa.x=Math.min(100,W-120);
+ santa.y=Math.max(70,H*.25);
+ santa.vx=0;santa.vy=0;santa.invincible=0;
+ Object.keys(keys).forEach(k=>keys[k]=false);
+ updateUI();
+ $("startScreen").classList.add("hidden");
+ running=true;
+ lastTime=performance.now();
+ requestAnimationFrame(loop);
+}
+
+function loop(time){
+ if(!running)return;
+ const dt=Math.min((time-lastTime)/1000||0,.025);
+ lastTime=time;
+ update(dt);
+ draw();
+ requestAnimationFrame(loop);
+}
+
+window.startSantaGame=startGame;
+$("play").addEventListener("click",startGame);
+$("drop").addEventListener("pointerdown",e=>{
+ e.preventDefault();dropGift();
+});
+
+document.querySelectorAll("[data-key]").forEach(btn=>{
+ const key=btn.dataset.key;
+ btn.addEventListener("pointerdown",e=>{
+  e.preventDefault();keys[key]=true;
+  btn.setPointerCapture(e.pointerId);
+ });
+ const release=()=>keys[key]=false;
+ btn.addEventListener("pointerup",release);
+ btn.addEventListener("pointercancel",release);
+ btn.addEventListener("lostpointercapture",release);
+});
+
+document.addEventListener("keydown",e=>{
+ if(e.code==="ArrowLeft")keys.left=true;
+ if(e.code==="ArrowRight")keys.right=true;
+ if(e.code==="ArrowUp")keys.up=true;
+ if(e.code==="ArrowDown")keys.down=true;
+ if(e.code==="Space"){e.preventDefault();dropGift()}
+});
+
+document.addEventListener("keyup",e=>{
+ if(e.code==="ArrowLeft")keys.left=false;
+ if(e.code==="ArrowRight")keys.right=false;
+ if(e.code==="ArrowUp")keys.up=false;
+ if(e.code==="ArrowDown")keys.down=false;
+});
+
+window.addEventListener("blur",()=>Object.keys(keys).forEach(k=>keys[k]=false));
+window.addEventListener("resize",resize);
+
+resize();
+updateUI();
+
+})();
+</script>
+</body>
+</html>

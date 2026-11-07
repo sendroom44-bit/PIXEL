@@ -1,0 +1,1444 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>App Breakout</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #11131a;
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+.game {
+    width: min(1100px, 100%);
+}
+
+.top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.title {
+    font-size: 27px;
+    font-weight: bold;
+}
+
+.back {
+    text-decoration: none;
+    color: white;
+    background: #303541;
+    padding: 9px 14px;
+    border-radius: 10px;
+}
+
+.info {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: 9px;
+    font-size: 15px;
+}
+
+.stat {
+    background: #20232d;
+    padding: 7px 12px;
+    border-radius: 9px;
+}
+
+.canvas-wrap {
+    position: relative;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+canvas {
+    width: 100%;
+    max-width: 1050px;
+    aspect-ratio: 16 / 10;
+    display: block;
+    background: #171a23;
+    border: 3px solid #363b4a;
+    border-radius: 12px;
+    touch-action: none;
+}
+
+.controls {
+    margin-top: 10px;
+    display: flex;
+    justify-content: center;
+    gap: 9px;
+    flex-wrap: wrap;
+}
+
+button {
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 17px;
+    font-size: 15px;
+    cursor: pointer;
+    background: #303541;
+    color: white;
+}
+
+button:hover {
+    background: #3c4251;
+}
+
+.pause {
+    background: #7160a8;
+}
+
+.mobile-controls {
+    display: none;
+    position: relative;
+    height: 125px;
+    margin-top: 10px;
+}
+
+.joystick {
+    position: absolute;
+    left: 15px;
+    bottom: 5px;
+    width: 105px;
+    height: 105px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.08);
+    border: 2px solid rgba(255,255,255,.16);
+    touch-action: none;
+}
+
+.stick {
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: rgba(255,255,255,.28);
+    border: 2px solid rgba(255,255,255,.4);
+}
+
+.mobile-hint {
+    text-align: center;
+    opacity: .65;
+    font-size: 13px;
+    margin-top: 5px;
+}
+
+@media (max-width: 700px) {
+    .mobile-controls {
+        display: block;
+    }
+
+    .title {
+        font-size: 21px;
+    }
+
+    .info {
+        gap: 7px;
+        font-size: 13px;
+    }
+
+    .stat {
+        padding: 6px 9px;
+    }
+
+    .desktop-only {
+        display: none;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="game">
+
+    <div class="top">
+        <div class="title">📱 App Breakout</div>
+        <a class="back" href="/">← Главная</a>
+    </div>
+
+    <div class="info">
+        <div class="stat">Очки: <b id="score">0</b></div>
+        <div class="stat">Рекорд: <b id="highscore">0</b></div>
+        <div class="stat">Уровень: <b id="level">1</b></div>
+        <div class="stat">Жизни: <b id="lives">3</b></div>
+        <div class="stat">Комбо: <b id="combo">0</b></div>
+    </div>
+
+    <div class="canvas-wrap">
+        <canvas id="gameCanvas" width="1050" height="650"></canvas>
+    </div>
+
+    <div class="controls">
+        <button id="leftBtn">← Лево</button>
+        <button id="pauseBtn" class="pause">Пауза</button>
+        <button id="rightBtn">Право →</button>
+        <button id="newBtn">Новая игра</button>
+    </div>
+
+    <div class="mobile-controls">
+        <div class="joystick" id="joystick">
+            <div class="stick" id="stick"></div>
+        </div>
+    </div>
+
+    <div class="mobile-hint">
+        На телефоне: веди пальцем по полю или используй джойстик
+    </div>
+
+</div>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+const scoreEl = document.getElementById("score");
+const highscoreEl = document.getElementById("highscore");
+const levelEl = document.getElementById("level");
+const livesEl = document.getElementById("lives");
+const comboEl = document.getElementById("combo");
+
+let W = canvas.width;
+let H = canvas.height;
+
+let score = 0;
+let highscore = 0;
+let level = 1;
+let lives = 3;
+let combo = 0;
+
+let paused = false;
+let gameOver = false;
+
+let leftPressed = false;
+let rightPressed = false;
+
+let touchX = null;
+let joystickPower = 0;
+
+let particles = [];
+
+try {
+    highscore = Number(localStorage.getItem("appBreakoutHighscore") || 0);
+} catch (e) {
+    highscore = 0;
+}
+
+highscoreEl.textContent = highscore;
+
+
+/* =========================
+   ПЛАТФОРМА
+========================= */
+
+const paddle = {
+    x: W / 2 - 75,
+    y: H - 45,
+    width: 150,
+    height: 16,
+    speed: 9
+};
+
+
+/* =========================
+   МЯЧ
+========================= */
+
+const ball = {
+    x: W / 2,
+    y: H - 70,
+    radius: 9,
+    dx: 4.3,
+    dy: -4.3
+};
+
+
+/* =========================
+   ПРИЛОЖЕНИЯ
+========================= */
+
+const apps = [
+    {
+        name: "Telegram",
+        bg: "#35a9e8",
+        fg: "#ffffff",
+        symbol: "➤"
+    },
+    {
+        name: "WhatsApp",
+        bg: "#25d366",
+        fg: "#ffffff",
+        symbol: "☎"
+    },
+    {
+        name: "YouTube",
+        bg: "#ef4444",
+        fg: "#ffffff",
+        symbol: "▶"
+    },
+    {
+        name: "Discord",
+        bg: "#7164d8",
+        fg: "#ffffff",
+        symbol: "☯"
+    },
+    {
+        name: "Instagram",
+        bg: "#d946a8",
+        fg: "#ffffff",
+        symbol: "◎"
+    },
+    {
+        name: "TikTok",
+        bg: "#111111",
+        fg: "#ffffff",
+        symbol: "♪"
+    },
+    {
+        name: "Spotify",
+        bg: "#20c76b",
+        fg: "#ffffff",
+        symbol: "≋"
+    },
+    {
+        name: "VK",
+        bg: "#3979d8",
+        fg: "#ffffff",
+        symbol: "VK"
+    },
+    {
+        name: "Steam",
+        bg: "#28547b",
+        fg: "#ffffff",
+        symbol: "●"
+    },
+    {
+        name: "Reddit",
+        bg: "#f4512c",
+        fg: "#ffffff",
+        symbol: "●"
+    },
+    {
+        name: "Chrome",
+        bg: "#eab308",
+        fg: "#111111",
+        symbol: "◉"
+    },
+    {
+        name: "Roblox",
+        bg: "#eeeeee",
+        fg: "#111111",
+        symbol: "◇"
+    }
+];
+
+
+/* =========================
+   БЛОКИ
+========================= */
+
+let bricks = [];
+
+const cols = 8;
+const rows = 5;
+
+const brickGap = 10;
+const brickWidth = 105;
+const brickHeight = 67;
+
+function createLevel() {
+
+    bricks = [];
+
+    const patterns = [
+        "full",
+        "checker",
+        "diamond",
+        "middle",
+        "full"
+    ];
+
+    const pattern = patterns[(level - 1) % patterns.length];
+
+    for (let row = 0; row < rows; row++) {
+
+        for (let col = 0; col < cols; col++) {
+
+            let active = true;
+
+            if (pattern === "checker") {
+                active = (row + col) % 2 === 0;
+            }
+
+            if (pattern === "diamond") {
+                active =
+                    Math.abs(col - 3.5) +
+                    Math.abs(row - 2) < 4.5;
+            }
+
+            if (pattern === "middle") {
+                active =
+                    row === 0 ||
+                    row === 1 ||
+                    col === 1 ||
+                    col === 2 ||
+                    col === 3 ||
+                    col === 4 ||
+                    col === 5 ||
+                    col === 6;
+            }
+
+            if (!active) {
+                continue;
+            }
+
+            const appIndex =
+                (row * cols + col + level - 1) % apps.length;
+
+            bricks.push({
+                x: 20 + col * (brickWidth + brickGap),
+                y: 25 + row * (brickHeight + brickGap),
+                width: brickWidth,
+                height: brickHeight,
+                app: apps[appIndex],
+                alive: true
+            });
+        }
+    }
+}
+
+
+/* =========================
+   РИСОВАНИЕ АВАТАРКИ
+========================= */
+
+function drawBrick(brick) {
+
+    if (!brick.alive) {
+        return;
+    }
+
+    const cx = brick.x + brick.width / 2;
+    const cy = brick.y + brick.height / 2;
+    const r = Math.min(brick.width, brick.height) * 0.36;
+
+    ctx.save();
+
+    ctx.globalAlpha = 0.16;
+    ctx.fillStyle = "#ffffff";
+
+    roundRect(
+        brick.x + 2,
+        brick.y + 3,
+        brick.width - 4,
+        brick.height - 4,
+        15
+    );
+
+    ctx.fill();
+
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = brick.app.bg;
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = brick.app.fg;
+
+    ctx.font =
+        brick.app.symbol.length > 1
+        ? "bold 22px Arial"
+        : "bold 30px Arial";
+
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    ctx.fillText(
+        brick.app.symbol,
+        cx,
+        cy + 1
+    );
+
+    ctx.fillStyle = "rgba(255,255,255,.85)";
+    ctx.font = "12px Arial";
+
+    ctx.fillText(
+        brick.app.name,
+        cx,
+        brick.y + brick.height - 9
+    );
+
+    ctx.restore();
+}
+
+
+function roundRect(x, y, w, h, r) {
+
+    ctx.beginPath();
+
+    ctx.moveTo(x + r, y);
+
+    ctx.lineTo(x + w - r, y);
+
+    ctx.quadraticCurveTo(
+        x + w,
+        y,
+        x + w,
+        y + r
+    );
+
+    ctx.lineTo(
+        x + w,
+        y + h - r
+    );
+
+    ctx.quadraticCurveTo(
+        x + w,
+        y + h,
+        x + w - r,
+        y + h
+    );
+
+    ctx.lineTo(
+        x + r,
+        y + h
+    );
+
+    ctx.quadraticCurveTo(
+        x,
+        y + h,
+        x,
+        y + h - r
+    );
+
+    ctx.lineTo(
+        x,
+        y + r
+    );
+
+    ctx.quadraticCurveTo(
+        x,
+        y,
+        x + r,
+        y
+    );
+
+    ctx.closePath();
+}
+
+
+/* =========================
+   ПЛАТФОРМА
+========================= */
+
+function drawPaddle() {
+
+    const gradient =
+        ctx.createLinearGradient(
+            paddle.x,
+            paddle.y,
+            paddle.x + paddle.width,
+            paddle.y
+        );
+
+    gradient.addColorStop(0, "#8b78d1");
+    gradient.addColorStop(.5, "#b39be9");
+    gradient.addColorStop(1, "#7561ba");
+
+    ctx.fillStyle = gradient;
+
+    roundRect(
+        paddle.x,
+        paddle.y,
+        paddle.width,
+        paddle.height,
+        8
+    );
+
+    ctx.fill();
+}
+
+
+/* =========================
+   МЯЧ
+========================= */
+
+function drawBall() {
+
+    const gradient =
+        ctx.createRadialGradient(
+            ball.x - 3,
+            ball.y - 3,
+            1,
+            ball.x,
+            ball.y,
+            ball.radius
+        );
+
+    gradient.addColorStop(0, "#ffffff");
+    gradient.addColorStop(.4, "#d9e1ff");
+    gradient.addColorStop(1, "#7e8cff");
+
+    ctx.fillStyle = gradient;
+
+    ctx.beginPath();
+
+    ctx.arc(
+        ball.x,
+        ball.y,
+        ball.radius,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+}
+
+
+/* =========================
+   ЧАСТИЦЫ
+========================= */
+
+function createParticles(x, y, color) {
+
+    for (let i = 0; i < 14; i++) {
+
+        particles.push({
+            x: x,
+            y: y,
+            dx: (Math.random() - .5) * 7,
+            dy: (Math.random() - .5) * 7,
+            life: 1,
+            color: color
+        });
+    }
+}
+
+function updateParticles() {
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+
+        const p = particles[i];
+
+        p.x += p.dx;
+        p.y += p.dy;
+
+        p.dy += .12;
+
+        p.life -= .035;
+
+        if (p.life <= 0) {
+            particles.splice(i, 1);
+        }
+    }
+}
+
+function drawParticles() {
+
+    for (const p of particles) {
+
+        ctx.globalAlpha = p.life;
+
+        ctx.fillStyle = p.color;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            p.x,
+            p.y,
+            3,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+    }
+
+    ctx.globalAlpha = 1;
+}
+
+
+/* =========================
+   УПРАВЛЕНИЕ
+========================= */
+
+function movePaddle() {
+
+    let direction = 0;
+
+    if (leftPressed) {
+        direction -= 1;
+    }
+
+    if (rightPressed) {
+        direction += 1;
+    }
+
+    if (joystickPower !== 0) {
+        direction = joystickPower;
+    }
+
+    if (direction !== 0) {
+        paddle.x += direction * paddle.speed;
+    }
+
+    if (touchX !== null) {
+
+        const rect = canvas.getBoundingClientRect();
+
+        const scaleX = W / rect.width;
+
+        const target =
+            touchX * scaleX -
+            paddle.width / 2;
+
+        paddle.x +=
+            (target - paddle.x) * .22;
+    }
+
+    if (paddle.x < 0) {
+        paddle.x = 0;
+    }
+
+    if (paddle.x + paddle.width > W) {
+        paddle.x =
+            W - paddle.width;
+    }
+}
+
+
+/* =========================
+   МЯЧ
+========================= */
+
+function updateBall() {
+
+    ball.x += ball.dx;
+    ball.y += ball.dy;
+
+    /* стены */
+
+    if (
+        ball.x - ball.radius <= 0 ||
+        ball.x + ball.radius >= W
+    ) {
+        ball.dx *= -1;
+    }
+
+    if (
+        ball.y - ball.radius <= 0
+    ) {
+        ball.dy *= -1;
+    }
+
+    /* платформа */
+
+    if (
+        ball.y + ball.radius >= paddle.y &&
+        ball.y - ball.radius <=
+            paddle.y + paddle.height &&
+        ball.x >= paddle.x &&
+        ball.x <=
+            paddle.x + paddle.width &&
+        ball.dy > 0
+    ) {
+
+        const hit =
+            (ball.x -
+            (paddle.x + paddle.width / 2)) /
+            (paddle.width / 2);
+
+        ball.dx =
+            hit * 6.5;
+
+        ball.dy =
+            -Math.abs(ball.dy);
+
+        combo = 0;
+        comboEl.textContent = combo;
+    }
+
+    /* блоки */
+
+    for (const brick of bricks) {
+
+        if (!brick.alive) {
+            continue;
+        }
+
+        if (
+            ball.x + ball.radius > brick.x &&
+            ball.x - ball.radius <
+                brick.x + brick.width &&
+            ball.y + ball.radius > brick.y &&
+            ball.y - ball.radius <
+                brick.y + brick.height
+        ) {
+
+            brick.alive = false;
+
+            ball.dy *= -1;
+
+            combo++;
+
+            const points =
+                10 + combo * 2;
+
+            score += points;
+
+            createParticles(
+                ball.x,
+                ball.y,
+                brick.app.bg
+            );
+
+            updateStats();
+
+            break;
+        }
+    }
+
+    /* все блоки разбиты */
+
+    if (
+        bricks.every(
+            brick => !brick.alive
+        )
+    ) {
+
+        level++;
+
+        levelEl.textContent =
+            level;
+
+        resetBall();
+
+        createLevel();
+    }
+
+    /* мяч упал */
+
+    if (
+        ball.y - ball.radius > H
+    ) {
+
+        lives--;
+
+        combo = 0;
+
+        updateStats();
+
+        if (lives <= 0) {
+
+            gameOver = true;
+
+            if (score > highscore) {
+                highscore = score;
+
+                try {
+                    localStorage.setItem(
+                        "appBreakoutHighscore",
+                        highscore
+                    );
+                } catch (e) {}
+
+                highscoreEl.textContent =
+                    highscore;
+            }
+
+        } else {
+            resetBall();
+        }
+    }
+}
+
+
+/* =========================
+   НОВЫЙ МЯЧ
+========================= */
+
+function resetBall() {
+
+    ball.x =
+        paddle.x +
+        paddle.width / 2;
+
+    ball.y =
+        paddle.y - 25;
+
+    const direction =
+        Math.random() < .5
+        ? -1
+        : 1;
+
+    const speed =
+        4.3 + level * .18;
+
+    ball.dx =
+        direction * speed;
+
+    ball.dy =
+        -speed;
+}
+
+
+/* =========================
+   СТАТИСТИКА
+========================= */
+
+function updateStats() {
+
+    scoreEl.textContent =
+        score;
+
+    livesEl.textContent =
+        lives;
+
+    comboEl.textContent =
+        combo;
+
+    levelEl.textContent =
+        level;
+
+    if (score > highscore) {
+
+        highscore = score;
+
+        highscoreEl.textContent =
+            highscore;
+
+        try {
+            localStorage.setItem(
+                "appBreakoutHighscore",
+                highscore
+            );
+        } catch (e) {}
+    }
+}
+
+
+/* =========================
+   ТЕКСТ НА ЭКРАНЕ
+========================= */
+
+function centerText(text, y, size) {
+
+    ctx.fillStyle = "white";
+    ctx.font = `bold ${size}px Arial`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    ctx.fillText(
+        text,
+        W / 2,
+        y
+    );
+}
+
+
+/* =========================
+   ОТРИСОВКА
+========================= */
+
+function draw() {
+
+    ctx.clearRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+    /* фон */
+
+    const bg =
+        ctx.createLinearGradient(
+            0,
+            0,
+            0,
+            H
+        );
+
+    bg.addColorStop(0, "#181b25");
+    bg.addColorStop(1, "#101219");
+
+    ctx.fillStyle = bg;
+
+    ctx.fillRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+    /* сетка */
+
+    ctx.strokeStyle =
+        "rgba(255,255,255,.025)";
+
+    ctx.lineWidth = 1;
+
+    for (let x = 0; x < W; x += 35) {
+
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H);
+        ctx.stroke();
+    }
+
+    for (let y = 0; y < H; y += 35) {
+
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+    }
+
+    for (const brick of bricks) {
+        drawBrick(brick);
+    }
+
+    drawPaddle();
+    drawBall();
+    drawParticles();
+
+    if (paused && !gameOver) {
+
+        ctx.fillStyle =
+            "rgba(0,0,0,.58)";
+
+        ctx.fillRect(
+            0,
+            0,
+            W,
+            H
+        );
+
+        centerText(
+            "ПАУЗА",
+            H / 2 - 15,
+            42
+        );
+
+        centerText(
+            "Нажми «Пауза», чтобы продолжить",
+            H / 2 + 35,
+            17
+        );
+    }
+
+    if (gameOver) {
+
+        ctx.fillStyle =
+            "rgba(0,0,0,.68)";
+
+        ctx.fillRect(
+            0,
+            0,
+            W,
+            H
+        );
+
+        centerText(
+            "ИГРА ОКОНЧЕНА",
+            H / 2 - 35,
+            38
+        );
+
+        centerText(
+            "Счёт: " + score,
+            H / 2 + 15,
+            22
+        );
+
+        centerText(
+            "Нажми «Новая игра»",
+            H / 2 + 55,
+            17
+        );
+    }
+}
+
+
+/* =========================
+   ГЛАВНЫЙ ЦИКЛ
+========================= */
+
+function loop() {
+
+    if (!paused && !gameOver) {
+
+        movePaddle();
+        updateBall();
+        updateParticles();
+    }
+
+    draw();
+
+    requestAnimationFrame(loop);
+}
+
+
+/* =========================
+   КЛАВИАТУРА
+========================= */
+
+document.addEventListener(
+    "keydown",
+    e => {
+
+        if (
+            e.key === "ArrowLeft" ||
+            e.key.toLowerCase() === "a"
+        ) {
+            leftPressed = true;
+        }
+
+        if (
+            e.key === "ArrowRight" ||
+            e.key.toLowerCase() === "d"
+        ) {
+            rightPressed = true;
+        }
+
+        if (e.key === " ") {
+
+            e.preventDefault();
+
+            togglePause();
+        }
+    }
+);
+
+document.addEventListener(
+    "keyup",
+    e => {
+
+        if (
+            e.key === "ArrowLeft" ||
+            e.key.toLowerCase() === "a"
+        ) {
+            leftPressed = false;
+        }
+
+        if (
+            e.key === "ArrowRight" ||
+            e.key.toLowerCase() === "d"
+        ) {
+            rightPressed = false;
+        }
+    }
+);
+
+
+/* =========================
+   КНОПКИ
+========================= */
+
+function holdButton(button, direction) {
+
+    button.addEventListener(
+        "pointerdown",
+        e => {
+            e.preventDefault();
+
+            if (direction === "left") {
+                leftPressed = true;
+            } else {
+                rightPressed = true;
+            }
+        }
+    );
+
+    button.addEventListener(
+        "pointerup",
+        e => {
+            e.preventDefault();
+
+            if (direction === "left") {
+                leftPressed = false;
+            } else {
+                rightPressed = false;
+            }
+        }
+    );
+
+    button.addEventListener(
+        "pointercancel",
+        () => {
+
+            leftPressed = false;
+            rightPressed = false;
+        }
+    );
+
+    button.addEventListener(
+        "pointerleave",
+        () => {
+
+            leftPressed = false;
+            rightPressed = false;
+        }
+    );
+}
+
+holdButton(
+    document.getElementById("leftBtn"),
+    "left"
+);
+
+holdButton(
+    document.getElementById("rightBtn"),
+    "right"
+);
+
+
+/* =========================
+   ПАУЗА
+========================= */
+
+function togglePause() {
+
+    if (gameOver) {
+        return;
+    }
+
+    paused = !paused;
+
+    document.getElementById(
+        "pauseBtn"
+    ).textContent =
+        paused
+        ? "Продолжить"
+        : "Пауза";
+}
+
+document.getElementById(
+    "pauseBtn"
+).addEventListener(
+    "click",
+    togglePause
+);
+
+
+/* =========================
+   НОВАЯ ИГРА
+========================= */
+
+function newGame() {
+
+    score = 0;
+    level = 1;
+    lives = 3;
+    combo = 0;
+
+    paused = false;
+    gameOver = false;
+
+    paddle.x =
+        W / 2 -
+        paddle.width / 2;
+
+    resetBall();
+
+    createLevel();
+
+    updateStats();
+
+    document.getElementById(
+        "pauseBtn"
+    ).textContent = "Пауза";
+}
+
+document.getElementById(
+    "newBtn"
+).addEventListener(
+    "click",
+    newGame
+);
+
+
+/* =========================
+   УПРАВЛЕНИЕ ПАЛЬЦЕМ
+========================= */
+
+canvas.addEventListener(
+    "pointerdown",
+    e => {
+
+        if (e.pointerType === "touch") {
+
+            const rect =
+                canvas.getBoundingClientRect();
+
+            touchX =
+                e.clientX -
+                rect.left;
+        }
+    }
+);
+
+canvas.addEventListener(
+    "pointermove",
+    e => {
+
+        if (
+            e.pointerType === "touch" ||
+            e.pointerType === "mouse"
+        ) {
+
+            const rect =
+                canvas.getBoundingClientRect();
+
+            touchX =
+                e.clientX -
+                rect.left;
+        }
+    }
+);
+
+canvas.addEventListener(
+    "pointerup",
+    e => {
+
+        if (e.pointerType === "touch") {
+            touchX = null;
+        }
+    }
+);
+
+canvas.addEventListener(
+    "pointercancel",
+    () => {
+        touchX = null;
+    }
+);
+
+
+/* =========================
+   ДЖОЙСТИК
+========================= */
+
+const joystick =
+    document.getElementById("joystick");
+
+const stick =
+    document.getElementById("stick");
+
+let joystickActive = false;
+
+function joystickMove(e) {
+
+    const rect =
+        joystick.getBoundingClientRect();
+
+    const centerX =
+        rect.left +
+        rect.width / 2;
+
+    let dx =
+        e.clientX -
+        centerX;
+
+    const max =
+        rect.width / 2 -
+        25;
+
+    dx =
+        Math.max(
+            -max,
+            Math.min(max, dx)
+        );
+
+    stick.style.left =
+        `calc(50% + ${dx}px)`;
+
+    joystickPower =
+        dx / max;
+}
+
+function joystickReset() {
+
+    joystickActive = false;
+
+    joystickPower = 0;
+
+    stick.style.left = "50%";
+    stick.style.top = "50%";
+}
+
+joystick.addEventListener(
+    "pointerdown",
+    e => {
+
+        e.preventDefault();
+
+        joystickActive = true;
+
+        joystick.setPointerCapture(
+            e.pointerId
+        );
+
+        joystickMove(e);
+    }
+);
+
+joystick.addEventListener(
+    "pointermove",
+    e => {
+
+        if (joystickActive) {
+            joystickMove(e);
+        }
+    }
+);
+
+joystick.addEventListener(
+    "pointerup",
+    joystickReset
+);
+
+joystick.addEventListener(
+    "pointercancel",
+    joystickReset
+);
+
+
+/* =========================
+   ЗАПУСК
+========================= */
+
+createLevel();
+resetBall();
+updateStats();
+loop();
+
+</script>
+
+</body>
+</html>

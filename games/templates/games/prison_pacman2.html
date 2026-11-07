@@ -1,0 +1,1974 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PRISON PAC-MAN 2</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    min-height:100vh;
+    background:#080b18;
+    color:#fff;
+    font-family:Arial,sans-serif;
+    overflow-x:hidden;
+}
+
+body.neon{background:radial-gradient(circle at 20% 10%,#253cff55,transparent 35%),#080b18}
+body.prison{background:repeating-linear-gradient(90deg,#142018 0 35px,#1b2b20 35px 70px)}
+body.ocean{background:radial-gradient(circle at 30% 30%,#00d9ff44,transparent 35%),#06182b}
+body.sunset{background:linear-gradient(135deg,#251039,#71304d,#b75e3d)}
+body.circuit{background:#0c1518}
+
+header{text-align:center;padding:18px 10px 8px}
+h1{
+    margin:0;
+    font-size:clamp(28px,6vw,52px);
+    letter-spacing:4px;
+    text-shadow:0 0 12px #fff7;
+}
+.subtitle{opacity:.7;margin-top:5px}
+
+.panel{
+    width:min(950px,94vw);
+    margin:12px auto;
+    padding:14px;
+    background:#0009;
+    border:1px solid #ffffff25;
+    border-radius:16px;
+}
+
+.controls,.skins{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    justify-content:center;
+}
+
+button,select{
+    color:#fff;
+    background:#ffffff14;
+    border:1px solid #ffffff35;
+    border-radius:9px;
+    padding:9px 12px;
+    font-size:14px;
+}
+
+button{cursor:pointer}
+button:hover{background:#ffffff25}
+button.active{border-color:#fff;background:#ffffff30}
+
+select option{background:#151515}
+
+.stats{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:16px;
+    margin:12px 0;
+    font-weight:bold;
+}
+
+#gameWrap{
+    width:min(760px,94vw);
+    margin:12px auto;
+    position:relative;
+}
+
+canvas{
+    display:block;
+    width:100%;
+    aspect-ratio:1;
+    background:#050507;
+    border:3px solid #ffffff30;
+    border-radius:14px;
+}
+
+.message{
+    min-height:25px;
+    text-align:center;
+    font-weight:bold;
+    margin:8px;
+}
+
+.skin{
+    width:34px;
+    height:34px;
+    padding:0;
+    border-radius:50%;
+}
+
+.blue{background:#168cff}
+.green{background:#22c55e}
+.turquoise{background:#14e0d0}
+.red{background:#ef3030}
+.pink{background:#ff6bc8}
+.burgundy{background:#7d1838}
+.brown{background:#8b542d}
+.yellow{background:#ffd51a}
+.white{background:#fff}
+.black{background:#111}
+.gray{background:#888}
+.purple{background:#a855f7}
+.rainbow{background:linear-gradient(135deg,red,orange,yellow,green,cyan,blue,violet)}
+
+.mobile{
+    width:210px;
+    margin:12px auto 25px;
+    display:grid;
+    grid-template-columns:repeat(3,65px);
+    gap:7px;
+    justify-content:center;
+}
+
+.mobile button{
+    width:65px;
+    height:55px;
+    font-size:23px;
+}
+
+.empty{visibility:hidden}
+
+.extra{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-top:10px;
+}
+
+#mini{
+    position:absolute;
+    right:12px;
+    top:12px;
+    width:150px;
+    height:150px;
+    background:#000b;
+    border:1px solid #ffffff35;
+    border-radius:8px;
+    display:none;
+}
+
+.editor{display:none;margin-top:12px}
+.editor.show{display:block}
+
+.editorGrid{
+    width:min(570px,90vw);
+    margin:auto;
+    display:grid;
+    grid-template-columns:repeat(19,1fr);
+}
+
+.ecell{
+    aspect-ratio:1;
+    border:1px solid #ffffff12;
+    background:#ffffff08;
+}
+
+.ecell.wall{background:#151515}
+.ecell.exit{background:#c33}
+.ecell.key{background:#d7b400}
+.ecell.start{background:#168cff}
+
+.help{
+    text-align:center;
+    opacity:.65;
+    font-size:12px;
+    margin-top:8px;
+}
+
+@media(max-width:600px){
+    #mini{
+        width:105px;
+        height:105px;
+    }
+}
+</style>
+</head>
+
+<body class="neon">
+
+<header>
+    <h1>PRISON PAC-MAN 2</h1>
+    <div class="subtitle">Побег из тюрьмы</div>
+</header>
+
+<div class="panel">
+
+<div class="controls">
+    <button id="start">▶ НАЧАТЬ</button>
+    <button id="restart">↻ ЗАНОВО</button>
+
+    <select id="mode">
+        <option value="base">Базовая карта</option>
+        <option value="random">Случайный лабиринт</option>
+        <option value="custom">Своя карта</option>
+    </select>
+
+    <select id="mapSelect">
+        <option value="0">Тюрьма</option>
+        <option value="1">Коридоры</option>
+        <option value="2">Блок</option>
+        <option value="3">Подземелье</option>
+        <option value="4">Изолятор</option>
+    </select>
+
+    <select id="difficulty">
+        <option value="easy">Легко</option>
+        <option value="normal" selected>Нормально</option>
+        <option value="hard">Сложно</option>
+    </select>
+
+    <select id="background">
+        <option value="neon">Неон</option>
+        <option value="prison">Тюрьма</option>
+        <option value="ocean">Океан</option>
+        <option value="sunset">Закат</option>
+        <option value="circuit">Схемы</option>
+    </select>
+</div>
+
+<div class="stats">
+    <span>Очки: <b id="score">0</b></span>
+    <span>Рекорд: <b id="high">0</b></span>
+    <span>❤️ <b id="lives">3</b></span>
+    <span>🔑 <b id="keys">0/0</b></span>
+    <span>🪙 <b id="coins">0</b></span>
+</div>
+
+<div class="skins">
+    <button class="skin blue" data-skin="blue"></button>
+    <button class="skin green" data-skin="green"></button>
+    <button class="skin turquoise" data-skin="turquoise"></button>
+    <button class="skin red" data-skin="red"></button>
+    <button class="skin pink" data-skin="pink"></button>
+    <button class="skin burgundy" data-skin="burgundy"></button>
+    <button class="skin brown" data-skin="brown"></button>
+    <button class="skin yellow active" data-skin="yellow"></button>
+    <button class="skin white" data-skin="white"></button>
+    <button class="skin black" data-skin="black"></button>
+    <button class="skin gray" data-skin="gray"></button>
+    <button class="skin rainbow" data-skin="rainbow"></button>
+    <button class="skin purple" data-skin="purple"></button>
+</div>
+
+<div class="extra">
+    <button id="mapBtn">🗺 Мини-карта</button>
+    <button id="editorBtn">🧱 Редактор</button>
+</div>
+
+<div class="editor" id="editor">
+    <b>РЕДАКТОР КАРТЫ</b>
+    <div class="editorGrid" id="editorGrid"></div>
+    <div class="help">
+        Клик: стена/проход. Красная клетка — выход.
+        Старт находится слева сверху.
+    </div>
+</div>
+
+</div>
+
+<div id="gameWrap">
+    <canvas id="game" width="760" height="760"></canvas>
+    <canvas id="mini" width="150" height="150"></canvas>
+</div>
+
+<div class="message" id="message">Нажми «НАЧАТЬ»</div>
+
+<div class="mobile">
+    <button class="empty"></button>
+    <button data-dir="up">▲</button>
+    <button class="empty"></button>
+    <button data-dir="left">◀</button>
+    <button data-dir="down">▼</button>
+    <button data-dir="right">▶</button>
+</div>
+
+<script>
+"use strict";
+
+/* =========================
+   ЯДРО
+========================= */
+
+const SIZE=19;
+const canvas=document.getElementById("game");
+const ctx=canvas.getContext("2d");
+const mini=document.getElementById("mini");
+const mctx=mini.getContext("2d");
+const TILE=canvas.width/SIZE;
+
+let map=[];
+let player=null;
+let guards=[];
+let items=[];
+let running=false;
+let score=0;
+let coins=0;
+let lives=3;
+let collected=0;
+let totalKeys=0;
+
+let direction={x:0,y:0};
+let wanted={x:0,y:0};
+
+let skin="yellow";
+let alertLevel=0;
+
+let lastLogic=0;
+let lastRender=0;
+let animTime=0;
+
+const RENDER_INTERVAL=1000/30;
+
+let highscore=Number(
+    localStorage.getItem("prisonPacman2Highscore")||0
+);
+
+document.getElementById("high").textContent=highscore;
+
+
+/* =========================
+   КАРТЫ
+========================= */
+
+const MAPS=[
+
+[
+"###################",
+"#P....#.....#....K#",
+"#.###.#.###.#.###.#",
+"#.....#...#.#.....#",
+"###.#####.#.#####.#",
+"#...#.....#.....#.#",
+"#.#.#.###.###.#.#.#",
+"#.#...#.....#...#.#",
+"#.#####.###.#####.#",
+"#.....#..G..#.....#",
+"#.###.#.###.#.###.#",
+"#...#.#.....#.#...#",
+"###.#.#####.#.#.###",
+"#K..#.....#.....K.#",
+"#.#####.#.#####.###",
+"#.....#.#.....#...#",
+"#.###.#.###.#.###.#",
+"#K....#.....#....E#",
+"###################"
+],
+
+[
+"###################",
+"#P....#...........#",
+"#.###.#.#########.#",
+"#...#.#...........#",
+"###.#.###########.#",
+"#...#.....#.......#",
+"#.#######.#.#####.#",
+"#.........#.#...#.#",
+"#########.#.#.#.#.#",
+"#.....#...#...#...#",
+"#.###.#.#########.#",
+"#.#...#...........#",
+"#.#.#############.#",
+"#.#...............#",
+"#.###############.#",
+"#.................#",
+"#.###############.#",
+"#K...............E#",
+"###################"
+],
+
+[
+"###################",
+"#P....#.....#.....#",
+"#.###.#.###.#.###.#",
+"#...#.#...#.#...#.#",
+"###.#.###.#.###.#.#",
+"#...#.....#.....#.#",
+"#.###########.###.#",
+"#.................#",
+"#####.###########.#",
+"#....#.....G.....K#",
+"#.###.###########.#",
+"#.................#",
+"#.###########.###.#",
+"#.#.....#.....#...#",
+"#.#.###.#.###.#.#.#",
+"#.#...#.#...#.#.#.#",
+"#.###.#.###.#.#.#.#",
+"#K....#.....#....E#",
+"###################"
+],
+
+[
+"###################",
+"#P........#.......#",
+"#.#######.#.#####.#",
+"#.......#.#.....#.#",
+"#######.#.#####.#.#",
+"#.....#.#.....#.#.#",
+"#.###.#.#####.#.#.#",
+"#.#...#.....#.#...#",
+"#.#.#########.#.###",
+"#...#.....G...#...#",
+"###.#.###########.#",
+"#...#.............#",
+"#.###############.#",
+"#.................#",
+"#.###############.#",
+"#.................#",
+"#.###############.#",
+"#K...............E#",
+"###################"
+],
+
+[
+"###################",
+"#P......#.........#",
+"#.#######.#######.#",
+"#.........#.......#",
+"#######.#.#.#####.#",
+"#.....#.#.#.....#.#",
+"#.###.#.#.#####.#.#",
+"#.#...#.#.......#.#",
+"#.#.###.#######.#.#",
+"#...#...G.....#...#",
+"###.#.#######.#.###",
+"#...#.......#.#...#",
+"#.#########.#.###.#",
+"#...........#.....#",
+"#.###########.###.#",
+"#K.................",
+"#.#################",
+"#.................E",
+"###################"
+]
+
+];
+
+
+/* =========================
+   ПОМОЩНИКИ
+========================= */
+
+function cloneMap(src){
+    return src.map(row=>row.split(""));
+}
+
+function findChar(ch,m=map){
+    for(let y=0;y<SIZE;y++){
+        for(let x=0;x<SIZE;x++){
+            if(m[y] && m[y][x]===ch){
+                return {x,y};
+            }
+        }
+    }
+    return null;
+}
+
+function freeCells(m=map){
+    const a=[];
+
+    for(let y=1;y<SIZE-1;y++){
+        for(let x=1;x<SIZE-1;x++){
+            if(m[y][x]!=="#"){
+                a.push({x,y});
+            }
+        }
+    }
+
+    return a;
+}
+
+function canMove(x,y,dx,dy){
+    const nx=x+dx;
+    const ny=y+dy;
+
+    if(nx<0||ny<0||nx>=SIZE||ny>=SIZE)return false;
+
+    return map[ny] &&
+           map[ny][nx]!=="#";
+}
+
+function randomItem(a){
+    return a.length
+        ? a[Math.floor(Math.random()*a.length)]
+        : null;
+}
+
+function distance(a,b){
+    return Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
+}
+
+
+/* =========================
+   BFS
+========================= */
+
+function pathExists(m,start,end){
+
+    if(!start||!end)return false;
+
+    const q=[start];
+    const seen=new Set([
+        start.x+","+start.y
+    ]);
+
+    let index=0;
+
+    while(index<q.length){
+
+        const p=q[index++];
+
+        if(p.x===end.x&&p.y===end.y){
+            return true;
+        }
+
+        const dirs=[
+            {x:1,y:0},
+            {x:-1,y:0},
+            {x:0,y:1},
+            {x:0,y:-1}
+        ];
+
+        for(const d of dirs){
+
+            const nx=p.x+d.x;
+            const ny=p.y+d.y;
+            const key=nx+","+ny;
+
+            if(
+                nx>=0&&ny>=0&&
+                nx<SIZE&&ny<SIZE&&
+                m[ny]&&
+                m[ny][nx]!=="#"&&
+                !seen.has(key)
+            ){
+                seen.add(key);
+                q.push({x:nx,y:ny});
+            }
+        }
+    }
+
+    return false;
+}
+
+
+/* =========================
+   СЛУЧАЙНЫЙ ЛАБИРИНТ
+========================= */
+
+function randomMaze(){
+
+    const m=[];
+
+    for(let y=0;y<SIZE;y++){
+        m[y]=[];
+
+        for(let x=0;x<SIZE;x++){
+            m[y][x]="#";
+        }
+    }
+
+    const stack=[{x:1,y:1}];
+    m[1][1]=".";
+
+    while(stack.length){
+
+        const cur=stack[stack.length-1];
+
+        const dirs=[
+            {x:2,y:0},
+            {x:-2,y:0},
+            {x:0,y:2},
+            {x:0,y:-2}
+        ];
+
+        for(let i=dirs.length-1;i>0;i--){
+            const j=Math.floor(Math.random()*(i+1));
+            [dirs[i],dirs[j]]=[dirs[j],dirs[i]];
+        }
+
+        let found=false;
+
+        for(const d of dirs){
+
+            const nx=cur.x+d.x;
+            const ny=cur.y+d.y;
+
+            if(
+                nx>0&&ny>0&&
+                nx<SIZE-1&&ny<SIZE-1&&
+                m[ny][nx]==="#"
+            ){
+
+                m[cur.y+d.y/2][cur.x+d.x/2]=".";
+                m[ny][nx]=".";
+
+                stack.push({x:nx,y:ny});
+                found=true;
+                break;
+            }
+        }
+
+        if(!found)stack.pop();
+    }
+
+    /* немного дополнительных проходов */
+
+    for(let i=0;i<45;i++){
+
+        const x=1+Math.floor(Math.random()*(SIZE-2));
+        const y=1+Math.floor(Math.random()*(SIZE-2));
+
+        if(m[y][x]==="#"){
+            let open=0;
+
+            if(m[y-1]&&m[y-1][x]!=="#")open++;
+            if(m[y+1]&&m[y+1][x]!=="#")open++;
+            if(m[y][x-1]!=="#")open++;
+            if(m[y][x+1]!=="#")open++;
+
+            if(open>=2)m[y][x]=".";
+        }
+    }
+
+    m[1][1]="P";
+    m[SIZE-2][SIZE-2]="E";
+
+    return m;
+}
+
+
+/* =========================
+   ПОДГОТОВКА
+========================= */
+
+function prepare(){
+
+    const mode=document.getElementById("mode").value;
+
+    if(mode==="base"){
+
+        map=cloneMap(
+            MAPS[
+                Number(document.getElementById("mapSelect").value)
+            ]
+        );
+
+    }else if(mode==="random"){
+
+        let tries=0;
+
+        do{
+            map=randomMaze();
+            tries++;
+        }while(
+            !pathExists(
+                map,
+                findChar("P"),
+                findChar("E")
+            )&&tries<20
+        );
+
+    }else{
+
+        map=cloneMap(customMap);
+    }
+
+    let start=findChar("P");
+    let exit=findChar("E");
+
+    if(!start){
+        start={x:1,y:1};
+        map[1][1]="P";
+    }
+
+    if(!exit){
+        exit={x:SIZE-2,y:SIZE-2};
+        map[SIZE-2][SIZE-2]="E";
+    }
+
+    if(!pathExists(map,start,exit)){
+        map=cloneMap(MAPS[0]);
+        start=findChar("P");
+        exit=findChar("E");
+    }
+
+    map[start.y][start.x]=".";
+    map[exit.y][exit.x]="E";
+
+    player={
+        x:start.x,
+        y:start.y
+    };
+
+    direction={x:0,y:0};
+    wanted={x:0,y:0};
+
+    guards=[];
+    items=[];
+
+    /* существующие охранники */
+
+    for(let y=0;y<SIZE;y++){
+        for(let x=0;x<SIZE;x++){
+
+            if(map[y][x]==="G"){
+
+                guards.push({
+                    x,
+                    y,
+                    type:guards.length%3,
+                    last:{x:0,y:0},
+                    alert:0
+                });
+
+                map[y][x]=".";
+            }
+        }
+    }
+
+    const difficulty=
+        document.getElementById("difficulty").value;
+
+    const wantedGuards=
+        difficulty==="easy"?2:
+        difficulty==="normal"?3:4;
+
+    const cells=freeCells();
+
+    let tries=0;
+
+    while(
+        guards.length<wantedGuards &&
+        tries<800
+    ){
+
+        tries++;
+
+        const p=randomItem(cells);
+
+        if(!p)break;
+
+        if(distance(p,player)<7)continue;
+
+        if(
+            guards.some(
+                g=>g.x===p.x&&g.y===p.y
+            )
+        )continue;
+
+        guards.push({
+            x:p.x,
+            y:p.y,
+            type:guards.length%3,
+            last:{x:0,y:0},
+            alert:0
+        });
+    }
+
+    /* ключи */
+
+    totalKeys=0;
+
+    for(let y=0;y<SIZE;y++){
+        for(let x=0;x<SIZE;x++){
+            if(map[y][x]==="K"){
+                totalKeys++;
+            }
+        }
+    }
+
+    if(totalKeys===0){
+
+        let tries2=0;
+
+        while(totalKeys<3&&tries2<500){
+
+            tries2++;
+
+            const p=randomItem(cells);
+
+            if(!p)break;
+
+            if(
+                map[p.y][p.x]==="."&&
+                distance(p,player)>5
+            ){
+
+                map[p.y][p.x]="K";
+                totalKeys++;
+            }
+        }
+    }
+
+    /* предметы */
+
+    for(let i=0;i<8;i++){
+
+        const p=randomItem(cells);
+
+        if(!p)continue;
+
+        if(
+            distance(p,player)<5||
+            map[p.y][p.x]!=="."||
+            guards.some(g=>g.x===p.x&&g.y===p.y)
+        )continue;
+
+        items.push({
+            x:p.x,
+            y:p.y,
+            type:i%2===0?"coin":"medkit"
+        });
+    }
+
+    score=0;
+    coins=0;
+    collected=0;
+    lives=3;
+    alertLevel=0;
+
+    updateStats();
+}
+
+
+/* =========================
+   ОХРАНА
+========================= */
+
+function guardSees(g){
+
+    if(!player)return false;
+
+    const dx=player.x-g.x;
+    const dy=player.y-g.y;
+
+    const d=Math.abs(dx)+Math.abs(dy);
+
+    const diff=document.getElementById("difficulty").value;
+
+    const vision=
+        diff==="easy"?5:
+        diff==="normal"?7:10;
+
+    if(d>vision)return false;
+
+    if(dx===0){
+
+        const step=dy>0?1:-1;
+
+        for(
+            let y=g.y+step;
+            y!==player.y;
+            y+=step
+        ){
+            if(map[y][g.x]==="#")return false;
+        }
+
+        return true;
+    }
+
+    if(dy===0){
+
+        const step=dx>0?1:-1;
+
+        for(
+            let x=g.x+step;
+            x!==player.x;
+            x+=step
+        ){
+            if(map[g.y][x]==="#")return false;
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+function moveGuard(g){
+
+    const seen=guardSees(g);
+
+    if(seen){
+        g.alert=Math.min(100,g.alert+30);
+        alertLevel=Math.min(
+            100,
+            alertLevel+12
+        );
+    }else{
+        g.alert=Math.max(
+            0,
+            g.alert-8
+        );
+    }
+
+    const dirs=[
+        {x:1,y:0},
+        {x:-1,y:0},
+        {x:0,y:1},
+        {x:0,y:-1}
+    ];
+
+    let choices=[];
+
+    for(const d of dirs){
+
+        if(canMove(g.x,g.y,d.x,d.y)){
+
+            if(
+                d.x===-g.last.x&&
+                d.y===-g.last.y
+            ){
+                continue;
+            }
+
+            choices.push(d);
+        }
+    }
+
+    if(!choices.length){
+
+        for(const d of dirs){
+            if(canMove(g.x,g.y,d.x,d.y)){
+                choices.push(d);
+            }
+        }
+    }
+
+    if(!choices.length)return;
+
+    let chosen;
+
+    if(seen){
+
+        choices.sort((a,b)=>{
+
+            const da=
+                Math.abs(g.x+a.x-player.x)+
+                Math.abs(g.y+a.y-player.y);
+
+            const db=
+                Math.abs(g.x+b.x-player.x)+
+                Math.abs(g.y+b.y-player.y);
+
+            return da-db;
+        });
+
+        /* следопыт чаще преследует */
+
+        if(g.type===2){
+
+            chosen=choices[0];
+
+        }else{
+
+            chosen=
+                Math.random()<0.75
+                ?choices[0]
+                :randomItem(choices);
+        }
+
+    }else{
+
+        chosen=randomItem(choices);
+    }
+
+    g.x+=chosen.x;
+    g.y+=chosen.y;
+
+    g.last=chosen;
+}
+
+
+/* =========================
+   ИГРОК
+========================= */
+
+function movePlayer(){
+
+    if(!player)return;
+
+    if(
+        canMove(
+            player.x,
+            player.y,
+            wanted.x,
+            wanted.y
+        )
+    ){
+        direction={...wanted};
+    }
+
+    if(
+        !canMove(
+            player.x,
+            player.y,
+            direction.x,
+            direction.y
+        )
+    ){
+        return;
+    }
+
+    player.x+=direction.x;
+    player.y+=direction.y;
+
+    const tile=map[player.y][player.x];
+
+    if(tile==="K"){
+
+        map[player.y][player.x]=".";
+        collected++;
+        score+=100;
+    }
+
+    if(tile==="E"){
+
+        if(collected>=totalKeys){
+
+            score+=500;
+            running=false;
+
+            saveHighscore();
+
+            message(
+                "ПОБЕГ УДАЛСЯ! 🎉 Очки: "+score
+            );
+
+        }else{
+
+            message(
+                "🔒 Выход закрыт — нужны все ключи!"
+            );
+        }
+    }
+
+    collectItems();
+}
+
+function collectItems(){
+
+    for(let i=items.length-1;i>=0;i--){
+
+        const item=items[i];
+
+        if(
+            item.x===player.x&&
+            item.y===player.y
+        ){
+
+            if(item.type==="coin"){
+
+                coins++;
+                score+=25;
+
+            }else{
+
+                if(lives<3){
+                    lives++;
+                    message("💊 Аптечка! +1 жизнь");
+                }else{
+                    score+=50;
+                    message("💊 Аптечка: +50 очков");
+                }
+            }
+
+            items.splice(i,1);
+        }
+    }
+}
+
+
+/* =========================
+   СТОЛКНОВЕНИЯ
+========================= */
+
+function collisions(){
+
+    for(const g of guards){
+
+        if(
+            g.x===player.x&&
+            g.y===player.y
+        ){
+
+            lives--;
+            updateStats();
+
+            if(lives<=0){
+
+                running=false;
+                saveHighscore();
+
+                message(
+                    "🚨 ТЕБЯ ПОЙМАЛИ! Очки: "+score
+                );
+
+                return;
+            }
+
+            const p=findChar("P");
+
+            player.x=p?p.x:1;
+            player.y=p?p.y:1;
+
+            direction={x:0,y:0};
+            wanted={x:0,y:0};
+
+            message(
+                "🚨 Охранник поймал тебя! Жизней: "+lives
+            );
+        }
+    }
+}
+
+
+/* =========================
+   РИСОВАНИЕ
+========================= */
+
+function drawWalls(){
+
+    for(let y=0;y<SIZE;y++){
+
+        for(let x=0;x<SIZE;x++){
+
+            if(map[y][x]!=="#")continue;
+
+            const px=x*TILE;
+            const py=y*TILE;
+
+            ctx.fillStyle=
+                skin==="rainbow"
+                ?rainbow(x*15+y*9)
+                :"#273bff";
+
+            ctx.fillRect(
+                px+2,
+                py+2,
+                TILE-4,
+                TILE-4
+            );
+        }
+    }
+}
+
+function drawKeys(){
+
+    for(let y=0;y<SIZE;y++){
+
+        for(let x=0;x<SIZE;x++){
+
+            if(map[y][x]!=="K")continue;
+
+            const cx=x*TILE+TILE/2;
+            const cy=y*TILE+TILE/2;
+
+            ctx.fillStyle="#ffd21a";
+
+            ctx.beginPath();
+            ctx.arc(
+                cx,
+                cy,
+                TILE*.13,
+                0,
+                Math.PI*2
+            );
+            ctx.fill();
+
+            ctx.fillRect(
+                cx+TILE*.08,
+                cy-2,
+                TILE*.25,
+                4
+            );
+        }
+    }
+}
+
+function drawItems(){
+
+    for(const item of items){
+
+        const cx=item.x*TILE+TILE/2;
+        const cy=item.y*TILE+TILE/2;
+
+        if(item.type==="coin"){
+
+            ctx.fillStyle="#ffc400";
+
+            ctx.beginPath();
+            ctx.arc(
+                cx,
+                cy,
+                TILE*.13,
+                0,
+                Math.PI*2
+            );
+            ctx.fill();
+
+        }else{
+
+            ctx.fillStyle="#35e875";
+
+            ctx.fillRect(
+                cx-TILE*.14,
+                cy-TILE*.14,
+                TILE*.28,
+                TILE*.28
+            );
+
+            ctx.fillStyle="#fff";
+
+            ctx.fillRect(
+                cx-2,
+                cy-TILE*.09,
+                4,
+                TILE*.18
+            );
+
+            ctx.fillRect(
+                cx-TILE*.09,
+                cy-2,
+                TILE*.18,
+                4
+            );
+        }
+    }
+}
+
+function drawExit(){
+
+    const e=findChar("E");
+
+    if(!e)return;
+
+    const open=collected>=totalKeys;
+
+    ctx.fillStyle=
+        open?"#20e875":"#e33242";
+
+    ctx.fillRect(
+        e.x*TILE+7,
+        e.y*TILE+5,
+        TILE-14,
+        TILE-10
+    );
+
+    ctx.fillStyle="#111";
+
+    ctx.fillRect(
+        e.x*TILE+TILE*.65,
+        e.y*TILE+TILE*.47,
+        5,
+        5
+    );
+}
+
+function rainbow(n){
+
+    return "hsl("+((n+animTime/4)%360)+",90%,60%)";
+}
+
+function playerColor(){
+
+    const colors={
+        blue:"#168cff",
+        green:"#22c55e",
+        turquoise:"#14e0d0",
+        red:"#ef3030",
+        pink:"#ff6bc8",
+        burgundy:"#7d1838",
+        brown:"#8b542d",
+        yellow:"#ffd51a",
+        white:"#fff",
+        black:"#111",
+        gray:"#888",
+        purple:"#a855f7"
+    };
+
+    return skin==="rainbow"
+        ?rainbow(0)
+        :(colors[skin]||"#ffd51a");
+}
+
+function drawPlayer(){
+
+    if(!player)return;
+
+    const cx=player.x*TILE+TILE/2;
+    const cy=player.y*TILE+TILE/2;
+
+    const r=TILE*.37;
+
+    ctx.fillStyle=playerColor();
+
+    ctx.beginPath();
+
+    /* рот зависит от времени */
+
+    const mouth=
+        Math.abs(Math.sin(animTime/100))*0.28;
+
+    let angle=0;
+
+    if(direction.x>0)angle=0;
+    if(direction.x<0)angle=Math.PI;
+    if(direction.y>0)angle=Math.PI/2;
+    if(direction.y<0)angle=-Math.PI/2;
+
+    ctx.moveTo(cx,cy);
+
+    ctx.arc(
+        cx,
+        cy,
+        r,
+        angle+mouth,
+        angle+Math.PI*2-mouth
+    );
+
+    ctx.closePath();
+    ctx.fill();
+
+    /* глаза */
+
+    ctx.fillStyle=
+        skin==="white"?"#111":"#fff";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        cx-5,
+        cy-8,
+        4,
+        0,
+        Math.PI*2
+    );
+
+    ctx.arc(
+        cx+5,
+        cy-8,
+        4,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.fillStyle="#111";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        cx-5,
+        cy-8,
+        2,
+        0,
+        Math.PI*2
+    );
+
+    ctx.arc(
+        cx+5,
+        cy-8,
+        2,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+}
+
+function drawGuards(){
+
+    for(const g of guards){
+
+        const cx=g.x*TILE+TILE/2;
+        const cy=g.y*TILE+TILE/2;
+
+        const colors=[
+            "#777",
+            "#245bd5",
+            "#236331"
+        ];
+
+        let color=colors[g.type];
+
+        if(g.alert>60){
+            color="#ef3030";
+        }
+
+        ctx.fillStyle=color;
+
+        ctx.beginPath();
+
+        ctx.arc(
+            cx,
+            cy-3,
+            TILE*.27,
+            Math.PI,
+            0
+        );
+
+        ctx.lineTo(
+            cx+TILE*.27,
+            cy+TILE*.30
+        );
+
+        ctx.lineTo(
+            cx-TILE*.27,
+            cy+TILE*.30
+        );
+
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle="#e8bd98";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            cx,
+            cy-1,
+            TILE*.18,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+        ctx.fillStyle="#111";
+
+        ctx.beginPath();
+
+        ctx.arc(cx-5,cy-4,2,0,Math.PI*2);
+        ctx.arc(cx+5,cy-4,2,0,Math.PI*2);
+
+        ctx.fill();
+
+        ctx.fillStyle=color;
+
+        ctx.fillRect(
+            cx-TILE*.24,
+            cy-TILE*.35,
+            TILE*.48,
+            TILE*.09
+        );
+    }
+}
+
+
+/* =========================
+   МИНИ-КАРТА
+========================= */
+
+function drawMini(){
+
+    if(mini.style.display==="none")return;
+
+    const s=mini.width/SIZE;
+
+    mctx.fillStyle="#050505";
+    mctx.fillRect(0,0,mini.width,mini.height);
+
+    for(let y=0;y<SIZE;y++){
+        for(let x=0;x<SIZE;x++){
+
+            if(map[y][x]==="#"){
+                mctx.fillStyle="#334cff";
+                mctx.fillRect(
+                    x*s,
+                    y*s,
+                    s,
+                    s
+                );
+            }
+        }
+    }
+
+    mctx.fillStyle="#e5c000";
+
+    for(let y=0;y<SIZE;y++){
+        for(let x=0;x<SIZE;x++){
+
+            if(map[y][x]==="K"){
+                mctx.fillRect(
+                    x*s+2,
+                    y*s+2,
+                    s-4,
+                    s-4
+                );
+            }
+        }
+    }
+
+    mctx.fillStyle="#e33";
+
+    for(const g of guards){
+        mctx.fillRect(
+            g.x*s,
+            g.y*s,
+            s,
+            s
+        );
+    }
+
+    if(player){
+
+        mctx.fillStyle="#ffd51a";
+
+        mctx.fillRect(
+            player.x*s,
+            player.y*s,
+            s,
+            s
+        );
+    }
+}
+
+
+/* =========================
+   ОСНОВНОЙ РЕНДЕР
+========================= */
+
+function draw(){
+
+    ctx.clearRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    drawWalls();
+    drawKeys();
+    drawItems();
+    drawExit();
+    drawGuards();
+    drawPlayer();
+
+    if(alertLevel>0){
+
+        ctx.fillStyle=
+            "rgba(255,0,0,"+
+            (alertLevel/500)+")";
+
+        ctx.fillRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+    }
+
+    drawMini();
+}
+
+
+/* =========================
+   ИГРОВОЙ ЦИКЛ
+========================= */
+
+function loop(time){
+
+    if(!lastLogic){
+        lastLogic=time;
+    }
+
+    const logicDiff=time-lastLogic;
+
+    animTime=time;
+
+    if(running){
+
+        const diff=
+            document.getElementById("difficulty").value;
+
+        const speed=
+            diff==="easy"?170:
+            diff==="normal"?125:90;
+
+        if(logicDiff>=speed){
+
+            movePlayer();
+
+            for(const g of guards){
+
+                /*
+                   быстрый тип двигается чаще
+                */
+
+                moveGuard(g);
+            }
+
+            collisions();
+
+            score++;
+
+            alertLevel=Math.max(
+                0,
+                alertLevel-5
+            );
+
+            updateStats();
+
+            lastLogic=time;
+        }
+
+    }else{
+        lastLogic=time;
+    }
+
+    if(time-lastRender>=RENDER_INTERVAL){
+
+        draw();
+        lastRender=time;
+    }
+
+    requestAnimationFrame(loop);
+}
+
+
+/* =========================
+   СТАТИСТИКА
+========================= */
+
+function updateStats(){
+
+    document.getElementById("score").textContent=score;
+    document.getElementById("high").textContent=highscore;
+    document.getElementById("lives").textContent=lives;
+
+    document.getElementById("keys").textContent=
+        collected+"/"+totalKeys;
+
+    document.getElementById("coins").textContent=
+        coins;
+}
+
+function saveHighscore(){
+
+    if(score>highscore){
+
+        highscore=score;
+
+        localStorage.setItem(
+            "prisonPacman2Highscore",
+            highscore
+        );
+    }
+
+    updateStats();
+}
+
+function message(text){
+
+    document.getElementById(
+        "message"
+    ).textContent=text;
+}
+
+
+/* =========================
+   УПРАВЛЕНИЕ
+========================= */
+
+const keyDirs={
+    ArrowUp:{x:0,y:-1},
+    ArrowDown:{x:0,y:1},
+    ArrowLeft:{x:-1,y:0},
+    ArrowRight:{x:1,y:0},
+
+    w:{x:0,y:-1},
+    W:{x:0,y:-1},
+    s:{x:0,y:1},
+    S:{x:0,y:1},
+    a:{x:-1,y:0},
+    A:{x:-1,y:0},
+    d:{x:1,y:0},
+    D:{x:1,y:0}
+};
+
+document.addEventListener(
+    "keydown",
+    e=>{
+
+        if(keyDirs[e.key]){
+
+            wanted=keyDirs[e.key];
+
+            e.preventDefault();
+        }
+
+        /* SHIFT — короткий спринт */
+
+        if(e.key==="Shift"&&running){
+            score+=2;
+        }
+    }
+);
+
+document.querySelectorAll(
+    ".mobile [data-dir]"
+).forEach(btn=>{
+
+    btn.addEventListener(
+        "click",
+        ()=>{
+
+            const d=btn.dataset.dir;
+
+            const dirs={
+                up:{x:0,y:-1},
+                down:{x:0,y:1},
+                left:{x:-1,y:0},
+                right:{x:1,y:0}
+            };
+
+            wanted=dirs[d];
+        }
+    );
+});
+
+
+/* =========================
+   КНОПКИ
+========================= */
+
+document.getElementById("start")
+.addEventListener(
+    "click",
+    ()=>{
+
+        prepare();
+
+        running=true;
+        lastLogic=performance.now();
+
+        message(
+            "🏃 Беги! Собери ключи и доберись до выхода."
+        );
+    }
+);
+
+document.getElementById("restart")
+.addEventListener(
+    "click",
+    ()=>{
+
+        prepare();
+
+        running=true;
+        lastLogic=performance.now();
+
+        message("Новая попытка!");
+    }
+);
+
+
+/* =========================
+   СКИНЫ
+========================= */
+
+document.querySelectorAll(
+    ".skin"
+).forEach(btn=>{
+
+    btn.addEventListener(
+        "click",
+        ()=>{
+
+            document.querySelectorAll(
+                ".skin"
+            ).forEach(
+                b=>b.classList.remove("active")
+            );
+
+            btn.classList.add("active");
+
+            skin=btn.dataset.skin;
+        }
+    );
+});
+
+
+/* =========================
+   ФОН
+========================= */
+
+document.getElementById("background")
+.addEventListener(
+    "change",
+    e=>{
+
+        document.body.className=
+            e.target.value;
+    }
+);
+
+
+/* =========================
+   МИНИ-КАРТА
+========================= */
+
+document.getElementById("mapBtn")
+.addEventListener(
+    "click",
+    ()=>{
+
+        mini.style.display=
+            mini.style.display==="none"
+            ?"block"
+            :"none";
+
+        draw();
+    }
+);
+
+
+/* =========================
+   РЕДАКТОР
+========================= */
+
+let customMap=cloneMap(MAPS[0]);
+
+const editor=document.getElementById("editor");
+const editorGrid=document.getElementById("editorGrid");
+
+function buildEditor(){
+
+    editorGrid.innerHTML="";
+
+    for(let y=0;y<SIZE;y++){
+
+        for(let x=0;x<SIZE;x++){
+
+            const b=document.createElement("button");
+
+            b.className="ecell";
+            b.type="button";
+
+            refreshEditorCell(
+                b,
+                x,
+                y
+            );
+
+            b.addEventListener(
+                "click",
+                ()=>{
+
+                    if(x===1&&y===1)return;
+
+                    if(
+                        x===SIZE-2&&
+                        y===SIZE-2
+                    ){
+                        customMap[y][x]="E";
+                    }else{
+
+                        customMap[y][x]=
+                            customMap[y][x]==="#"
+                            ?"."
+                            :"#";
+                    }
+
+                    refreshEditorCell(
+                        b,
+                        x,
+                        y
+                    );
+                }
+            );
+
+            editorGrid.appendChild(b);
+        }
+    }
+}
+
+function refreshEditorCell(b,x,y){
+
+    b.className="ecell";
+
+    if(x===1&&y===1){
+        b.classList.add("start");
+        return;
+    }
+
+    if(
+        x===SIZE-2&&
+        y===SIZE-2
+    ){
+        b.classList.add("exit");
+        return;
+    }
+
+    if(customMap[y][x]==="#"){
+        b.classList.add("wall");
+    }
+
+    if(customMap[y][x]==="K"){
+        b.classList.add("key");
+    }
+}
+
+document.getElementById("editorBtn")
+.addEventListener(
+    "click",
+    ()=>{
+
+        const show=
+            !editor.classList.contains("show");
+
+        editor.classList.toggle(
+            "show",
+            show
+        );
+
+        if(show)buildEditor();
+    }
+);
+
+document.getElementById("mode")
+.addEventListener(
+    "change",
+    e=>{
+
+        document.getElementById(
+            "mapSelect"
+        ).style.display=
+            e.target.value==="base"
+            ?"block"
+            :"none";
+
+        if(e.target.value==="custom"){
+            editor.classList.add("show");
+            buildEditor();
+        }else{
+            editor.classList.remove("show");
+        }
+    }
+);
+
+
+/* =========================
+   ЗАПУСК
+========================= */
+
+document.getElementById("mapSelect")
+.style.display="block";
+
+prepare();
+draw();
+
+requestAnimationFrame(loop);
+
+</script>
+
+</body>
+</html>

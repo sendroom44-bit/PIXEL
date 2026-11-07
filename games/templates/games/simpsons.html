@@ -1,0 +1,811 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Симпсоны — Большой тест</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #151515;
+            color: white;
+            margin: 0;
+            padding: 30px 15px;
+        }
+
+        .container {
+            max-width: 750px;
+            margin: auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: #252525;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            margin-top: 12px;
+            border: none;
+            border-radius: 10px;
+            background: #444;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #666;
+        }
+
+        .answer {
+            text-align: left;
+            background: #333;
+        }
+
+        .money {
+            text-align: right;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .progress {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 15px;
+        }
+
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .back {
+            display: block;
+            text-align: center;
+            color: #aaa;
+            text-decoration: none;
+            margin-top: 25px;
+        }
+
+        .back:hover {
+            color: white;
+        }
+
+        @media (max-width: 650px) {
+            body {
+                padding: 20px 10px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            .shop-grid {
+                grid-template-columns: 1fr;
+            }
+
+            button {
+                min-height: 48px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🍩 СИМПСОНЫ</h1>
+    <p class="subtitle">Большой тест</p>
+
+    <!-- МЕНЮ -->
+    <div id="menu">
+
+        <div class="card">
+            <h2>🎬 Начать тест</h2>
+
+            <p>
+                Ответь на 12 вопросов и узнай,
+                на кого из персонажей «Симпсонов»
+                ты больше всего похож.
+            </p>
+
+            <button onclick="startTest()">НАЧАТЬ</button>
+        </div>
+
+        <div class="card">
+            <h2>🛒 Магазин</h2>
+
+            <p>Покупай подсказки и бонусы.</p>
+
+            <button onclick="openShopFromMenu()">МАГАЗИН</button>
+        </div>
+
+        <div class="card">
+            <h2>📖 Правила</h2>
+
+            <button onclick="showRules()">ПРАВИЛА</button>
+        </div>
+
+    </div>
+
+
+    <!-- ТЕСТ -->
+    <div id="test" class="hidden">
+
+        <div class="money">
+            🪙 Монеты:
+            <b id="money">500</b>
+        </div>
+
+        <div class="progress" id="progress">
+            Вопрос 1 из 12
+        </div>
+
+        <div class="card">
+
+            <h2 id="question">Вопрос</h2>
+
+            <div id="answers"></div>
+
+        </div>
+
+    </div>
+
+
+    <!-- ПЕРЕРЫВ -->
+    <div id="break" class="hidden">
+
+        <div class="card">
+
+            <h2>⏸ Перерыв</h2>
+
+            <p>
+                Ты ответил на 3 вопроса.
+            </p>
+
+            <button onclick="continueTest()">
+                ПРОДОЛЖИТЬ ТЕСТ
+            </button>
+
+            <button onclick="openShopFromTest()">
+                🛒 МАГАЗИН
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- МАГАЗИН -->
+    <div id="shop" class="hidden">
+
+        <div class="card">
+
+            <h2>🛒 Магазин</h2>
+
+            <p>
+                Монеты:
+                <b id="shopMoney">500</b>
+            </p>
+
+            <div class="shop-grid">
+
+                <div>
+                    <h3>💡 Подсказка</h3>
+                    <p>100 монет</p>
+                    <button onclick="buyHint()">КУПИТЬ</button>
+                </div>
+
+                <div>
+                    <h3>⭐ +2 очка</h3>
+                    <p>200 монет</p>
+                    <button onclick="buyPoints()">КУПИТЬ</button>
+                </div>
+
+                <div>
+                    <h3>🎁 Случайный бонус</h3>
+                    <p>300 монет</p>
+                    <button onclick="buyRandomBonus()">КУПИТЬ</button>
+                </div>
+
+            </div>
+
+            <button onclick="returnFromShop()">
+                ← НАЗАД
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- ПРАВИЛА -->
+    <div id="rules" class="hidden">
+
+        <div class="card">
+
+            <h2>📖 Правила</h2>
+
+            <p>• В тесте 12 вопросов.</p>
+            <p>• Каждый ответ даёт персонажу 1 очко.</p>
+            <p>• За каждый ответ ты получаешь 25 монет.</p>
+            <p>• Монеты можно тратить в магазине.</p>
+            <p>• После каждых 3 вопросов появляется перерыв.</p>
+            <p>• В конце тест определит персонажа с наибольшим количеством очков.</p>
+
+            <button onclick="backToMenu()">
+                ← НАЗАД
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- РЕЗУЛЬТАТ -->
+    <div id="result" class="hidden">
+
+        <div class="card">
+
+            <h2>🏆 Результат</h2>
+
+            <div id="resultText"></div>
+
+            <button onclick="startTest()">
+                🔄 ПРОЙТИ ЕЩЁ РАЗ
+            </button>
+
+            <button onclick="backToMenu()">
+                ← В МЕНЮ
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <a class="back" href="/">
+        ← Назад в MY GAMES
+    </a>
+
+</div>
+
+
+<script>
+
+let money = 500;
+let bonusPoints = 0;
+let currentQuestion = 0;
+let questions = [];
+let returnTo = "menu";
+
+let scores = {
+    homer: 0,
+    bart: 0,
+    lisa: 0,
+    marge: 0
+};
+
+
+const allQuestions = [
+
+    {
+        question: "Что ты предпочитаешь делать после школы?",
+        answers: [
+            ["Отдыхать и смотреть телевизор", "homer"],
+            ["Идти навстречу приключениям", "bart"],
+            ["Читать или заниматься", "lisa"],
+            ["Заниматься полезными делами", "marge"]
+        ]
+    },
+
+    {
+        question: "Твой друг попал в неприятности. Что ты сделаешь?",
+        answers: [
+            ["Поддержу его", "homer"],
+            ["Пойду разбираться", "bart"],
+            ["Сначала выясню обстоятельства", "lisa"],
+            ["Постараюсь спокойно решить проблему", "marge"]
+        ]
+    },
+
+    {
+        question: "Какой школьный предмет тебе ближе?",
+        answers: [
+            ["Физкультура", "homer"],
+            ["Что-нибудь весёлое", "bart"],
+            ["Наука", "lisa"],
+            ["Практические занятия", "marge"]
+        ]
+    },
+
+    {
+        question: "Тебе дали очень сложную задачу.",
+        answers: [
+            ["Как-нибудь решу", "homer"],
+            ["Придумаю необычный способ", "bart"],
+            ["Постараюсь всё понять", "lisa"],
+            ["Разделю задачу на части", "marge"]
+        ]
+    },
+
+    {
+        question: "Что тебе больше всего нравится?",
+        answers: [
+            ["Еда", "homer"],
+            ["Розыгрыши", "bart"],
+            ["Книги", "lisa"],
+            ["Семья", "marge"]
+        ]
+    },
+
+    {
+        question: "Как ты относишься к правилам?",
+        answers: [
+            ["Какие ещё правила?", "homer"],
+            ["Иногда нарушаю ради веселья", "bart"],
+            ["Правила должны иметь смысл", "lisa"],
+            ["Стараюсь соблюдать", "marge"]
+        ]
+    },
+
+    {
+        question: "Что ты сделаешь, если получил плохую оценку?",
+        answers: [
+            ["Забуду об этом", "homer"],
+            ["Пошучу над ситуацией", "bart"],
+            ["Пойму свою ошибку", "lisa"],
+            ["Попробую исправить", "marge"]
+        ]
+    },
+
+    {
+        question: "Какой у тебя характер?",
+        answers: [
+            ["Спокойный и расслабленный", "homer"],
+            ["Энергичный и непредсказуемый", "bart"],
+            ["Любознательный", "lisa"],
+            ["Заботливый", "marge"]
+        ]
+    },
+
+    {
+        question: "Что ты выберешь на выходных?",
+        answers: [
+            ["Вкусно поесть", "homer"],
+            ["Погулять с друзьями", "bart"],
+            ["Интересный проект", "lisa"],
+            ["Время с семьёй", "marge"]
+        ]
+    },
+
+    {
+        question: "Кто попросил тебя помочь?",
+        answers: [
+            ["Если будет еда — помогу", "homer"],
+            ["Если будет весело — помогу", "bart"],
+            ["Если задача интересная — помогу", "lisa"],
+            ["Помогу просто потому, что нужно", "marge"]
+        ]
+    },
+
+    {
+        question: "Как ты принимаешь решения?",
+        answers: [
+            ["По настроению", "homer"],
+            ["Как получится", "bart"],
+            ["Обдумываю варианты", "lisa"],
+            ["Думаю о последствиях", "marge"]
+        ]
+    },
+
+    {
+        question: "Что ты сделаешь, если увидишь несправедливость?",
+        answers: [
+            ["Постараюсь не вмешиваться", "homer"],
+            ["Сразу вмешаюсь", "bart"],
+            ["Сначала разберусь", "lisa"],
+            ["Постараюсь помочь всем", "marge"]
+        ]
+    }
+
+];
+
+
+function startTest() {
+
+    money = 500;
+    bonusPoints = 0;
+    currentQuestion = 0;
+
+    scores = {
+        homer: 0,
+        bart: 0,
+        lisa: 0,
+        marge: 0
+    };
+
+    questions = [...allQuestions];
+
+    shuffle(questions);
+
+    returnTo = "menu";
+
+    hideAll();
+
+    document.getElementById("test").classList.remove("hidden");
+
+    showQuestion();
+}
+
+
+function shuffle(array) {
+
+    for (let i = array.length - 1; i > 0; i--) {
+
+        let j = Math.floor(Math.random() * (i + 1));
+
+        [array[i], array[j]] = [array[j], array[i]];
+
+    }
+
+}
+
+
+function showQuestion() {
+
+    document.getElementById("progress").textContent =
+        "Вопрос " + (currentQuestion + 1) + " из 12";
+
+    document.getElementById("money").textContent = money;
+
+    document.getElementById("question").textContent =
+        questions[currentQuestion].question;
+
+    const answersDiv = document.getElementById("answers");
+
+    answersDiv.innerHTML = "";
+
+    questions[currentQuestion].answers.forEach(answer => {
+
+        const button = document.createElement("button");
+
+        button.className = "answer";
+
+        button.textContent = answer[0];
+
+        button.onclick = function() {
+
+            chooseAnswer(answer[1]);
+
+        };
+
+        answersDiv.appendChild(button);
+
+    });
+
+}
+
+
+function chooseAnswer(character) {
+
+    scores[character]++;
+
+    money += 25;
+
+    currentQuestion++;
+
+    if (currentQuestion < 12) {
+
+        if (currentQuestion % 3 === 0) {
+
+            showBreak();
+
+        } else {
+
+            showQuestion();
+
+        }
+
+    } else {
+
+        showResult();
+
+    }
+
+}
+
+
+function showBreak() {
+
+    hideAll();
+
+    document.getElementById("break").classList.remove("hidden");
+
+}
+
+
+function continueTest() {
+
+    hideAll();
+
+    document.getElementById("test").classList.remove("hidden");
+
+    showQuestion();
+
+}
+
+
+function openShopFromTest() {
+
+    returnTo = "test";
+
+    openShop();
+
+}
+
+
+function openShopFromMenu() {
+
+    returnTo = "menu";
+
+    openShop();
+
+}
+
+
+function openShop() {
+
+    hideAll();
+
+    document.getElementById("shop").classList.remove("hidden");
+
+    updateShop();
+
+}
+
+
+function updateShop() {
+
+    document.getElementById("shopMoney").textContent = money;
+
+}
+
+
+function returnFromShop() {
+
+    hideAll();
+
+    if (returnTo === "test") {
+
+        document.getElementById("test").classList.remove("hidden");
+
+        showQuestion();
+
+    } else {
+
+        document.getElementById("menu").classList.remove("hidden");
+
+    }
+
+}
+
+
+function buyHint() {
+
+    if (money < 100) {
+
+        alert("Недостаточно монет!");
+
+        return;
+
+    }
+
+    money -= 100;
+
+    alert("💡 Подсказка куплена!");
+
+    updateShop();
+
+}
+
+
+function buyPoints() {
+
+    if (money < 200) {
+
+        alert("Недостаточно монет!");
+
+        return;
+
+    }
+
+    money -= 200;
+
+    bonusPoints += 2;
+
+    alert("⭐ Ты получил +2 бонусных очка!");
+
+    updateShop();
+
+}
+
+
+function buyRandomBonus() {
+
+    if (money < 300) {
+
+        alert("Недостаточно монет!");
+
+        return;
+
+    }
+
+    money -= 300;
+
+    let bonus = Math.floor(Math.random() * 5) + 1;
+
+    bonusPoints += bonus;
+
+    alert("🎁 Ты получил +" + bonus + " бонусных очков!");
+
+    updateShop();
+
+}
+
+
+function showResult() {
+
+    hideAll();
+
+    document.getElementById("result").classList.remove("hidden");
+
+    let max = Math.max(
+        scores.homer,
+        scores.bart,
+        scores.lisa,
+        scores.marge
+    );
+
+    let winners = [];
+
+    for (let character in scores) {
+
+        if (scores[character] === max) {
+
+            winners.push(character);
+
+        }
+
+    }
+
+    let names = {
+        homer: "Гомер",
+        bart: "Барт",
+        lisa: "Лиза",
+        marge: "Мардж"
+    };
+
+    let descriptions = {
+        homer: "Ты любишь отдых, веселье и наслаждение жизнью.",
+        bart: "Ты энергичный, смелый и любишь приключения.",
+        lisa: "Ты любознательный, умный и любишь сложные вещи.",
+        marge: "Ты заботливый, спокойный и всегда готов помочь."
+    };
+
+    let html = "";
+
+    html += "<p>Гомер: " + scores.homer + "</p>";
+    html += "<p>Барт: " + scores.bart + "</p>";
+    html += "<p>Лиза: " + scores.lisa + "</p>";
+    html += "<p>Мардж: " + scores.marge + "</p>";
+
+    html += "<hr>";
+
+    if (winners.length > 1) {
+
+        html += "<h2>🤝 Ничья!</h2>";
+
+        html += "<p>";
+
+        winners.forEach(character => {
+
+            html += names[character] + " ";
+
+        });
+
+        html += "</p>";
+
+    } else {
+
+        let winner = winners[0];
+
+        html += "<h2>🏆 Ты больше всего похож на: "
+            + names[winner]
+            + "</h2>";
+
+        html += "<p>"
+            + descriptions[winner]
+            + "</p>";
+
+    }
+
+    if (bonusPoints > 0) {
+
+        html += "<p>⭐ Бонусные очки: "
+            + bonusPoints
+            + "</p>";
+
+    }
+
+    html += "<p>🪙 Заработано монет: "
+        + money
+        + "</p>";
+
+    document.getElementById("resultText").innerHTML = html;
+
+}
+
+
+function showRules() {
+
+    hideAll();
+
+    document.getElementById("rules").classList.remove("hidden");
+
+}
+
+
+function backToMenu() {
+
+    hideAll();
+
+    document.getElementById("menu").classList.remove("hidden");
+
+}
+
+
+function hideAll() {
+
+    document.getElementById("menu").classList.add("hidden");
+
+    document.getElementById("test").classList.add("hidden");
+
+    document.getElementById("break").classList.add("hidden");
+
+    document.getElementById("shop").classList.add("hidden");
+
+    document.getElementById("rules").classList.add("hidden");
+
+    document.getElementById("result").classList.add("hidden");
+
+}
+
+</script>
+
+</body>
+</html>

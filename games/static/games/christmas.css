@@ -1,0 +1,220 @@
+
+/* PIXEL — Christmas Edition */
+
+body.christmas-mode {
+    background:
+        radial-gradient(ellipse at top, #302044 0%, transparent 55%),
+        linear-gradient(180deg, #100d1b, #171020 70%, #10151a);
+}
+
+/* Золотые заголовки */
+
+.christmas-mode h1,
+.christmas-mode h2 {
+    color: #f5d58a;
+    text-shadow: 0 0 12px rgba(226, 174, 77, 0.3);
+}
+
+/* Карточки игр */
+
+.christmas-mode .card {
+    border: 1px solid rgba(199, 153, 70, 0.55);
+    background: linear-gradient(145deg, #21182b, #17251f);
+    box-shadow: 0 5px 22px rgba(0, 0, 0, 0.3);
+    transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.christmas-mode .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(194, 148, 64, 0.2);
+}
+
+/* Праздничные кнопки */
+
+.christmas-mode .button,
+.christmas-mode button {
+    border: 1px solid #b98a42;
+    background: linear-gradient(135deg, #176044, #792b3a);
+    color: #fff4d7;
+}
+
+/* Золотая линия */
+
+.christmas-mode .hero {
+    border-bottom: 1px solid rgba(214, 172, 91, 0.35);
+}
+
+/* Украшения */
+
+.christmas-decoration {
+    position: fixed;
+    right: 18px;
+    bottom: 12px;
+    z-index: 1000;
+    font-size: 42px;
+    pointer-events: none;
+}
+
+/* Снег */
+
+.christmas-snow {
+    position: fixed;
+    top: -25px;
+    z-index: 9999;
+    pointer-events: none;
+    color: #fff;
+    text-shadow: 0 0 8px #b8dfff;
+    animation: pixelSnowfall linear infinite;
+}
+
+@keyframes pixelSnowfall {
+    from {
+        transform: translateY(-20px) rotate(0deg);
+    }
+    to {
+        transform: translateY(110vh) rotate(360deg);
+    }
+}
+
+/* Еловые ветки и шары */
+['left', 'right'].forEach(function (side) {
+    var branch = document.createElement('div');
+    branch.className = 'christmas-branches ' + side;
+    document.body.appendChild(branch);
+});
+
+['gold one', 'red two', 'gold three', 'red four'].forEach(function (style) {
+    var ball = document.createElement('div');
+    ball.className = 'christmas-ornament ' + style;
+    document.body.appendChild(ball);
+});
+
+/* Новогодняя гирлянда */
+
+.christmas-garland {
+    position: relative;
+    height: 30px;
+    margin: 0 auto 15px;
+    border-top: 2px solid #9b783e;
+    max-width: 700px;
+}
+
+.christmas-garland span {
+    display: inline-block;
+    width: 9px;
+    height: 13px;
+    margin: -2px 13px 0;
+    border-radius: 50%;
+    background: #e7bb58;
+    box-shadow: 0 0 12px #e7bb58;
+    animation: pixelLights 1.5s infinite alternate;
+}
+
+.christmas-garland span:nth-child(2n) {
+    background: #c94b55;
+    box-shadow: 0 0 12px #c94b55;
+    animation-delay: 0.5s;
+}
+
+.christmas-garland span:nth-child(3n) {
+    background: #4ab889;
+    box-shadow: 0 0 12px #4ab889;
+    animation-delay: 0.9s;
+}
+
+@keyframes pixelLights {
+    from { opacity: 0.45; }
+    to { opacity: 1; }
+}
+
+/* Еловые ветки */
+
+.christmas-branches {
+    position: fixed;
+    top: 0;
+    width: 180px;
+    height: 150px;
+    z-index: 10000;
+    pointer-events: none;
+    opacity: 0.95;
+}
+
+.christmas-branches.left {
+    left: 0;
+}
+
+.christmas-branches.right {
+    right: 0;
+    transform: scaleX(-1);
+}
+
+/* Отдельные иголки */
+
+.christmas-branches::before {
+    content: "";
+    position: absolute;
+    top: 12px;
+    left: -20px;
+    width: 210px;
+    height: 65px;
+    background: #174a32;
+    border-radius: 0 0 100% 0;
+    transform: rotate(18deg);
+    box-shadow:
+        12px 18px 0 -8px #24613d,
+        30px 30px 0 -12px #103b2a,
+        50px 40px 0 -15px #286846;
+}
+
+.christmas-branches::after {
+    content: "";
+    position: absolute;
+    top: 35px;
+    left: 35px;
+    width: 130px;
+    height: 4px;
+    background: #a27a3e;
+    transform: rotate(25deg);
+}
+
+/* Новогодние шары */
+
+.christmas-ornament {
+    position: fixed;
+    z-index: 10001;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    pointer-events: none;
+    box-shadow: inset -5px -5px 8px rgba(0,0,0,.35),
+                0 0 12px rgba(238,190,90,.3);
+}
+
+.christmas-ornament.gold {
+    background: radial-gradient(circle at 30% 25%, #fff0b2, #d6a43e 65%, #80521b);
+}
+
+.christmas-ornament.red {
+    background: radial-gradient(circle at 30% 25%, #ffb2a9, #bd303c 65%, #65151f);
+}
+
+.christmas-ornament.one {
+    top: 75px;
+    left: 95px;
+}
+
+.christmas-ornament.two {
+    top: 110px;
+    left: 45px;
+}
+
+.christmas-ornament.three {
+    top: 65px;
+    right: 65px;
+}
+
+.christmas-ornament.four {
+    top: 115px;
+    right: 115px;
+}
+

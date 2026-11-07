@@ -1,0 +1,1212 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>БП Шахматы</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js"></script>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    background: #eee9f7;
+    color: #333;
+    display: flex;
+    justify-content: center;
+    padding: 15px;
+}
+
+.game {
+    width: min(1100px, 100%);
+}
+
+.top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+.back {
+    text-decoration: none;
+    color: white;
+    background: #8c78b8;
+    padding: 10px 15px;
+    border-radius: 12px;
+}
+
+.layout {
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+.board-wrap {
+    flex: 1;
+    min-width: 0;
+}
+
+#board {
+    width: min(700px, 100%);
+    aspect-ratio: 1 / 1;
+    margin: auto;
+    display: grid;
+    grid-template-columns: repeat(8, minmax(0, 1fr));
+    grid-template-rows: repeat(8, minmax(0, 1fr));
+    border: 6px solid #6f6383;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(0,0,0,.18);
+}
+
+.square {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    min-width: 0;
+    min-height: 0;
+}
+.square.light {
+    background: #eadff1;
+}
+
+.square.dark {
+    background: #9b86a9;
+}
+
+.square.selected {
+    box-shadow: inset 0 0 0 5px #fff36b;
+}
+
+.square.last {
+    box-shadow: inset 0 0 0 4px rgba(255,235,100,.75);
+}
+
+.square.check {
+    box-shadow: inset 0 0 0 6px #ed6d6d;
+}
+ .square.move {
+    box-shadow: inset 0 0 0 5px rgba(70, 70, 70, 0.35);
+}
+
+.square.capture {
+    box-shadow: inset 0 0 0 5px rgba(190, 70, 80, 0.55);
+}
+
+.piece {
+    width: 88%;
+    height: 88%;
+    object-fit: contain;
+    position: relative;
+    z-index: 2;
+    pointer-events: none;
+    filter: drop-shadow(0 3px 2px rgba(0,0,0,.2));
+}
+
+.piece.animate {
+    animation: pieceMove .24s ease-out;
+}
+
+@keyframes pieceMove {
+    from {
+        transform: scale(.72);
+        opacity: .25;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.panel {
+    width: 270px;
+    background: rgba(255,255,255,.75);
+    border-radius: 18px;
+    padding: 15px;
+    box-shadow: 0 7px 25px rgba(0,0,0,.12);
+}
+
+.status {
+    background: white;
+    border-radius: 13px;
+    padding: 13px;
+    text-align: center;
+    margin-bottom: 12px;
+    font-weight: bold;
+}
+
+button, select {
+    width: 100%;
+    border: 0;
+    padding: 11px;
+    margin-top: 8px;
+    border-radius: 11px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+button {
+    background: #8c78b8;
+    color: white;
+}
+
+button:hover {
+    filter: brightness(.95);
+}
+
+.secondary {
+    background: #d6cbe5;
+    color: #333;
+}
+
+.settings {
+    margin-top: 15px;
+    background: white;
+    padding: 12px;
+    border-radius: 13px;
+}
+
+.setting {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0;
+}
+
+.setting input {
+    width: 20px;
+    height: 20px;
+}
+
+.themes {
+    margin-top: 12px;
+}
+
+.moves {
+    margin-top: 12px;
+    background: white;
+    border-radius: 13px;
+    padding: 10px;
+    max-height: 180px;
+    overflow-y: auto;
+    font-size: 14px;
+}
+
+.move-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 3px;
+}
+
+.info {
+    text-align: center;
+    margin-top: 10px;
+    font-size: 13px;
+    opacity: .7;
+}
+
+/* ТЕМЫ */
+
+body.mint {
+    background: #e5f5ef;
+}
+body.mint #board {
+    border-color: #629d89;
+}
+body.mint .square.light {
+    background: #d9eee7;
+}
+body.mint .square.dark {
+    background: #91c4b3;
+}
+body.mint button,
+body.mint .back {
+    background: #619c89;
+}
+
+body.pink {
+    background: #fae8f1;
+}
+body.pink #board {
+    border-color: #b87898;
+}
+body.pink .square.light {
+    background: #f7dce8;
+}
+body.pink .square.dark {
+    background: #c48ca7;
+}
+body.pink button,
+body.pink .back {
+    background: #b87898;
+}
+
+body.blue {
+    background: #e5f1fa;
+}
+body.blue #board {
+    border-color: #688fae;
+}
+body.blue .square.light {
+    background: #dbeaf4;
+}
+body.blue .square.dark {
+    background: #91b3ca;
+}
+body.blue button,
+body.blue .back {
+    background: #688fae;
+}
+
+body.cream {
+    background: #f7f0df;
+}
+body.cream #board {
+    border-color: #9d8c69;
+}
+body.cream .square.light {
+    background: #f3ead5;
+}
+body.cream .square.dark {
+    background: #b9a982;
+}
+body.cream button,
+body.cream .back {
+    background: #9d8c69;
+}
+
+body.lavender {
+    background: #eee9f7;
+}
+body.lavender #board {
+    border-color: #6f6383;
+}
+body.lavender .square.light {
+    background: #eadff1;
+}
+body.lavender .square.dark {
+    background: #9b86a9;
+}
+body.lavender button,
+body.lavender .back {
+    background: #8c78b8;
+}
+
+body.red {
+    background: #f6e7e7;
+}
+body.red #board {
+    border-color: #9d6c6c;
+}
+body.red .square.light {
+    background: #f2dddd;
+}
+body.red .square.dark {
+    background: #bd9292;
+}
+body.red button,
+body.red .back {
+    background: #9d6c6c;
+}
+
+body.gray {
+    background: #ededed;
+}
+body.gray #board {
+    border-color: #777;
+}
+body.gray .square.light {
+    background: #e6e6e6;
+}
+body.gray .square.dark {
+    background: #aaa;
+}
+body.gray button,
+body.gray .back {
+    background: #777;
+}
+
+body.graphite {
+    background: #27272b;
+    color: #eee;
+}
+body.graphite .panel,
+body.graphite .status,
+body.graphite .settings,
+body.graphite .moves {
+    background: #38383e;
+    color: #eee;
+}
+body.graphite #board {
+    border-color: #18181b;
+}
+body.graphite .square.light {
+    background: #77777e;
+}
+body.graphite .square.dark {
+    background: #3e3e44;
+}
+body.graphite button,
+body.graphite .back {
+    background: #5d5d66;
+}
+
+/* Мигающая тема */
+body.flash {
+    animation: flashBackground 4s ease-in-out infinite;
+}
+
+body.flash #board {
+    animation: flashBoard 3s ease-in-out infinite;
+}
+
+body.flash .square.light {
+    animation: flashLight 3s ease-in-out infinite;
+}
+
+body.flash .square.dark {
+    animation: flashDark 3s ease-in-out infinite;
+}
+
+@keyframes flashBackground {
+    0%, 100% {
+        background: #eee9f7;
+    }
+    25% {
+        background: #e6f3f8;
+    }
+    50% {
+        background: #f8e7ef;
+    }
+    75% {
+        background: #eaf5e9;
+    }
+}
+
+@keyframes flashBoard {
+    0%, 100% {
+        border-color: #8c78b8;
+    }
+    33% {
+        border-color: #6d9db8;
+    }
+    66% {
+        border-color: #b87998;
+    }
+}
+
+@keyframes flashLight {
+    0%, 100% {
+        background: #eadff1;
+    }
+    33% {
+        background: #dcecf3;
+    }
+    66% {
+        background: #f4dfe9;
+    }
+}
+
+@keyframes flashDark {
+    0%, 100% {
+        background: #9b86a9;
+    }
+    33% {
+        background: #82aabd;
+    }
+    66% {
+        background: #b787a0;
+    }
+}
+
+@media (max-width: 850px) {
+    .layout {
+        flex-direction: column;
+    }
+
+    .panel {
+        width: 100%;
+    }
+
+    #board {
+        width: 100%;
+    }
+
+    .panel-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 7px;
+    }
+
+    .panel-buttons button {
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 420px) {
+    body {
+        padding: 7px;
+    }
+
+    h1 {
+        font-size: 22px;
+    }
+
+    #board {
+        border-width: 3px;
+    }
+
+    .piece {
+        width: 94%;
+        height: 94%;
+    }
+
+    .square.move::after {
+        width: 20%;
+        height: 20%;
+    }
+}
+</style>
+</head>
+
+<body class="lavender">
+
+<div class="game">
+
+    <div class="top">
+        <h1>♟ БП Шахматы</h1>
+        <a class="back" href="/">← На главную</a>
+    </div>
+
+    <div class="layout">
+
+        <div class="board-wrap">
+            <div id="board"></div>
+            <div class="info">
+                Белые ходят первыми
+            </div>
+        </div>
+
+        <div class="panel">
+
+            <div class="status" id="status">
+                Ход белых
+            </div>
+
+            <div class="panel-buttons">
+                <button id="newGame">Новая партия</button>
+                <button id="undo" class="secondary">Отменить ход</button>
+                <button id="flip" class="secondary">Перевернуть доску</button>
+                <button id="resign" class="secondary">Сдаться</button>
+            </div>
+
+            <div class="settings">
+
+                <b>Настройки</b>
+
+                <div class="setting">
+                    <span>Анимация ходов</span>
+                    <input type="checkbox" id="animation" checked>
+                </div>
+
+                <div class="setting">
+                    <span>Подсветка ходов</span>
+                    <input type="checkbox" id="highlights" checked>
+                </div>
+
+                <div class="setting">
+                    <span>Бот</span>
+                    <select id="botLevel">
+                        <option value="0">Без бота</option>
+                        <option value="1" selected>Лёгкий</option>
+                        <option value="2">Средний</option>
+                        <option value="3">Сложнее</option>
+                    </select>
+                </div>
+
+                <div class="themes">
+                    <select id="theme">
+                        <option value="lavender">Лаванда</option>
+                        <option value="mint">Мята</option>
+                        <option value="pink">Розовый</option>
+                        <option value="blue">Голубой</option>
+                        <option value="cream">Кремовый</option>
+                        <option value="red">Пастельно-красный</option>
+                        <option value="gray">Пастельно-серый</option>
+                        <option value="graphite">Графит</option>
+                        <option value="flash">Мигающий</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="moves" id="moves">
+                <b>Ходы</b>
+                <div id="moveList"></div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+const boardElement = document.getElementById("board");
+const statusElement = document.getElementById("status");
+const moveListElement = document.getElementById("moveList");
+
+const animationCheckbox = document.getElementById("animation");
+const highlightsCheckbox = document.getElementById("highlights");
+const botLevel = document.getElementById("botLevel");
+const themeSelect = document.getElementById("theme");
+
+let game = new Chess();
+
+let selectedSquare = null;
+let legalMoves = [];
+let flipped = false;
+let botThinking = false;
+let lastFrom = null;
+let lastTo = null;
+
+const pieceFiles = {
+    "P": "white_pawn.png",
+    "N": "white_knight.png",
+    "B": "white_bishop.png",
+    "R": "white_rook.png",
+    "Q": "white_queen.png",
+    "K": "white_king.png",
+    "p": "black_pawn.png",
+    "n": "black_knight.png",
+    "b": "black_bishop.png",
+    "r": "black_rook.png",
+    "q": "black_queen.png",
+    "k": "black_king.png"
+};
+
+const pieceNames = {
+    "P": "Пешка",
+    "N": "Конь",
+    "B": "Слон",
+    "R": "Тура",
+    "Q": "Ферзь",
+    "K": "Король",
+    "p": "Пешка",
+    "n": "Конь",
+    "b": "Слон",
+    "r": "Тура",
+    "q": "Ферзь",
+    "k": "Король"
+};
+
+function pieceImage(piece) {
+    return "{% static 'games/chess_pieces/' %}" + pieceFiles[piece];
+}
+
+function createBoard() {
+    boardElement.innerHTML = "";
+
+    const files = flipped
+        ? ["h","g","f","e","d","c","b","a"]
+        : ["a","b","c","d","e","f","g","h"];
+
+    const ranks = flipped
+        ? ["1","2","3","4","5","6","7","8"]
+        : ["8","7","6","5","4","3","2","1"];
+
+    const position = game.board();
+
+    for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 8; col++) {
+
+            const file = files[col];
+            const rank = ranks[row];
+            const squareName = file + rank;
+
+            const square = document.createElement("div");
+
+            const color =
+                (files.indexOf(file) + ranks.indexOf(rank)) % 2 === 0
+                ? "light"
+                : "dark";
+
+            square.className = "square " + color;
+
+            if (selectedSquare === squareName) {
+                square.classList.add("selected");
+            }
+
+            if (lastFrom === squareName || lastTo === squareName) {
+                square.classList.add("last");
+            }
+
+            if (highlightsCheckbox.checked && legalMoves.includes(squareName)) {
+                const isCapture = game.get(squareName);
+
+                square.classList.add(isCapture ? "capture" : "move");
+            }
+
+            const realRow = 8 - Number(rank);
+            const realCol = file.charCodeAt(0) - 97;
+
+            const piece = position[realRow][realCol];
+
+            if (piece) {
+                const img = document.createElement("img");
+
+                img.className = "piece";
+                img.src = pieceImage(piece.color === "w"
+                    ? piece.type.toUpperCase()
+                    : piece.type);
+
+                img.alt = pieceNames[
+                    piece.color === "w"
+                    ? piece.type.toUpperCase()
+                    : piece.type
+                ];
+
+                square.appendChild(img);
+            }
+
+            square.addEventListener("click", () => clickSquare(squareName));
+
+            boardElement.appendChild(square);
+        }
+    }
+
+    updateCheckHighlight();
+}
+
+function updateCheckHighlight() {
+    if (!game.in_check()) {
+        return;
+    }
+
+    const board = game.board();
+
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+
+            const piece = board[r][c];
+
+            if (
+                piece &&
+                piece.type === "k" &&
+                piece.color === game.turn()
+            ) {
+                const square =
+                    String.fromCharCode(97 + c) + (8 - r);
+
+                const elements =
+                    boardElement.querySelectorAll(".square");
+
+                elements.forEach(el => {
+                    if (
+                        el.dataset.square === square
+                    ) {
+                        el.classList.add("check");
+                    }
+                });
+            }
+        }
+    }
+}
+
+function clickSquare(square) {
+
+    if (botThinking || game.game_over()) {
+        return;
+    }
+
+    const piece = game.get(square);
+
+    if (!selectedSquare) {
+
+        if (!piece) {
+            return;
+        }
+
+        if (piece.color !== game.turn()) {
+            return;
+        }
+
+        selectedSquare = square;
+
+        legalMoves = game.moves({
+            square: square,
+            verbose: true
+        }).map(move => move.to);
+
+        createBoard();
+        return;
+    }
+
+    if (square === selectedSquare) {
+        selectedSquare = null;
+        legalMoves = [];
+        createBoard();
+        return;
+    }
+
+    if (legalMoves.includes(square)) {
+        makeMove(selectedSquare, square);
+        return;
+    }
+
+    if (piece && piece.color === game.turn()) {
+        selectedSquare = square;
+
+        legalMoves = game.moves({
+            square: square,
+            verbose: true
+        }).map(move => move.to);
+
+        createBoard();
+        return;
+    }
+
+    selectedSquare = null;
+    legalMoves = [];
+    createBoard();
+}
+
+function makeMove(from, to) {
+
+    const movingPiece = game.get(from);
+
+    if (!movingPiece) {
+        return;
+    }
+
+    const move = game.move({
+        from: from,
+        to: to,
+        promotion: "q"
+    });
+
+    if (!move) {
+        return;
+    }
+
+    lastFrom = from;
+    lastTo = to;
+
+    selectedSquare = null;
+    legalMoves = [];
+
+    updateMoves();
+    updateStatus();
+
+    createBoard();
+
+    if (
+        animationCheckbox.checked &&
+        boardElement.animate
+    ) {
+        animateMove(to);
+    }
+
+    if (!game.game_over() && botLevel.value !== "0" && game.turn() === "b") {
+        botThinking = true;
+
+        setTimeout(() => {
+            botMove();
+        }, 350);
+    }
+}
+
+function animateMove(to) {
+
+    const squares = boardElement.querySelectorAll(".square");
+
+    squares.forEach(square => {
+
+        const img = square.querySelector(".piece");
+
+        if (
+            img &&
+            square.classList.contains("last")
+        ) {
+            img.classList.add("animate");
+
+            setTimeout(() => {
+                img.classList.remove("animate");
+            }, 300);
+        }
+    });
+}
+
+function botMove() {
+
+    if (game.game_over()) {
+        botThinking = false;
+        return;
+    }
+
+    const depth = Number(botLevel.value);
+
+    let move;
+
+    if (depth === 1) {
+        move = randomBotMove();
+    } else {
+        move = minimaxRoot(depth);
+    }
+
+    if (move) {
+        game.move({
+            from: move.from,
+            to: move.to,
+            promotion: "q"
+        });
+
+        lastFrom = move.from;
+        lastTo = move.to;
+    }
+
+    botThinking = false;
+
+    updateMoves();
+    updateStatus();
+    createBoard();
+
+    if (
+        animationCheckbox.checked &&
+        boardElement.animate
+    ) {
+        animateMove(lastTo);
+    }
+}
+
+function randomBotMove() {
+
+    const moves = game.moves({
+        verbose: true
+    });
+
+    if (!moves.length) {
+        return null;
+    }
+
+    /* Бот немного предпочитает взятия */
+    const captures = moves.filter(m => m.captured);
+
+    if (captures.length && Math.random() < 0.65) {
+        return captures[
+            Math.floor(Math.random() * captures.length)
+        ];
+    }
+
+    return moves[
+        Math.floor(Math.random() * moves.length)
+    ];
+}
+
+function minimaxRoot(depth) {
+
+    const moves = game.moves({
+        verbose: true
+    });
+
+    let bestScore = -Infinity;
+    let bestMove = moves[0];
+
+    for (const move of moves) {
+
+        game.move(move);
+
+        const score = minimax(depth - 1, false, -Infinity, Infinity);
+
+        game.undo();
+
+        if (score > bestScore) {
+            bestScore = score;
+            bestMove = move;
+        }
+    }
+
+    return bestMove;
+}
+
+function minimax(depth, maximizing, alpha, beta) {
+
+    if (depth === 0 || game.game_over()) {
+        return evaluateBoard();
+    }
+
+    const moves = game.moves({
+        verbose: true
+    });
+
+    if (maximizing) {
+
+        let best = -Infinity;
+
+        for (const move of moves) {
+
+            game.move(move);
+
+            best = Math.max(
+                best,
+                minimax(depth - 1, false, alpha, beta)
+            );
+
+            game.undo();
+
+            alpha = Math.max(alpha, best);
+
+            if (beta <= alpha) {
+                break;
+            }
+        }
+
+        return best;
+
+    } else {
+
+        let best = Infinity;
+
+        for (const move of moves) {
+
+            game.move(move);
+
+            best = Math.min(
+                best,
+                minimax(depth - 1, true, alpha, beta)
+            );
+
+            game.undo();
+
+            beta = Math.min(beta, best);
+
+            if (beta <= alpha) {
+                break;
+            }
+        }
+
+        return best;
+    }
+}
+
+function evaluateBoard() {
+
+    const values = {
+        p: 100,
+        n: 320,
+        b: 330,
+        r: 500,
+        q: 900,
+        k: 20000
+    };
+
+    if (game.in_checkmate()) {
+        return game.turn() === "b"
+            ? -100000
+            : 100000;
+    }
+
+    if (game.in_draw() || game.in_stalemate()) {
+        return 0;
+    }
+
+    let score = 0;
+
+    const board = game.board();
+
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+
+            const piece = board[r][c];
+
+            if (!piece) {
+                continue;
+            }
+
+            const value = values[piece.type];
+
+            if (piece.color === "b") {
+                score += value;
+            } else {
+                score -= value;
+            }
+        }
+    }
+
+    return score;
+}
+
+function updateStatus() {
+
+    if (game.in_checkmate()) {
+
+        statusElement.textContent =
+            game.turn() === "w"
+            ? "Мат! Победили чёрные"
+            : "Мат! Победили белые";
+
+        return;
+    }
+
+    if (game.in_stalemate()) {
+        statusElement.textContent = "Пат!";
+        return;
+    }
+
+    if (game.in_draw()) {
+        statusElement.textContent = "Ничья";
+        return;
+    }
+
+    if (game.in_check()) {
+
+        statusElement.textContent =
+            game.turn() === "w"
+            ? "Шах! Ход белых"
+            : "Шах! Ход чёрных";
+
+        return;
+    }
+
+    statusElement.textContent =
+        game.turn() === "w"
+        ? "Ход белых"
+        : "Ход чёрных";
+}
+
+function updateMoves() {
+
+    moveListElement.innerHTML = "";
+
+    const history = game.history();
+
+    for (let i = 0; i < history.length; i += 2) {
+
+        const row = document.createElement("div");
+        row.className = "move-row";
+
+        const number = Math.floor(i / 2) + 1;
+
+        const white = history[i] || "";
+        const black = history[i + 1] || "";
+
+        row.innerHTML =
+            "<span>" + number + ".</span>" +
+            "<span>" + white + "</span>" +
+            "<span>" + black + "</span>";
+
+        moveListElement.appendChild(row);
+    }
+}
+
+document.getElementById("newGame").addEventListener("click", () => {
+
+    game = new Chess();
+
+    selectedSquare = null;
+    legalMoves = [];
+    lastFrom = null;
+    lastTo = null;
+    botThinking = false;
+
+    updateMoves();
+    updateStatus();
+    createBoard();
+});
+
+document.getElementById("undo").addEventListener("click", () => {
+
+    if (botThinking) {
+        return;
+    }
+
+    game.undo();
+
+    /*
+       Если игра против бота —
+       отменяем сразу ход бота и ход игрока.
+    */
+    if (
+        botLevel.value !== "0" &&
+        game.history().length > 0
+    ) {
+        game.undo();
+    }
+
+    selectedSquare = null;
+    legalMoves = [];
+
+    const history = game.history();
+
+    if (history.length === 0) {
+        lastFrom = null;
+        lastTo = null;
+    }
+
+    updateMoves();
+    updateStatus();
+    createBoard();
+});
+
+document.getElementById("flip").addEventListener("click", () => {
+
+    flipped = !flipped;
+
+    createBoard();
+});
+
+document.getElementById("resign").addEventListener("click", () => {
+
+    if (game.game_over()) {
+        return;
+    }
+
+    statusElement.textContent =
+        game.turn() === "w"
+        ? "Белые сдались — победили чёрные"
+        : "Чёрные сдались — победили белые";
+
+    botThinking = true;
+});
+
+themeSelect.addEventListener("change", () => {
+
+    document.body.className = themeSelect.value;
+});
+
+animationCheckbox.addEventListener("change", () => {
+    createBoard();
+});
+
+highlightsCheckbox.addEventListener("change", () => {
+    createBoard();
+});
+
+botLevel.addEventListener("change", () => {
+
+    if (botLevel.value === "0") {
+        botThinking = false;
+    }
+});
+
+createBoard();
+updateMoves();
+updateStatus();
+</script>
+
+</body>
+</html>

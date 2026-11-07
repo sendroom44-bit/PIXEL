@@ -1,0 +1,114 @@
+﻿
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ article.title }} — PIXEL</title>
+
+    <style>
+        body {
+            margin: 0;
+            background: #111318;
+            color: #eeeeee;
+            font-family: Arial, sans-serif;
+        }
+
+        header {
+            padding: 25px 8%;
+            background: #191d25;
+            border-bottom: 2px solid #343b49;
+        }
+
+        .logo {
+            color: #ffffff;
+            font-size: 30px;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        main {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .category {
+            color: #69a8ff;
+            text-transform: uppercase;
+            font-size: 13px;
+            font-weight: bold;
+        }
+
+        h1 {
+            font-size: 38px;
+            line-height: 1.2;
+        }
+
+        .cover {
+            width: 100%;
+            max-height: 480px;
+            object-fit: cover;
+            border-radius: 10px;
+        }
+
+        .description {
+            color: #b8c0ce;
+            font-size: 19px;
+            line-height: 1.6;
+        }
+
+        .content {
+            font-size: 17px;
+            line-height: 1.8;
+            margin-top: 35px;
+        }
+
+        .content img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        a {
+            color: #69a8ff;
+        }
+
+        footer {
+            padding: 25px;
+            text-align: center;
+            color: #777f8d;
+            border-top: 1px solid #343b49;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <a class="logo" href="/">PIXEL</a>
+</header>
+
+<main>
+    <p><a href="{% url 'articles' %}">← Все статьи</a></p>
+
+    <div class="category">{{ article.category }}</div>
+
+    <h1>{{ article.title }}</h1>
+
+    {% if article.cover %}
+        <img class="cover" src="{{ article.cover.url }}" alt="{{ article.title }}">
+    {% endif %}
+
+    <p class="description">{{ article.description }}</p>
+
+    <div class="content">
+        {{ article.content|safe }}
+    </div>
+</main>
+
+<footer>
+    PIXEL — игровой журнал
+</footer>
+
+</body>
+</html>

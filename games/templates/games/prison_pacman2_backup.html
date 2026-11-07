@@ -1,0 +1,2287 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prison Pac-Man 2</title>
+
+<style>
+*{box-sizing:border-box}
+
+body{
+    margin:0;
+    min-height:100vh;
+    color:white;
+    font-family:Arial,sans-serif;
+    background:#111;
+    display:flex;
+    justify-content:center;
+    padding:14px;
+    overflow-x:hidden;
+}
+
+.wrap{
+    width:min(1000px,100%);
+    text-align:center;
+}
+
+h1{
+    margin:5px 0 2px;
+    font-size:clamp(27px,6vw,48px);
+    letter-spacing:2px;
+}
+
+.subtitle{
+    color:#aaa;
+    margin:0 0 15px;
+}
+
+.panel{
+    background:rgba(20,20,20,.92);
+    border:1px solid #555;
+    border-radius:15px;
+    padding:18px;
+    margin-bottom:14px;
+    box-shadow:0 8px 30px rgba(0,0,0,.35);
+}
+
+.panel h2{
+    margin:3px 0 14px;
+}
+
+.row{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:12px;
+}
+
+button,
+select{
+    border:1px solid #666;
+    background:#292929;
+    color:white;
+    border-radius:9px;
+    padding:10px 14px;
+    font-size:14px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#3b3b3b;
+}
+
+button.active{
+    background:#555;
+    border-color:white;
+}
+
+.skin{
+    width:44px;
+    height:44px;
+    padding:0;
+    border-radius:50%;
+}
+
+.skin-dot{
+    width:26px;
+    height:26px;
+    margin:auto;
+    border-radius:50%;
+}
+
+.mode{
+    min-width:135px;
+}
+
+canvas{
+    display:block;
+    width:min(760px,100%);
+    height:auto;
+    margin:auto;
+    background:#111;
+    border:4px solid #555;
+    border-radius:13px;
+    box-shadow:0 8px 30px rgba(0,0,0,.6);
+    touch-action:none;
+}
+
+.topbar{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:8px;
+    margin-bottom:12px;
+}
+
+.stat{
+    background:#151515;
+    border:1px solid #555;
+    border-radius:9px;
+    padding:8px 13px;
+    font-weight:bold;
+}
+
+.buttons{
+    display:flex;
+    justify-content:center;
+    flex-wrap:wrap;
+    gap:9px;
+    margin-top:13px;
+}
+
+.controls{
+    margin:15px auto 0;
+    width:190px;
+    display:grid;
+    grid-template-columns:repeat(3,60px);
+    gap:7px;
+    justify-content:center;
+}
+
+.controls button{
+    width:60px;
+    height:52px;
+    padding:0;
+    font-size:23px;
+}
+
+.empty{
+    visibility:hidden;
+}
+
+.message{
+    min-height:28px;
+    margin-top:9px;
+    font-size:18px;
+    font-weight:bold;
+}
+
+.help{
+    color:#aaa;
+    margin-top:12px;
+    line-height:1.5;
+    font-size:14px;
+}
+
+.hidden{
+    display:none!important;
+}
+
+.editor-info{
+    color:#aaa;
+    font-size:13px;
+    margin:8px;
+}
+
+@media(max-width:500px){
+    body{padding:8px}
+    .panel{padding:12px}
+    canvas{border-width:3px}
+    .stat{font-size:13px;padding:7px 10px}
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+<h1>🔒 PRISON PAC-MAN 2</h1>
+<p class="subtitle">Новый побег из тюрьмы</p>
+
+<!-- НАСТРОЙКИ -->
+
+<div id="menu" class="panel">
+
+<h2>⚙️ Настройка побега</h2>
+
+<div>
+    <b>Сложность</b>
+    <div class="row">
+        <button class="difficulty active" data-difficulty="easy">Легко</button>
+        <button class="difficulty" data-difficulty="normal">Нормально</button>
+        <button class="difficulty" data-difficulty="hard">Сложно</button>
+    </div>
+</div>
+
+<div>
+    <b>Лабиринт</b>
+    <div class="row">
+        <button class="mode active" data-maze="base">🗺️ Базовые</button>
+        <button class="mode" data-maze="random">🎲 Рандом</button>
+        <button class="mode" data-maze="custom">🛠️ Свой</button>
+    </div>
+</div>
+
+<div id="baseMazeRow" class="row">
+    <select id="baseMaze">
+        <option value="0">Тюрьма №1</option>
+        <option value="1">Тюрьма №2</option>
+        <option value="2">Тюрьма №3</option>
+    </select>
+</div>
+
+<div>
+    <b>Скин Пакмена</b>
+
+    <div class="row">
+
+        <button class="skin active" data-color="#ffd52f">
+            <div class="skin-dot" style="background:#ffd52f"></div>
+        </button>
+
+        <button class="skin" data-color="#168cff">
+            <div class="skin-dot" style="background:#168cff"></div>
+        </button>
+
+        <button class="skin" data-color="#22b455">
+            <div class="skin-dot" style="background:#22b455"></div>
+        </button>
+
+        <button class="skin" data-color="#16d6d0">
+            <div class="skin-dot" style="background:#16d6d0"></div>
+        </button>
+
+        <button class="skin" data-color="#e22b2b">
+            <div class="skin-dot" style="background:#e22b2b"></div>
+        </button>
+
+        <button class="skin" data-color="#ff69b4">
+            <div class="skin-dot" style="background:#ff69b4"></div>
+        </button>
+
+        <button class="skin" data-color="#7e1826">
+            <div class="skin-dot" style="background:#7e1826"></div>
+        </button>
+
+        <button class="skin" data-color="#8b5a2b">
+            <div class="skin-dot" style="background:#8b5a2b"></div>
+        </button>
+
+        <button class="skin" data-color="#ffffff">
+            <div class="skin-dot" style="background:#fff"></div>
+        </button>
+
+        <button class="skin" data-color="#111111">
+            <div class="skin-dot" style="background:#111"></div>
+        </button>
+
+        <button class="skin" data-color="#888888">
+            <div class="skin-dot" style="background:#888"></div>
+        </button>
+
+        <button class="skin" data-color="#8e44ad">
+            <div class="skin-dot" style="background:#8e44ad"></div>
+        </button>
+
+        <button class="skin" data-color="rainbow">
+            🌈
+        </button>
+
+        <button class="skin" data-color="rainbow2">
+            ✨
+        </button>
+
+    </div>
+</div>
+
+<div>
+    <b>Скин охранников</b>
+
+    <div class="row">
+        <button class="guard active" data-guard="guard">👮 Охранник</button>
+        <button class="guard" data-guard="police">👮‍♂️ Полицейский</button>
+        <button class="guard" data-guard="general">🎖️ Генерал</button>
+    </div>
+</div>
+
+<div>
+    <b>Фон</b>
+
+    <div class="row">
+        <button class="background active" data-bg="0">🌑 1</button>
+        <button class="background" data-bg="1">🌃 2</button>
+        <button class="background" data-bg="2">🟣 3</button>
+        <button class="background" data-bg="3">🔵 4</button>
+        <button class="background" data-bg="4">🟢 5</button>
+    </div>
+</div>
+
+<button id="startBtn" style="font-size:18px;padding:13px 28px">
+    🚨 НАЧАТЬ ПОБЕГ
+</button>
+
+</div>
+
+<!-- РЕДАКТОР -->
+
+<div id="editorPanel" class="panel hidden">
+
+<h2>🛠️ Создать свой лабиринт</h2>
+
+<div class="editor-info">
+    Нажимай на клетки, чтобы ставить или убирать стены.
+    Старт и выход ставятся автоматически.
+</div>
+
+<canvas id="editor" width="760" height="760"></canvas>
+
+<div class="row">
+    <button id="editorClear">🧹 Очистить</button>
+    <button id="editorBack">↩️ Назад</button>
+    <button id="editorUse">✅ Использовать</button>
+</div>
+
+</div>
+
+<!-- ИГРА -->
+
+<div id="gamePanel" class="hidden">
+
+<div class="topbar">
+    <div class="stat">🔑 Ключи: <span id="keys">0/4</span></div>
+    <div class="stat">❤️ Жизни: <span id="lives">3</span></div>
+    <div class="stat">🏆 Очки: <span id="score">0</span></div>
+    <div class="stat">🏆 Рекорд: <span id="highscore">0</span></div>
+</div>
+
+<canvas id="game" width="760" height="760"></canvas>
+
+<div id="message" class="message"></div>
+
+<div class="buttons">
+    <button id="pauseBtn">⏸ Пауза</button>
+    <button id="newBtn">🔄 Новый побег</button>
+    <button id="menuBtn">⚙️ Настройки</button>
+    <button id="homeBtn">🏠 На главную</button>
+</div>
+
+<div class="controls">
+
+    <button class="empty"></button>
+    <button data-dir="up">▲</button>
+    <button class="empty"></button>
+
+    <button data-dir="left">◀</button>
+    <button data-dir="down">▼</button>
+    <button data-dir="right">▶</button>
+
+</div>
+
+<div class="help">
+    Компьютер: WASD или стрелки<br>
+    Телефон: свайп по полю или кнопки
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const SIZE = 19;
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const editor = document.getElementById("editor");
+const ectx = editor.getContext("2d");
+
+const CELL = canvas.width / SIZE;
+
+const menu = document.getElementById("menu");
+const gamePanel = document.getElementById("gamePanel");
+const editorPanel = document.getElementById("editorPanel");
+
+const keysEl = document.getElementById("keys");
+const livesEl = document.getElementById("lives");
+const scoreEl = document.getElementById("score");
+const highscoreEl = document.getElementById("highscore");
+const messageEl = document.getElementById("message");
+
+const pauseBtn = document.getElementById("pauseBtn");
+
+let difficulty = "easy";
+let mazeMode = "base";
+let baseMazeIndex = 0;
+
+let playerColor = "#ffd52f";
+let guardSkin = "guard";
+let backgroundType = 0;
+
+let map = [];
+let player;
+let guards = [];
+
+let collected = 0;
+let lives = 3;
+let score = 0;
+
+let paused = false;
+let gameOver = false;
+let won = false;
+
+let direction = {x:0,y:0};
+let wantedDirection = {x:0,y:0};
+
+let playerTimer = 0;
+let guardTimer = 0;
+let lastTime = 0;
+
+let rainbowTime = 0;
+
+let highscore = Number(
+    localStorage.getItem("prisonPacman2Highscore") || 0
+);
+
+const BASE_MAZES = [
+
+[
+"###################",
+"#P....#.....#....K#",
+"#.###.#.###.#.###.#",
+"#.....#...#.#.....#",
+"###.#####.#.#####.#",
+"#...#.....#.....#.#",
+"#.#.#.###.###.#.#.#",
+"#.#...#.....#...#.#",
+"#.#####.###.#####.#",
+"#.....#..GG.#.....#",
+"#.###.#.###.#.###.#",
+"#...#.#.....#.#...#",
+"###.#.#####.#.#.###",
+"#K..#.....#.....#K#",
+"#.#####.#.#####.#.#",
+"#.....#.#.....#...#",
+"#.###.#.###.#.###.#",
+"#K....#.....#....E#",
+"###################"
+],
+
+[
+"###################",
+"#P......#.........#",
+"#.#####.#.#######.#",
+"#.....#.#.......#.#",
+"#####.#.#######.#.#",
+"#.....#.....#.....#",
+"#.#########.#.###.#",
+"#.#.......#.#...#.#",
+"#.#.#####.#.###.#.#",
+"#...#GGG#.........#",
+"###.#.###.#########",
+"#...#.....#.......#",
+"#.#######.#.#####.#",
+"#K........#.....K#",
+"#.###########.####",
+"#.....#.........K#",
+"#.###.#.##########",
+"#...............E#",
+"###################"
+],
+
+[
+"###################",
+"#P#........#.....K#",
+"#.#.######.#.###.##",
+"#.#......#.#...#..#",
+"#.######.#.###.#.##",
+"#......#.#.....#..#",
+"######.#.########.#",
+"#K.....#....GG...##",
+"#.##############..#",
+"#.................#",
+"##.##############.#",
+"#..#.............K#",
+"#.###.#############",
+"#.....#............",
+"#####.#.############",
+"#.....#...........E#",
+"#.###############.#",
+"#K................#",
+"###################"
+]
+
+];
+
+function cloneMap(source){
+    return source.map(row => row.split(""));
+}
+
+function randomChoice(arr){
+    return arr[Math.floor(Math.random()*arr.length)];
+}
+
+function getDifficultySettings(){
+
+    if(difficulty === "easy"){
+        return {
+            playerDelay:150,
+            guardDelay:420,
+            guardSmart:false
+        };
+    }
+
+    if(difficulty === "normal"){
+        return {
+            playerDelay:135,
+            guardDelay:330,
+            guardSmart:true
+        };
+    }
+
+    return {
+        playerDelay:115,
+        guardDelay:240,
+        guardSmart:true
+    };
+}
+
+/* ---------------------------
+   МЕНЮ
+---------------------------- */
+
+document.querySelectorAll(".difficulty").forEach(btn => {
+
+    btn.addEventListener("click", () => {
+
+        document.querySelectorAll(".difficulty")
+            .forEach(x => x.classList.remove("active"));
+
+        btn.classList.add("active");
+
+        difficulty = btn.dataset.difficulty;
+    });
+
+});
+
+document.querySelectorAll(".mode").forEach(btn => {
+
+    btn.addEventListener("click", () => {
+
+        document.querySelectorAll(".mode")
+            .forEach(x => x.classList.remove("active"));
+
+        btn.classList.add("active");
+
+        mazeMode = btn.dataset.maze;
+
+        document
+            .getElementById("baseMazeRow")
+            .classList.toggle(
+                "hidden",
+                mazeMode !== "base"
+            );
+    });
+
+});
+
+document.getElementById("baseMaze")
+.addEventListener("change", e => {
+    baseMazeIndex = Number(e.target.value);
+});
+
+document.querySelectorAll(".skin").forEach(btn => {
+
+    btn.addEventListener("click", () => {
+
+        document.querySelectorAll(".skin")
+            .forEach(x => x.classList.remove("active"));
+
+        btn.classList.add("active");
+
+        playerColor = btn.dataset.color;
+    });
+
+});
+
+document.querySelectorAll(".guard").forEach(btn => {
+
+    btn.addEventListener("click", () => {
+
+        document.querySelectorAll(".guard")
+            .forEach(x => x.classList.remove("active"));
+
+        btn.classList.add("active");
+
+        guardSkin = btn.dataset.guard;
+    });
+
+});
+
+document.querySelectorAll(".background")
+.forEach(btn => {
+
+    btn.addEventListener("click", () => {
+
+        document.querySelectorAll(".background")
+            .forEach(x => x.classList.remove("active"));
+
+        btn.classList.add("active");
+
+        backgroundType = Number(btn.dataset.bg);
+    });
+
+});
+
+/* ---------------------------
+   ЛАБИРИНТ
+---------------------------- */
+
+function findStart(m){
+
+    for(let y=0;y<SIZE;y++){
+        for(let x=0;x<SIZE;x++){
+
+            if(m[y][x] === "P"){
+                return {x,y};
+            }
+
+        }
+    }
+
+    return {x:1,y:1};
+}
+
+function findExit(m){
+
+    for(let y=0;y<SIZE;y++){
+        for(let x=0;x<SIZE;x++){
+
+            if(m[y][x] === "E"){
+                return {x,y};
+            }
+
+        }
+    }
+
+    return {x:SIZE-2,y:SIZE-2};
+}
+
+function collectGuardStarts(m){
+
+    const result=[];
+
+    for(let y=0;y<SIZE;y++){
+        for(let x=0;x<SIZE;x++){
+
+            if(m[y][x] === "G"){
+
+                result.push({x,y});
+                m[y][x]=".";
+            }
+
+        }
+    }
+
+    return result;
+}
+
+function clearSpecials(m){
+
+    for(let y=0;y<SIZE;y++){
+        for(let x=0;x<SIZE;x++){
+
+            if(
+                m[y][x] === "P" ||
+                m[y][x] === "G"
+            ){
+                m[y][x]=".";
+            }
+
+        }
+    }
+}
+
+function addKeys(m){
+
+    const free=[];
+
+    for(let y=1;y<SIZE-1;y++){
+        for(let x=1;x<SIZE-1;x++){
+
+            if(m[y][x] === "."){
+                free.push({x,y});
+            }
+
+        }
+    }
+
+    for(let i=free.length-1;i>0;i--){
+
+        const j=Math.floor(Math.random()*(i+1));
+
+        [free[i],free[j]]=[free[j],free[i]];
+    }
+
+    for(let i=0;i<4 && i<free.length;i++){
+        m[free[i].y][free[i].x]="K";
+    }
+}
+
+/* ---------------------------
+   РАНДОМНЫЙ ЛАБИРИНТ
+---------------------------- */
+
+function generateRandomMaze(){
+
+    const m=[];
+
+    for(let y=0;y<SIZE;y++){
+
+        m[y]=[];
+
+        for(let x=0;x<SIZE;x++){
+
+            if(
+                x===0 ||
+                y===0 ||
+                x===SIZE-1 ||
+                y===SIZE-1
+            ){
+                m[y][x]="#";
+            }else{
+                m[y][x]=".";
+            }
+
+        }
+
+    }
+
+    /*
+       Создаём случайные стены,
+       но оставляем достаточно проходов.
+    */
+
+    for(let y=2;y<SIZE-2;y+=2){
+
+        for(let x=2;x<SIZE-2;x+=2){
+
+            m[y][x]="#";
+
+            const dirs=[
+                [1,0],
+                [-1,0],
+                [0,1],
+                [0,-1]
+            ];
+
+            const d=randomChoice(dirs);
+
+            m[y+d[1]][x+d[0]]="#";
+        }
+    }
+
+    m[1][1]="P";
+    m[SIZE-2][SIZE-2]="E";
+
+    /*
+       Если лабиринт не полностью проходим,
+       генерируем заново.
+    */
+
+    if(!isMazeConnected(m)){
+        return generateRandomMaze();
+    }
+
+    clearSpecials(m);
+
+    m[1][1]="P";
+    m[SIZE-2][SIZE-2]="E";
+
+    addKeys(m);
+
+    return m;
+}
+
+function isMazeConnected(m){
+
+    const start={x:1,y:1};
+
+    const queue=[start];
+    const visited=new Set();
+
+    visited.add("1,1");
+
+    while(queue.length){
+
+        const p=queue.shift();
+
+        const dirs=[
+            [1,0],
+            [-1,0],
+            [0,1],
+            [0,-1]
+        ];
+
+        for(const d of dirs){
+
+            const x=p.x+d[0];
+            const y=p.y+d[1];
+
+            if(
+                x<0 ||
+                y<0 ||
+                x>=SIZE ||
+                y>=SIZE
+            ) continue;
+
+            if(m[y][x]==="#") continue;
+
+            const id=x+","+y;
+
+            if(!visited.has(id)){
+
+                visited.add(id);
+                queue.push({x,y});
+            }
+
+        }
+    }
+
+    /*
+       Проверяем, что выход достижим.
+    */
+
+    return visited.has(
+        (SIZE-2)+","+(SIZE-2)
+    );
+}
+
+/* ---------------------------
+   СТАРТ ИГРЫ
+---------------------------- */
+
+function prepareMap(){
+
+    let m;
+
+    if(mazeMode==="base"){
+        m=cloneMap(BASE_MAZES[baseMazeIndex]);
+    }
+
+    if(mazeMode==="random"){
+        m=generateRandomMaze();
+    }
+
+    if(mazeMode==="custom"){
+        m=cloneMap(customMap);
+    }
+
+    map=m;
+
+    const start=findStart(map);
+    const exit=findExit(map);
+
+    clearSpecials(map);
+
+    map[start.y][start.x]=".";
+    map[exit.y][exit.x]="E";
+
+    player={
+        x:start.x,
+        y:start.y
+    };
+
+    collected=0;
+    score=0;
+    lives=3;
+
+    const oldGuards=collectGuardStarts(map);
+
+    guards=[];
+
+    if(oldGuards.length){
+
+        guards=oldGuards.map(p=>({
+            x:p.x,
+            y:p.y
+        }));
+
+    }else{
+
+        /*
+           Если в рандомном лабиринте нет
+           заданных охранников — создаём их
+           далеко от игрока.
+        */
+
+        const free=getFreeCells();
+
+        for(let i=0;i<3;i++){
+
+            let p;
+
+            do{
+                p=randomChoice(free);
+            }while(
+                Math.abs(p.x-player.x)+
+                Math.abs(p.y-player.y)<7
+            );
+
+            guards.push({
+                x:p.x,
+                y:p.y
+            });
+        }
+    }
+
+    addKeysIfNeeded();
+
+    direction={x:0,y:0};
+    wantedDirection={x:0,y:0};
+
+    paused=false;
+    gameOver=false;
+    won=false;
+
+    playerTimer=0;
+    guardTimer=0;
+
+    messageEl.textContent="";
+
+    updateUI();
+}
+
+function addKeysIfNeeded(){
+
+    let count=0;
+
+    for(let y=0;y<SIZE;y++){
+        for(let x=0;x<SIZE;x++){
+
+            if(map[y][x]==="K"){
+                count++;
+            }
+
+        }
+    }
+
+    if(count>=4) return;
+
+    addKeys(map);
+}
+
+/* ---------------------------
+   ДВИЖЕНИЕ
+---------------------------- */
+
+function isWall(x,y){
+
+    if(
+        x<0 ||
+        y<0 ||
+        x>=SIZE ||
+        y>=SIZE
+    ){
+        return true;
+    }
+
+    return map[y][x]==="#";
+}
+
+function canMove(x,y,dx,dy){
+
+    return !isWall(
+        x+dx,
+        y+dy
+    );
+}
+
+function getNeighbors(x,y){
+
+    const dirs=[
+        {x:1,y:0},
+        {x:-1,y:0},
+        {x:0,y:1},
+        {x:0,y:-1}
+    ];
+
+    return dirs.filter(d =>
+        canMove(x,y,d.x,d.y)
+    );
+}
+
+function setDirection(dx,dy){
+
+    if(gameOver || won) return;
+
+    wantedDirection={x:dx,y:dy};
+
+    if(
+        canMove(
+            player.x,
+            player.y,
+            dx,
+            dy
+        )
+    ){
+        direction={x:dx,y:dy};
+    }
+}
+
+function movePlayer(){
+
+    if(
+        canMove(
+            player.x,
+            player.y,
+            wantedDirection.x,
+            wantedDirection.y
+        )
+    ){
+        direction={...wantedDirection};
+    }
+
+    if(
+        !canMove(
+            player.x,
+            player.y,
+            direction.x,
+            direction.y
+        )
+    ){
+        return;
+    }
+
+    player.x+=direction.x;
+    player.y+=direction.y;
+
+    const tile=map[player.y][player.x];
+
+    if(tile==="K"){
+
+        collected++;
+        score+=100;
+
+        map[player.y][player.x]=".";
+
+        messageEl.textContent=
+            "🔑 Ключ найден!";
+    }
+
+    if(tile==="E"){
+
+        if(collected>=4){
+            winGame();
+            return;
+        }
+
+        messageEl.textContent=
+            "🔐 Нужны все 4 ключа!";
+    }
+
+    score+=10;
+}
+
+/* ---------------------------
+   ОХРАННИКИ
+---------------------------- */
+
+function canGuardSeePlayer(guard){
+
+    if(guard.x===player.x){
+
+        const step=
+            player.y>guard.y ? 1:-1;
+
+        for(
+            let y=guard.y+step;
+            y!==player.y;
+            y+=step
+        ){
+
+            if(isWall(guard.x,y)){
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    if(guard.y===player.y){
+
+        const step=
+            player.x>guard.x ? 1:-1;
+
+        for(
+            let x=guard.x+step;
+            x!==player.x;
+            x+=step
+        ){
+
+            if(isWall(x,guard.y)){
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    return false;
+}
+
+function moveGuards(){
+
+    const settings=getDifficultySettings();
+
+    for(const guard of guards){
+
+        const neighbors=getNeighbors(
+            guard.x,
+            guard.y
+        );
+
+        if(!neighbors.length) continue;
+
+        const sees=
+            canGuardSeePlayer(guard);
+
+        /*
+           Если видит игрока —
+           пытается приблизиться.
+        */
+
+        if(sees && settings.guardSmart){
+
+            neighbors.sort((a,b)=>{
+
+                const da=
+                    Math.abs(a.x-player.x)+
+                    Math.abs(a.y-player.y);
+
+                const db=
+                    Math.abs(b.x-player.x)+
+                    Math.abs(b.y-player.y);
+
+                return da-db;
+            });
+
+            /*
+               Иногда выбираем второй вариант,
+               чтобы поведение не было идеальным.
+            */
+
+            if(
+                neighbors.length>1 &&
+                Math.random()<0.25
+            ){
+                guard.x=
+                    neighbors[1].x;
+                guard.y=
+                    neighbors[1].y;
+            }else{
+                guard.x=
+                    neighbors[0].x;
+                guard.y=
+                    neighbors[0].y;
+            }
+
+        }else{
+
+            /*
+               Не видит игрока —
+               просто патрулирует случайно.
+            */
+
+            const target=
+                randomChoice(neighbors);
+
+            guard.x=target.x;
+            guard.y=target.y;
+        }
+    }
+}
+
+function checkCollision(){
+
+    for(const guard of guards){
+
+        if(
+            guard.x===player.x &&
+            guard.y===player.y
+        ){
+            loseLife();
+            return;
+        }
+    }
+}
+
+function loseLife(){
+
+    lives--;
+
+    if(lives<=0){
+        endGame();
+        return;
+    }
+
+    messageEl.textContent=
+        "👮 Тебя поймали! Жизней осталось: "+lives;
+
+    const start=findStart(map);
+
+    player={
+        x:start.x,
+        y:start.y
+    };
+
+    direction={x:0,y:0};
+    wantedDirection={x:0,y:0};
+
+    updateUI();
+}
+
+function endGame(){
+
+    gameOver=true;
+
+    saveHighscore();
+
+    messageEl.textContent=
+        "🚨 Побег провален! Очки: "+score;
+
+    updateUI();
+}
+
+function winGame(){
+
+    won=true;
+
+    score+=500;
+
+    saveHighscore();
+
+    messageEl.textContent=
+        "🚪 ПОБЕГ УДАЛСЯ! +500";
+
+    updateUI();
+}
+
+function saveHighscore(){
+
+    if(score>highscore){
+
+        highscore=score;
+
+        localStorage.setItem(
+            "prisonPacman2Highscore",
+            highscore
+        );
+    }
+}
+
+function updateUI(){
+
+    keysEl.textContent=
+        collected+"/4";
+
+    livesEl.textContent=lives;
+
+    scoreEl.textContent=score;
+
+    highscoreEl.textContent=highscore;
+
+    pauseBtn.textContent=
+        paused
+        ? "▶ Продолжить"
+        : "⏸ Пауза";
+}
+
+/* ---------------------------
+   ФОНЫ
+---------------------------- */
+
+function drawBackground(time){
+
+    const t=time/1000;
+
+    if(backgroundType===0){
+
+        const pulse=
+            18+
+            Math.sin(t*3)*5;
+
+        ctx.fillStyle=
+            `rgb(${pulse},${pulse},${pulse})`;
+
+        ctx.fillRect(
+            0,0,
+            canvas.width,
+            canvas.height
+        );
+    }
+
+    if(backgroundType===1){
+
+        const pulse=
+            15+
+            Math.sin(t*4)*8;
+
+        ctx.fillStyle=
+            `rgb(${8},${10},${pulse+15})`;
+
+        ctx.fillRect(
+            0,0,
+            canvas.width,
+            canvas.height
+        );
+    }
+
+    if(backgroundType===2){
+
+        const pulse=
+            30+
+            Math.sin(t*3)*15;
+
+        ctx.fillStyle=
+            `rgb(${pulse},10,${pulse+25})`;
+
+        ctx.fillRect(
+            0,0,
+            canvas.width,
+            canvas.height
+        );
+    }
+
+    if(backgroundType===3){
+
+        const pulse=
+            30+
+            Math.sin(t*3)*18;
+
+        ctx.fillStyle=
+            `rgb(5,${pulse},${pulse+20})`;
+
+        ctx.fillRect(
+            0,0,
+            canvas.width,
+            canvas.height
+        );
+    }
+
+    if(backgroundType===4){
+
+        const pulse=
+            25+
+            Math.sin(t*3)*15;
+
+        ctx.fillStyle=
+            `rgb(5,${pulse},15)`;
+
+        ctx.fillRect(
+            0,0,
+            canvas.width,
+            canvas.height
+        );
+    }
+
+    /*
+       Лёгкая сетка
+    */
+
+    ctx.strokeStyle="rgba(255,255,255,.035)";
+    ctx.lineWidth=1;
+
+    for(let x=0;x<canvas.width;x+=CELL){
+        ctx.beginPath();
+        ctx.moveTo(x,0);
+        ctx.lineTo(x,canvas.height);
+        ctx.stroke();
+    }
+
+    for(let y=0;y<canvas.height;y+=CELL){
+        ctx.beginPath();
+        ctx.moveTo(0,y);
+        ctx.lineTo(canvas.width,y);
+        ctx.stroke();
+    }
+}
+
+/* ---------------------------
+   РИСОВАНИЕ
+---------------------------- */
+
+function drawWalls(){
+
+    for(let y=0;y<SIZE;y++){
+
+        for(let x=0;x<SIZE;x++){
+
+            if(map[y][x]!=="#") continue;
+
+            const px=x*CELL;
+            const py=y*CELL;
+
+            ctx.fillStyle="#333";
+            ctx.fillRect(
+                px,
+                py,
+                CELL,
+                CELL
+            );
+
+            ctx.strokeStyle="#777";
+            ctx.lineWidth=2;
+
+            for(let i=1;i<4;i++){
+
+                const xx=
+                    px+CELL*i/4;
+
+                ctx.beginPath();
+
+                ctx.moveTo(
+                    xx,
+                    py+2
+                );
+
+                ctx.lineTo(
+                    xx,
+                    py+CELL-2
+                );
+
+                ctx.stroke();
+            }
+
+            ctx.strokeStyle="#555";
+            ctx.lineWidth=1;
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                px,
+                py+CELL/2
+            );
+
+            ctx.lineTo(
+                px+CELL,
+                py+CELL/2
+            );
+
+            ctx.stroke();
+        }
+    }
+}
+
+function drawKeys(){
+
+    for(let y=0;y<SIZE;y++){
+
+        for(let x=0;x<SIZE;x++){
+
+            if(map[y][x]!=="K") continue;
+
+            const cx=
+                x*CELL+CELL/2;
+
+            const cy=
+                y*CELL+CELL/2;
+
+            ctx.strokeStyle="#ffd84d";
+            ctx.lineWidth=4;
+
+            ctx.beginPath();
+
+            ctx.arc(
+                cx-5,
+                cy-4,
+                7,
+                0,
+                Math.PI*2
+            );
+
+            ctx.stroke();
+
+            ctx.beginPath();
+
+            ctx.moveTo(cx+1,cy);
+            ctx.lineTo(cx+10,cy);
+            ctx.lineTo(cx+10,cy+5);
+
+            ctx.stroke();
+        }
+    }
+}
+
+function drawExit(){
+
+    const exit=findExit(map);
+
+    const px=exit.x*CELL;
+    const py=exit.y*CELL;
+
+    ctx.fillStyle=
+        collected>=4
+        ? "#238344"
+        : "#682828";
+
+    ctx.fillRect(
+        px+5,
+        py+3,
+        CELL-10,
+        CELL-6
+    );
+
+    ctx.fillStyle="white";
+    ctx.font=`bold ${CELL*.42}px Arial`;
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+
+    ctx.fillText(
+        "🚪",
+        px+CELL/2,
+        py+CELL/2
+    );
+}
+
+function getPlayerColor(){
+
+    if(playerColor==="rainbow"){
+
+        const hue=
+            (rainbowTime*0.08)%360;
+
+        return `hsl(${hue},90%,55%)`;
+    }
+
+    if(playerColor==="rainbow2"){
+
+        const hue=
+            (rainbowTime*0.18)%360;
+
+        return `hsl(${hue},100%,65%)`;
+    }
+
+    return playerColor;
+}
+
+function drawPlayer(time){
+
+    const cx=
+        player.x*CELL+CELL/2;
+
+    const cy=
+        player.y*CELL+CELL/2;
+
+    const r=CELL*.37;
+
+    ctx.fillStyle=getPlayerColor();
+
+    let angle=0;
+
+    if(direction.x===-1){
+        angle=Math.PI;
+    }
+
+    if(direction.y===-1){
+        angle=-Math.PI/2;
+    }
+
+    if(direction.y===1){
+        angle=Math.PI/2;
+    }
+
+    ctx.beginPath();
+
+    ctx.moveTo(cx,cy);
+
+    ctx.arc(
+        cx,
+        cy,
+        r,
+        angle+.45,
+        angle+Math.PI*2-.45
+    );
+
+    ctx.closePath();
+    ctx.fill();
+
+    /*
+       Тюремная форма
+    */
+
+    ctx.fillStyle="rgba(20,20,20,.75)";
+
+    ctx.fillRect(
+        cx-r*.55,
+        cy+r*.2,
+        r*1.1,
+        r*.45
+    );
+
+    ctx.fillStyle="white";
+
+    ctx.font=
+        `bold ${CELL*.18}px Arial`;
+
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+
+    ctx.fillText(
+        "13",
+        cx,
+        cy+r*.42
+    );
+}
+
+function drawGuard(guard){
+
+    const cx=
+        guard.x*CELL+CELL/2;
+
+    const cy=
+        guard.y*CELL+CELL/2;
+
+    if(guardSkin==="guard"){
+
+        ctx.fillStyle="#555";
+
+        ctx.fillRect(
+            cx-CELL*.27,
+            cy,
+            CELL*.54,
+            CELL*.32
+        );
+
+        ctx.fillStyle="#e0ad7c";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            cx,
+            cy-CELL*.08,
+            CELL*.22,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+        ctx.fillStyle="#333";
+
+        ctx.fillRect(
+            cx-CELL*.25,
+            cy-CELL*.3,
+            CELL*.5,
+            CELL*.12
+        );
+
+    }
+
+    if(guardSkin==="police"){
+
+        ctx.fillStyle="#31577a";
+
+        ctx.fillRect(
+            cx-CELL*.29,
+            cy,
+            CELL*.58,
+            CELL*.32
+        );
+
+        ctx.fillStyle="#e6b98a";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            cx,
+            cy-CELL*.08,
+            CELL*.22,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+        ctx.fillStyle="#1e3550";
+
+        ctx.fillRect(
+            cx-CELL*.25,
+            cy-CELL*.3,
+            CELL*.5,
+            CELL*.12
+        );
+
+    }
+
+    if(guardSkin==="general"){
+
+        ctx.fillStyle="#174d2b";
+
+        ctx.fillRect(
+            cx-CELL*.31,
+            cy,
+            CELL*.62,
+            CELL*.34
+        );
+
+        ctx.fillStyle="#e6b98a";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            cx,
+            cy-CELL*.08,
+            CELL*.22,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+        ctx.fillStyle="#123a20";
+
+        ctx.fillRect(
+            cx-CELL*.27,
+            cy-CELL*.3,
+            CELL*.54,
+            CELL*.12
+        );
+
+        /*
+           Погоны
+        */
+
+        ctx.fillStyle="#d8b64c";
+
+        ctx.fillRect(
+            cx-CELL*.27,
+            cy,
+            CELL*.16,
+            CELL*.06
+        );
+
+        ctx.fillRect(
+            cx+CELL*.11,
+            cy,
+            CELL*.16,
+            CELL*.06
+        );
+    }
+
+    /*
+       Глаза
+    */
+
+    ctx.fillStyle="#111";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        cx-4,
+        cy-CELL*.09,
+        2,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+    ctx.beginPath();
+
+    ctx.arc(
+        cx+4,
+        cy-CELL*.09,
+        2,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+}
+
+function drawGuards(){
+
+    for(const guard of guards){
+        drawGuard(guard);
+    }
+}
+
+function drawPause(){
+
+    if(!paused) return;
+
+    ctx.fillStyle="rgba(0,0,0,.68)";
+
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    ctx.fillStyle="white";
+    ctx.font="bold 46px Arial";
+    ctx.textAlign="center";
+    ctx.textBaseline="middle";
+
+    ctx.fillText(
+        "ПАУЗА",
+        canvas.width/2,
+        canvas.height/2
+    );
+}
+
+function draw(time){
+
+    drawBackground(time);
+
+    drawWalls();
+    drawKeys();
+    drawExit();
+    drawPlayer(time);
+    drawGuards();
+    drawPause();
+}
+
+/* ---------------------------
+   GAME LOOP
+---------------------------- */
+
+function gameLoop(time){
+
+    const dt=time-lastTime;
+    lastTime=time;
+
+    rainbowTime=time;
+
+    if(
+        !paused &&
+        !gameOver &&
+        !won
+    ){
+
+        const settings=
+            getDifficultySettings();
+
+        playerTimer+=dt;
+        guardTimer+=dt;
+
+        if(playerTimer>=settings.playerDelay){
+
+            playerTimer=0;
+
+            movePlayer();
+
+            checkCollision();
+        }
+
+        if(guardTimer>=settings.guardDelay){
+
+            guardTimer=0;
+
+            moveGuards();
+
+            checkCollision();
+        }
+    }
+
+    draw(time);
+
+    requestAnimationFrame(gameLoop);
+}
+
+/* ---------------------------
+   КНОПКИ
+---------------------------- */
+
+document.getElementById("startBtn")
+.addEventListener("click",()=>{
+
+    if(mazeMode==="custom"){
+
+        openEditor();
+
+        return;
+    }
+
+    menu.classList.add("hidden");
+    gamePanel.classList.remove("hidden");
+
+    prepareMap();
+});
+
+document.getElementById("pauseBtn")
+.addEventListener("click",()=>{
+
+    if(gameOver || won) return;
+
+    paused=!paused;
+
+    updateUI();
+});
+
+document.getElementById("newBtn")
+.addEventListener("click",()=>{
+
+    prepareMap();
+});
+
+document.getElementById("menuBtn")
+.addEventListener("click",()=>{
+
+    gamePanel.classList.add("hidden");
+    menu.classList.remove("hidden");
+});
+
+document.getElementById("homeBtn")
+.addEventListener("click",()=>{
+
+    window.location.href="/";
+});
+
+/* ---------------------------
+   КЛАВИАТУРА
+---------------------------- */
+
+document.addEventListener("keydown",e=>{
+
+    const key=e.key.toLowerCase();
+
+    if(
+        key==="arrowup" ||
+        key==="w"
+    ){
+        e.preventDefault();
+        setDirection(0,-1);
+    }
+
+    if(
+        key==="arrowdown" ||
+        key==="s"
+    ){
+        e.preventDefault();
+        setDirection(0,1);
+    }
+
+    if(
+        key==="arrowleft" ||
+        key==="a"
+    ){
+        e.preventDefault();
+        setDirection(-1,0);
+    }
+
+    if(
+        key==="arrowright" ||
+        key==="d"
+    ){
+        e.preventDefault();
+        setDirection(1,0);
+    }
+
+    if(key==="p"){
+
+        if(!gameOver && !won){
+            paused=!paused;
+            updateUI();
+        }
+    }
+});
+
+/* ---------------------------
+   КНОПКИ ТЕЛЕФОНА
+---------------------------- */
+
+document.querySelectorAll("[data-dir]")
+.forEach(btn=>{
+
+    btn.addEventListener("pointerdown",e=>{
+
+        e.preventDefault();
+
+        const dir=btn.dataset.dir;
+
+        if(dir==="up")
+            setDirection(0,-1);
+
+        if(dir==="down")
+            setDirection(0,1);
+
+        if(dir==="left")
+            setDirection(-1,0);
+
+        if(dir==="right")
+            setDirection(1,0);
+    });
+});
+
+/* ---------------------------
+   СВАЙП
+---------------------------- */
+
+let touchStartX=0;
+let touchStartY=0;
+
+canvas.addEventListener(
+    "pointerdown",
+    e=>{
+        touchStartX=e.clientX;
+        touchStartY=e.clientY;
+    }
+);
+
+canvas.addEventListener(
+    "pointerup",
+    e=>{
+
+        const dx=
+            e.clientX-touchStartX;
+
+        const dy=
+            e.clientY-touchStartY;
+
+        if(
+            Math.abs(dx)<25 &&
+            Math.abs(dy)<25
+        ){
+            return;
+        }
+
+        if(Math.abs(dx)>Math.abs(dy)){
+
+            if(dx>0)
+                setDirection(1,0);
+            else
+                setDirection(-1,0);
+
+        }else{
+
+            if(dy>0)
+                setDirection(0,1);
+            else
+                setDirection(0,-1);
+        }
+    }
+);
+
+/* ---------------------------
+   РЕДАКТОР ЛАБИРИНТА
+---------------------------- */
+
+let customMap=[];
+
+function createEmptyEditor(){
+
+    customMap=[];
+
+    for(let y=0;y<SIZE;y++){
+
+        customMap[y]=[];
+
+        for(let x=0;x<SIZE;x++){
+
+            if(
+                x===0 ||
+                y===0 ||
+                x===SIZE-1 ||
+                y===SIZE-1
+            ){
+                customMap[y][x]="#";
+            }else{
+                customMap[y][x]=".";
+            }
+
+        }
+    }
+
+    customMap[1][1]="P";
+    customMap[SIZE-2][SIZE-2]="E";
+
+    addKeys(customMap);
+}
+
+function drawEditor(){
+
+    ectx.fillStyle="#151515";
+
+    ectx.fillRect(
+        0,
+        0,
+        editor.width,
+        editor.height
+    );
+
+    for(let y=0;y<SIZE;y++){
+
+        for(let x=0;x<SIZE;x++){
+
+            const px=x*CELL;
+            const py=y*CELL;
+
+            if(customMap[y][x]==="#"){
+
+                ectx.fillStyle="#444";
+
+            }else{
+
+                ectx.fillStyle=
+                    (x+y)%2===0
+                    ? "#222"
+                    : "#282828";
+            }
+
+            ectx.fillRect(
+                px,
+                py,
+                CELL,
+                CELL
+            );
+
+            ectx.strokeStyle=
+                "rgba(255,255,255,.08)";
+
+            ectx.strokeRect(
+                px,
+                py,
+                CELL,
+                CELL
+            );
+
+            if(customMap[y][x]==="P"){
+
+                ectx.fillStyle="#ffd52f";
+
+                ectx.beginPath();
+
+                ectx.arc(
+                    px+CELL/2,
+                    py+CELL/2,
+                    CELL*.32,
+                    0,
+                    Math.PI*2
+                );
+
+                ectx.fill();
+            }
+
+            if(customMap[y][x]==="E"){
+
+                ectx.font=`${CELL*.5}px Arial`;
+                ectx.textAlign="center";
+                ectx.textBaseline="middle";
+
+                ectx.fillText(
+                    "🚪",
+                    px+CELL/2,
+                    py+CELL/2
+                );
+            }
+
+            if(customMap[y][x]==="K"){
+
+                ectx.fillStyle="#ffd84d";
+
+                ectx.beginPath();
+
+                ectx.arc(
+                    px+CELL/2-4,
+                    py+CELL/2,
+                    6,
+                    0,
+                    Math.PI*2
+                );
+
+                ectx.stroke();
+            }
+        }
+    }
+}
+
+editor.addEventListener(
+    "pointerdown",
+    e=>{
+
+        const rect=
+            editor.getBoundingClientRect();
+
+        const x=Math.floor(
+            (e.clientX-rect.left)/
+            rect.width*SIZE
+        );
+
+        const y=Math.floor(
+            (e.clientY-rect.top)/
+            rect.height*SIZE
+        );
+
+        if(
+            x<=0 ||
+            y<=0 ||
+            x>=SIZE-1 ||
+            y>=SIZE-1
+        ){
+            return;
+        }
+
+        if(
+            customMap[y][x]==="P" ||
+            customMap[y][x]==="E"
+        ){
+            return;
+        }
+
+        customMap[y][x]=
+            customMap[y][x]==="#"
+            ? "."
+            : "#";
+
+        drawEditor();
+    }
+);
+
+function openEditor(){
+
+    menu.classList.add("hidden");
+    editorPanel.classList.remove("hidden");
+
+    createEmptyEditor();
+    drawEditor();
+}
+
+document.getElementById("editorClear")
+.addEventListener("click",()=>{
+
+    createEmptyEditor();
+    drawEditor();
+});
+
+document.getElementById("editorBack")
+.addEventListener("click",()=>{
+
+    editorPanel.classList.add("hidden");
+    menu.classList.remove("hidden");
+});
+
+document.getElementById("editorUse")
+.addEventListener("click",()=>{
+
+    if(!isMazeConnected(customMap)){
+
+        alert(
+            "В этом лабиринте невозможно добраться до выхода. Добавь проход."
+        );
+
+        return;
+    }
+
+    mazeMode="custom";
+
+    editorPanel.classList.add("hidden");
+    gamePanel.classList.remove("hidden");
+
+    prepareMap();
+});
+
+/* ---------------------------
+   ЗАПУСК
+---------------------------- */
+
+requestAnimationFrame(gameLoop);
+
+</script>
+
+</body>
+</html>

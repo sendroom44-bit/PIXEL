@@ -1,0 +1,38 @@
+﻿
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'games/christmas.css' %}">
+
+<script>
+document.body.classList.add('christmas-mode');
+
+(function () {
+    /* Гирлянда */
+    var garland = document.createElement('div');
+    garland.className = 'christmas-garland';
+
+    for (var i = 0; i < 25; i++) {
+        var light = document.createElement('span');
+        garland.appendChild(light);
+    }
+
+    document.body.insertBefore(garland, document.body.firstChild);
+
+    /* Падающий снег */
+    for (var i = 0; i < 45; i++) {
+        var snow = document.createElement('div');
+
+        snow.className = 'christmas-snow';
+        snow.style.width = (3 + Math.random() * 5) + 'px';
+        snow.style.height = snow.style.width;
+        snow.style.background = '#ffffff';
+        snow.style.borderRadius = '50%';
+        snow.style.left = Math.random() * 100 + '%';
+        snow.style.opacity = 0.3 + Math.random() * 0.7;
+        snow.style.animationDuration = (6 + Math.random() * 9) + 's';
+        snow.style.animationDelay = (-Math.random() * 12) + 's';
+
+        document.body.appendChild(snow);
+    }
+})();
+</script>

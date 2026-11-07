@@ -1,0 +1,1022 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prison Pac-Man</title>
+
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+            linear-gradient(rgba(0,0,0,.35), rgba(0,0,0,.55)),
+            repeating-linear-gradient(
+                90deg,
+                #252525 0px,
+                #252525 38px,
+                #292929 39px,
+                #292929 76px
+            );
+        color: white;
+        font-family: Arial, sans-serif;
+        display: flex;
+        justify-content: center;
+        padding: 18px;
+    }
+
+    .wrap {
+        width: min(850px, 100%);
+        text-align: center;
+    }
+
+    h1 {
+        margin: 5px 0 3px;
+        font-size: clamp(28px, 6vw, 48px);
+        letter-spacing: 2px;
+    }
+
+    .subtitle {
+        color: #aaa;
+        margin: 0 0 14px;
+    }
+
+    .topbar {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+
+    .stat {
+        background: #151515;
+        border: 1px solid #555;
+        border-radius: 9px;
+        padding: 8px 13px;
+        font-weight: bold;
+    }
+
+    canvas {
+        display: block;
+        width: min(760px, 100%);
+        height: auto;
+        margin: auto;
+        background: #111;
+        border: 5px solid #555;
+        border-radius: 12px;
+        box-shadow: 0 8px 30px rgba(0,0,0,.55);
+        touch-action: none;
+    }
+
+    .buttons {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-top: 13px;
+    }
+
+    button {
+        border: 1px solid #666;
+        background: #292929;
+        color: white;
+        border-radius: 9px;
+        padding: 11px 17px;
+        font-size: 15px;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #3b3b3b;
+    }
+
+    .controls {
+        margin: 15px auto 0;
+        width: 190px;
+        display: grid;
+        grid-template-columns: repeat(3, 60px);
+        gap: 7px;
+        justify-content: center;
+    }
+
+    .controls button {
+        width: 60px;
+        height: 52px;
+        padding: 0;
+        font-size: 23px;
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    .empty {
+        visibility: hidden;
+    }
+
+    .help {
+        color: #aaa;
+        margin-top: 12px;
+        line-height: 1.5;
+        font-size: 14px;
+    }
+
+    .message {
+        min-height: 28px;
+        margin-top: 9px;
+        font-size: 18px;
+        font-weight: bold;
+    }
+
+    @media (max-width: 500px) {
+        body {
+            padding: 10px;
+        }
+
+        canvas {
+            border-width: 3px;
+        }
+
+        .stat {
+            padding: 7px 10px;
+            font-size: 13px;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+    <h1>🔒 PRISON PAC-MAN</h1>
+    <p class="subtitle">Побег из тюрьмы</p>
+
+    <div class="topbar">
+        <div class="stat">🔑 Ключи: <span id="keys">0/4</span></div>
+        <div class="stat">❤️ Жизни: <span id="lives">3</span></div>
+        <div class="stat">🏆 Рекорд: <span id="highscore">0</span></div>
+    </div>
+
+    <canvas id="game" width="760" height="760"></canvas>
+
+    <div id="message" class="message"></div>
+
+    <div class="buttons">
+        <button id="pauseBtn">⏸ Пауза</button>
+        <button id="newBtn">🔄 Новый побег</button>
+        <button id="homeBtn">🏠 На главную</button>
+    </div>
+
+    <div class="controls">
+        <button class="empty"></button>
+        <button data-dir="up">▲</button>
+        <button class="empty"></button>
+
+        <button data-dir="left">◀</button>
+        <button data-dir="down">▼</button>
+        <button data-dir="right">▶</button>
+    </div>
+
+    <div class="help">
+        Компьютер: WASD или стрелки<br>
+        Телефон: свайп по полю или кнопки<br>
+        Собери все ключи и доберись до выхода 🚪
+    </div>
+
+</div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const keysEl = document.getElementById("keys");
+const livesEl = document.getElementById("lives");
+const highscoreEl = document.getElementById("highscore");
+const messageEl = document.getElementById("message");
+
+const pauseBtn = document.getElementById("pauseBtn");
+const newBtn = document.getElementById("newBtn");
+const homeBtn = document.getElementById("homeBtn");
+
+const SIZE = 19;
+const CELL = canvas.width / SIZE;
+
+/*
+# = стена
+. = точка
+K = ключ
+E = выход
+P = игрок
+G = мент
+*/
+
+const originalMap = [
+    "###################",
+    "#P....#.....#....K#",
+    "#.###.#.###.#.###.#",
+    "#.....#...#.#.....#",
+    "###.#####.#.#####.#",
+    "#...#.....#.....#.#",
+    "#.#.#.###.###.#.#.#",
+    "#.#...#.....#...#.#",
+    "#.#####.###.#####.#",
+    "#.....#..G..#.....#",
+    "#.###.#.###.#.###.#",
+    "#...#.#.....#.#...#",
+    "###.#.#####.#.#.###",
+    "#K..#.....#.....#K#",
+    "#.#####.#.#####.#.#",
+    "#.....#.#.....#...#",
+    "#.###.#.###.#.###.#",
+    "#K....#.....#....E#",
+    "###################"
+];
+
+let map;
+let player;
+let police;
+let collected;
+let lives;
+let score;
+let highscore = Number(localStorage.getItem("prisonPacmanHighscore") || 0);
+
+let paused = false;
+let gameOver = false;
+let won = false;
+
+let lastTime = 0;
+let playerMoveTimer = 0;
+let policeMoveTimer = 0;
+
+let direction = {x: 0, y: 0};
+let wantedDirection = {x: 0, y: 0};
+
+const PLAYER_DELAY = 155;
+const POLICE_DELAY = 300;
+
+const keyPositions = [
+    {x: 17, y: 1},
+    {x: 1, y: 13},
+    {x: 17, y: 13},
+    {x: 1, y: 17}
+];
+
+function resetMap() {
+    map = originalMap.map(row => row.split(""));
+
+    player = {x: 1, y: 1};
+
+    police = [
+        {x: 9, y: 9},
+        {x: 10, y: 9},
+        {x: 9, y: 8},
+        {x: 10, y: 10}
+    ];
+
+    collected = 0;
+
+    for (const k of keyPositions) {
+        map[k.y][k.x] = "K";
+    }
+
+    map[17][17] = "E";
+
+    map[player.y][player.x] = ".";
+
+    lives = 3;
+    score = 0;
+    paused = false;
+    gameOver = false;
+    won = false;
+
+    direction = {x: 0, y: 0};
+    wantedDirection = {x: 0, y: 0};
+
+    messageEl.textContent = "";
+
+    updateUI();
+}
+
+function updateUI() {
+    keysEl.textContent = collected + "/4";
+    livesEl.textContent = lives;
+    highscoreEl.textContent = highscore;
+    pauseBtn.textContent = paused ? "▶ Продолжить" : "⏸ Пауза";
+}
+
+function isWall(x, y) {
+    if (x < 0 || y < 0 || x >= SIZE || y >= SIZE) {
+        return true;
+    }
+
+    return map[y][x] === "#";
+}
+
+function canMove(x, y, dx, dy) {
+    return !isWall(x + dx, y + dy);
+}
+
+function setDirection(dx, dy) {
+    if (gameOver || won) return;
+
+    wantedDirection = {x: dx, y: dy};
+
+    if (canMove(player.x, player.y, dx, dy)) {
+        direction = {x: dx, y: dy};
+    }
+}
+
+function movePlayer() {
+    if (
+        canMove(
+            player.x,
+            player.y,
+            wantedDirection.x,
+            wantedDirection.y
+        )
+    ) {
+        direction = {...wantedDirection};
+    }
+
+    if (!canMove(player.x, player.y, direction.x, direction.y)) {
+        return;
+    }
+
+    player.x += direction.x;
+    player.y += direction.y;
+
+    const tile = map[player.y][player.x];
+
+    if (tile === "K") {
+        collected++;
+        score += 100;
+        map[player.y][player.x] = ".";
+        messageEl.textContent = "🔑 Ключ найден!";
+    }
+
+    if (tile === "E") {
+        if (collected >= 4) {
+            winGame();
+            return;
+        } else {
+            messageEl.textContent = "🔐 Выход закрыт! Нужны все 4 ключа.";
+        }
+    }
+
+    score += 10;
+}
+
+function getNeighbors(x, y) {
+    const dirs = [
+        {x: 1, y: 0},
+        {x: -1, y: 0},
+        {x: 0, y: 1},
+        {x: 0, y: -1}
+    ];
+
+    return dirs
+        .filter(d => !isWall(x + d.x, y + d.y))
+        .map(d => ({
+            x: x + d.x,
+            y: y + d.y
+        }));
+}
+
+/*
+    Менты двигаются специально медленнее.
+    Они стараются приближаться к зэку,
+    но не телепортируются и не двигаются каждый кадр.
+*/
+
+function movePolice() {
+
+    for (let i = 0; i < police.length; i++) {
+
+        const cop = police[i];
+        const neighbors = getNeighbors(cop.x, cop.y);
+
+        if (!neighbors.length) continue;
+
+        neighbors.sort((a, b) => {
+            const da =
+                Math.abs(a.x - player.x) +
+                Math.abs(a.y - player.y);
+
+            const db =
+                Math.abs(b.x - player.x) +
+                Math.abs(b.y - player.y);
+
+            return da - db;
+        });
+
+        /*
+            Иногда мент выбирает не самое близкое поле.
+            Это делает погоню менее идеальной.
+        */
+        let target = neighbors[0];
+
+        if (neighbors.length > 1 && Math.random() < 0.25) {
+            target =
+                neighbors[Math.floor(Math.random() * neighbors.length)];
+        }
+
+        cop.x = target.x;
+        cop.y = target.y;
+    }
+}
+
+function checkCollision() {
+
+    for (const cop of police) {
+
+        if (
+            cop.x === player.x &&
+            cop.y === player.y
+        ) {
+            loseLife();
+            return;
+        }
+    }
+}
+
+function loseLife() {
+
+    lives--;
+
+    if (lives <= 0) {
+        endGame();
+        return;
+    }
+
+    messageEl.textContent =
+        "👮 Тебя поймали! Осталось жизней: " + lives;
+
+    player = {x: 1, y: 1};
+
+    police = [
+        {x: 9, y: 9},
+        {x: 10, y: 9},
+        {x: 9, y: 8},
+        {x: 10, y: 10}
+    ];
+
+    direction = {x: 0, y: 0};
+    wantedDirection = {x: 0, y: 0};
+
+    updateUI();
+}
+
+function endGame() {
+
+    gameOver = true;
+
+    if (score > highscore) {
+        highscore = score;
+        localStorage.setItem(
+            "prisonPacmanHighscore",
+            highscore
+        );
+    }
+
+    messageEl.textContent =
+        "🚨 Побег провален. Очки: " + score;
+
+    updateUI();
+}
+
+function winGame() {
+
+    won = true;
+
+    score += 500;
+
+    if (score > highscore) {
+        highscore = score;
+        localStorage.setItem(
+            "prisonPacmanHighscore",
+            highscore
+        );
+    }
+
+    messageEl.textContent =
+        "🚪 ПОБЕГ УДАЛСЯ! Ты выбрался из тюрьмы!";
+
+    updateUI();
+}
+
+function drawBackground() {
+
+    ctx.fillStyle = "#101010";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    /*
+        Пол тюрьмы
+    */
+
+    for (let y = 0; y < SIZE; y++) {
+        for (let x = 0; x < SIZE; x++) {
+
+            if (map[y][x] !== "#") {
+
+                ctx.fillStyle =
+                    (x + y) % 2 === 0
+                        ? "#202020"
+                        : "#242424";
+
+                ctx.fillRect(
+                    x * CELL,
+                    y * CELL,
+                    CELL,
+                    CELL
+                );
+            }
+        }
+    }
+}
+
+function drawWalls() {
+
+    for (let y = 0; y < SIZE; y++) {
+        for (let x = 0; x < SIZE; x++) {
+
+            if (map[y][x] === "#") {
+
+                const px = x * CELL;
+                const py = y * CELL;
+
+                ctx.fillStyle = "#343434";
+                ctx.fillRect(px, py, CELL, CELL);
+
+                /*
+                    Тюремные прутья
+                */
+
+                ctx.strokeStyle = "#777";
+                ctx.lineWidth = 2;
+
+                for (let i = 1; i < 4; i++) {
+
+                    const xx =
+                        px + CELL * i / 4;
+
+                    ctx.beginPath();
+                    ctx.moveTo(xx, py + 2);
+                    ctx.lineTo(xx, py + CELL - 2);
+                    ctx.stroke();
+                }
+
+                ctx.strokeStyle = "#555";
+                ctx.lineWidth = 1;
+
+                ctx.beginPath();
+                ctx.moveTo(px, py + CELL / 2);
+                ctx.lineTo(px + CELL, py + CELL / 2);
+                ctx.stroke();
+            }
+        }
+    }
+}
+
+function drawKeys() {
+
+    for (let y = 0; y < SIZE; y++) {
+        for (let x = 0; x < SIZE; x++) {
+
+            if (map[y][x] === "K") {
+
+                const cx = x * CELL + CELL / 2;
+                const cy = y * CELL + CELL / 2;
+
+                ctx.strokeStyle = "#ffd84d";
+                ctx.lineWidth = 4;
+
+                ctx.beginPath();
+                ctx.arc(
+                    cx - 5,
+                    cy - 4,
+                    7,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.moveTo(cx + 1, cy);
+                ctx.lineTo(cx + 10, cy);
+                ctx.lineTo(cx + 10, cy + 5);
+                ctx.stroke();
+            }
+        }
+    }
+}
+
+function drawExit() {
+
+    const x = 17;
+    const y = 17;
+
+    const px = x * CELL;
+    const py = y * CELL;
+
+    ctx.fillStyle =
+        collected >= 4
+            ? "#236b38"
+            : "#572828";
+
+    ctx.fillRect(
+        px + 5,
+        py + 3,
+        CELL - 10,
+        CELL - 6
+    );
+
+    ctx.fillStyle = "white";
+    ctx.font = `${CELL * 0.55}px Arial`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    ctx.fillText(
+        "E",
+        px + CELL / 2,
+        py + CELL / 2
+    );
+}
+
+function drawPlayer() {
+
+    const cx = player.x * CELL + CELL / 2;
+    const cy = player.y * CELL + CELL / 2;
+
+    const r = CELL * 0.37;
+
+    /*
+        Голова Pac-Man
+    */
+
+    ctx.fillStyle = "#ffd52f";
+
+    let angle = 0;
+
+    if (direction.x === -1) {
+        angle = Math.PI;
+    } else if (direction.y === -1) {
+        angle = -Math.PI / 2;
+    } else if (direction.y === 1) {
+        angle = Math.PI / 2;
+    }
+
+    ctx.beginPath();
+
+    ctx.moveTo(cx, cy);
+
+    ctx.arc(
+        cx,
+        cy,
+        r,
+        angle + 0.45,
+        angle + Math.PI * 2 - 0.45
+    );
+
+    ctx.closePath();
+    ctx.fill();
+
+    /*
+        Тюремная форма
+    */
+
+    ctx.fillStyle = "#222";
+    ctx.fillRect(
+        cx - r * 0.55,
+        cy + r * 0.2,
+        r * 1.1,
+        r * 0.45
+    );
+
+    ctx.fillStyle = "white";
+    ctx.font = `${CELL * 0.2}px Arial`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(
+        "13",
+        cx,
+        cy + r * 0.42
+    );
+}
+
+function drawPolice() {
+
+    for (const cop of police) {
+
+        const cx =
+            cop.x * CELL + CELL / 2;
+
+        const cy =
+            cop.y * CELL + CELL / 2;
+
+        /*
+            Тело мента
+        */
+
+        ctx.fillStyle = "#31577a";
+
+        ctx.beginPath();
+        ctx.arc(
+            cx,
+            cy + 3,
+            CELL * 0.30,
+            Math.PI,
+            0
+        );
+
+        ctx.lineTo(
+            cx + CELL * 0.30,
+            cy + CELL * 0.25
+        );
+
+        ctx.lineTo(
+            cx - CELL * 0.30,
+            cy + CELL * 0.25
+        );
+
+        ctx.closePath();
+        ctx.fill();
+
+        /*
+            Голова
+        */
+
+        ctx.fillStyle = "#e6b98a";
+
+        ctx.beginPath();
+        ctx.arc(
+            cx,
+            cy - CELL * 0.08,
+            CELL * 0.22,
+            0,
+            Math.PI * 2
+        );
+        ctx.fill();
+
+        /*
+            Фуражка
+        */
+
+        ctx.fillStyle = "#1e3550";
+
+        ctx.fillRect(
+            cx - CELL * 0.25,
+            cy - CELL * 0.30,
+            CELL * 0.50,
+            CELL * 0.10
+        );
+
+        ctx.fillRect(
+            cx - CELL * 0.18,
+            cy - CELL * 0.38,
+            CELL * 0.36,
+            CELL * 0.10
+        );
+
+        /*
+            Глаза
+        */
+
+        ctx.fillStyle = "#111";
+
+        ctx.beginPath();
+        ctx.arc(
+            cx - 4,
+            cy - 5,
+            2,
+            0,
+            Math.PI * 2
+        );
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(
+            cx + 4,
+            cy - 5,
+            2,
+            0,
+            Math.PI * 2
+        );
+        ctx.fill();
+    }
+}
+
+function drawPause() {
+
+    if (!paused) return;
+
+    ctx.fillStyle = "rgba(0,0,0,.65)";
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+    ctx.fillStyle = "white";
+    ctx.font = "bold 46px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    ctx.fillText(
+        "ПАУЗА",
+        canvas.width / 2,
+        canvas.height / 2
+    );
+}
+
+function draw() {
+
+    drawBackground();
+    drawWalls();
+    drawKeys();
+    drawExit();
+    drawPlayer();
+    drawPolice();
+    drawPause();
+}
+
+function gameLoop(time) {
+
+    const dt = time - lastTime;
+    lastTime = time;
+
+    if (!paused && !gameOver && !won) {
+
+        playerMoveTimer += dt;
+        policeMoveTimer += dt;
+
+        if (playerMoveTimer >= PLAYER_DELAY) {
+            playerMoveTimer = 0;
+            movePlayer();
+            checkCollision();
+        }
+
+        if (policeMoveTimer >= POLICE_DELAY) {
+            policeMoveTimer = 0;
+            movePolice();
+            checkCollision();
+        }
+    }
+
+    draw();
+
+    requestAnimationFrame(gameLoop);
+}
+
+function togglePause() {
+
+    if (gameOver || won) return;
+
+    paused = !paused;
+
+    updateUI();
+}
+
+pauseBtn.addEventListener("click", togglePause);
+
+newBtn.addEventListener("click", () => {
+    resetMap();
+});
+
+homeBtn.addEventListener("click", () => {
+    window.location.href = "/";
+});
+
+/*
+    Клавиатура
+*/
+
+document.addEventListener("keydown", e => {
+
+    const key = e.key.toLowerCase();
+
+    if (
+        key === "arrowup" ||
+        key === "w"
+    ) {
+        e.preventDefault();
+        setDirection(0, -1);
+    }
+
+    if (
+        key === "arrowdown" ||
+        key === "s"
+    ) {
+        e.preventDefault();
+        setDirection(0, 1);
+    }
+
+    if (
+        key === "arrowleft" ||
+        key === "a"
+    ) {
+        e.preventDefault();
+        setDirection(-1, 0);
+    }
+
+    if (
+        key === "arrowright" ||
+        key === "d"
+    ) {
+        e.preventDefault();
+        setDirection(1, 0);
+    }
+
+    if (key === "p") {
+        togglePause();
+    }
+});
+
+/*
+    Экранные кнопки
+*/
+
+document.querySelectorAll("[data-dir]").forEach(btn => {
+
+    const handler = e => {
+
+        e.preventDefault();
+
+        const dir = btn.dataset.dir;
+
+        if (dir === "up") {
+            setDirection(0, -1);
+        }
+
+        if (dir === "down") {
+            setDirection(0, 1);
+        }
+
+        if (dir === "left") {
+            setDirection(-1, 0);
+        }
+
+        if (dir === "right") {
+            setDirection(1, 0);
+        }
+    };
+
+    btn.addEventListener("pointerdown", handler);
+});
+
+/*
+    Свайпы по полю
+*/
+
+let touchStartX = 0;
+let touchStartY = 0;
+
+canvas.addEventListener("pointerdown", e => {
+
+    touchStartX = e.clientX;
+    touchStartY = e.clientY;
+});
+
+canvas.addEventListener("pointerup", e => {
+
+    const dx = e.clientX - touchStartX;
+    const dy = e.clientY - touchStartY;
+
+    const minSwipe = 25;
+
+    if (
+        Math.abs(dx) < minSwipe &&
+        Math.abs(dy) < minSwipe
+    ) {
+        return;
+    }
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+
+        if (dx > 0) {
+            setDirection(1, 0);
+        } else {
+            setDirection(-1, 0);
+        }
+
+    } else {
+
+        if (dy > 0) {
+            setDirection(0, 1);
+        } else {
+            setDirection(0, -1);
+        }
+    }
+});
+
+resetMap();
+requestAnimationFrame(gameLoop);
+
+</script>
+
+</body>
+</html>

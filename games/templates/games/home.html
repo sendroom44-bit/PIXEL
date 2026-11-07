@@ -1,0 +1,636 @@
+﻿
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PIXEL — мир игр без границ</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    background: #101018;
+    color: #f4f1fa;
+    font-family: Arial, sans-serif;
+}
+
+/* HEADER */
+
+header {
+    padding: 22px;
+    text-align: center;
+    background: linear-gradient(120deg, #090910, #29164b, #10101a);
+    border-bottom: 1px solid #59408b;
+}
+
+.logo {
+    font-size: 46px;
+    font-weight: bold;
+    letter-spacing: 9px;
+    color: #c5a4ff;
+    text-shadow: 0 0 20px #8955ed;
+}
+
+.tagline {
+    margin-top: 7px;
+    color: #c9b9e9;
+    letter-spacing: 3px;
+    font-size: 14px;
+}
+
+/* NAVIGATION */
+
+nav {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 15px;
+    background: #171421;
+    border-bottom: 1px solid #30263e;
+}
+
+nav a {
+    color: #d6c5f8;
+    text-decoration: none;
+    padding: 9px 16px;
+    border-radius: 8px;
+    transition: .2s;
+}
+
+nav a:hover {
+    background: #352454;
+    color: white;
+}
+
+/* HERO */
+
+.hero {
+    position: relative;
+    overflow: hidden;
+    padding: 75px 20px;
+    text-align: center;
+    background:
+        radial-gradient(circle at 20% 30%, #542c8755, transparent 35%),
+        radial-gradient(circle at 80% 70%, #145d6655, transparent 35%),
+        linear-gradient(135deg, #11101b, #21143b, #10151e);
+}
+
+.hero h1 {
+    font-size: 38px;
+    margin: 0 0 15px;
+}
+
+.hero p {
+    color: #c5bdd4;
+    font-size: 17px;
+    line-height: 1.6;
+}
+
+.hero-buttons {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.main-button {
+    display: inline-block;
+    padding: 14px 23px;
+    background: linear-gradient(135deg, #8058d5, #a16eea);
+    border-radius: 10px;
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    transition: .2s;
+}
+
+.main-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px #8955ed66;
+}
+
+.secondary-button {
+    background: #252136;
+    border: 1px solid #66518e;
+}
+
+/* FEATURED GAME */
+
+.featured {
+    max-width: 1060px;
+    margin: 35px auto;
+    padding: 0 20px;
+}
+
+.featured-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 25px;
+    padding: 30px;
+    border: 1px solid #36a9a5;
+    border-radius: 18px;
+    background:
+        radial-gradient(circle at 85% 30%, #1a817744, transparent 35%),
+        linear-gradient(120deg, #123b43, #14252e);
+    box-shadow: 0 0 25px #20c9ad16;
+}
+
+.featured-content {
+    flex: 1;
+    min-width: 230px;
+}
+
+.featured-label {
+    color: #72e9d0;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 2px;
+}
+
+.featured h2 {
+    font-size: 28px;
+    margin: 12px 0;
+}
+
+.featured p {
+    color: #c0d6d1;
+    line-height: 1.6;
+}
+
+.featured-icon {
+    font-size: 85px;
+    filter: drop-shadow(0 0 18px #ffe47766);
+}
+
+/* SECTION */
+
+.section {
+    max-width: 1150px;
+    margin: 50px auto;
+    padding: 0 20px;
+}
+
+.section h2 {
+    font-size: 28px;
+    margin-bottom: 10px;
+}
+
+.intro {
+    color: #a9a3b7;
+    margin-bottom: 25px;
+    line-height: 1.5;
+}
+
+/* SEARCH */
+
+.search-area {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin: 25px 0;
+}
+
+.search-box {
+    flex: 1;
+    min-width: 220px;
+    padding: 14px 17px;
+    background: #1b1925;
+    border: 1px solid #4b3d64;
+    border-radius: 10px;
+    color: white;
+    font-size: 15px;
+    outline: none;
+}
+
+.search-box:focus {
+    border-color: #a17af5;
+    box-shadow: 0 0 12px #8955ed33;
+}
+
+.game-count {
+    color: #aaa0bd;
+    font-size: 14px;
+}
+
+/* GAME GRID */
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    align-items: stretch;
+}
+
+.card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 24px;
+    background: linear-gradient(145deg, #211e2c, #171720);
+    border: 1px solid #383044;
+    border-radius: 15px;
+    transition: .22s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    border-color: #9970ed;
+    box-shadow: 0 8px 25px #7040bd33;
+}
+
+.card h3 {
+    font-size: 20px;
+    margin: 10px 0;
+}
+
+.card p {
+    flex: 1;
+    color: #aaa5b8;
+    line-height: 1.55;
+    font-size: 14px;
+}
+
+.icon {
+    font-size: 39px;
+    min-height: 48px;
+}
+
+.button {
+    display: inline-block;
+    align-self: flex-start;
+    margin-top: 12px;
+    padding: 11px 19px;
+    background: #8058d5;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: .2s;
+}
+
+.button:hover {
+    background: #a17af5;
+}
+
+/* CHRISTMAS CIRCUIT */
+
+.circuit-card {
+    background: linear-gradient(145deg, #123b43, #14252e);
+    border-color: #36a9a5;
+}
+
+.circuit-card:hover {
+    border-color: #75f1d6;
+    box-shadow: 0 8px 25px #20c9ad33;
+}
+
+.circuit-card .button {
+    background: linear-gradient(135deg, #168e83, #26bba3);
+}
+
+.circuit-card .button:hover {
+    background: #36d9bd;
+}
+
+/* CHRISTMAS TOWER */
+
+.tower-card {
+    background: linear-gradient(145deg, #34254a, #211b31);
+    border-color: #8561bd;
+}
+
+/* SANTA */
+
+.santa-card {
+    background: linear-gradient(145deg, #491b25, #291820);
+    border-color: #bd4652;
+}
+
+.santa-card .button {
+    background: linear-gradient(135deg, #b52c3c, #e04b43);
+}
+
+/* NEW BADGE */
+
+.new-badge {
+    display: inline-block;
+    margin-left: 6px;
+    padding: 4px 7px;
+    background: #8058d5;
+    color: white;
+    font-size: 10px;
+    border-radius: 5px;
+    vertical-align: middle;
+}
+
+/* EMPTY SEARCH */
+
+#emptySearch {
+    display: none;
+    text-align: center;
+    padding: 40px;
+    color: #aaa5b8;
+    background: #1b1925;
+    border: 1px dashed #55456d;
+    border-radius: 12px;
+    margin-top: 20px;
+}
+
+/* FOOTER */
+
+footer {
+    margin-top: 65px;
+    padding: 35px 20px;
+    text-align: center;
+    background: #18151f;
+    color: #8e879c;
+    border-top: 1px solid #30263e;
+}
+
+.footer-logo {
+    color: #b99af2;
+    font-size: 23px;
+    font-weight: bold;
+    letter-spacing: 5px;
+    margin-bottom: 10px;
+}
+
+/* RESPONSIVE */
+
+@media (max-width: 850px) {
+    .cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .hero h1 {
+        font-size: 31px;
+    }
+}
+
+@media (max-width: 550px) {
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+    .logo {
+        font-size: 37px;
+    }
+
+    .hero {
+        padding: 50px 18px;
+    }
+
+    .hero h1 {
+        font-size: 26px;
+    }
+
+    .featured-card {
+        padding: 22px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <div class="logo">PIXEL</div>
+    <div class="tagline">МИР ИГР — БЕЗ ГРАНИЦ</div>
+</header>
+
+<nav>
+    <a href="#top">Главная</a>
+    <a href="#featured">Игра дня</a>
+    <a href="#games">Коллекция игр</a>
+</nav>
+
+<div class="hero" id="top">
+    <h1>Добро пожаловать в PIXEL!</h1>
+    <p>
+        Твоя территория игр, развлечений и открытий.<br>
+        Выбирай, экспериментируй и создавай собственные рекорды!
+    </p>
+
+    <div class="hero-buttons">
+        <a class="main-button" href="#games">🎮 Смотреть игры</a>
+        <a class="main-button secondary-button" href="#featured">⭐ Игра дня</a>
+    </div>
+</div>
+
+<!-- GAME OF THE DAY -->
+
+<section class="featured" id="featured">
+    <div class="featured-card">
+        <div class="featured-content">
+            <div class="featured-label">⭐ PIXEL ВЫБИРАЕТ</div>
+            <h2>Christmas Circuit</h2>
+            <p>
+                ⚡ Вращай провода, собирай электрическую цепь
+                и зажги все участки праздничной ёлки!
+            </p>
+            <a class="main-button" href="{% url 'christmas_circuit' %}">
+                Играть сейчас
+            </a>
+        </div>
+
+        <div class="featured-icon">🎄</div>
+    </div>
+</section>
+
+<!-- GAME COLLECTION -->
+
+<section class="section" id="games">
+
+    <h2>🎮 Моя коллекция игр</h2>
+
+    <p class="intro">
+        Все игры PIXEL в одном месте. Найди любимую игру
+        или открой для себя что-нибудь новое.
+    </p>
+
+    <div class="search-area">
+        <input
+            type="text"
+            id="gameSearch"
+            class="search-box"
+            placeholder="🔎 Найти игру по названию..."
+            oninput="searchGames()"
+        >
+
+        <div class="game-count">
+            Найдено игр: <span id="gameCount">{{ games|length }}</span>
+        </div>
+    </div>
+
+    <div class="cards" id="gameCards">
+
+        {% for game in games %}
+
+        <div class="card
+            {% if game.slug == 'christmas-circuit' %}circuit-card
+            {% elif game.slug == 'christmas-tower' %}tower-card
+            {% elif game.slug == 'santa-delivery' %}santa-card
+            {% endif %}"
+            data-name="{{ game.name|lower }}">
+
+            <div class="icon">
+                {% if game.slug == "football" %}⚽
+                {% elif game.slug == "basketball" %}🏀
+                {% elif game.slug == "tictactoe" %}❌
+                {% elif game.slug == "simpsons" %}🍩
+                {% elif game.slug == "chess" %}♟️
+                {% elif game.slug == "breakout" %}🧱
+                {% elif game.slug == "prison-pacman-2" %}👾
+                {% elif game.slug == "paint" %}🎨
+                {% elif game.slug == "mahjong" %}🀄
+                {% elif game.slug == "city-simulator" %}🏙️
+                {% elif game.slug == "christmas-tower" %}🎄
+                {% elif game.slug == "santa-delivery" %}🛷
+                {% elif game.slug == "christmas-circuit" %}⚡
+                {% elif game.slug == "chernobyl-fishing" %}🎣
+                {% elif game.slug == "match3" %}💎
+                {% else %}🎮
+                {% endif %}
+            </div>
+
+            <h3>
+                {{ game.name }}
+
+                {% if game.is_new or game.slug == "christmas-circuit" %}
+                    <span class="new-badge">NEW</span>
+                {% endif %}
+            </h3>
+
+            {% if game.slug == "christmas-circuit" %}
+                <p>⚡ Собери электрическую цепь, вращай провода и зажги всю праздничную ёлку!</p>
+
+            {% elif game.slug == "christmas-tower" %}
+                <p>🎄 Построй праздничную башню! Лови этажи, проверяй равновесие и не дай зданию рухнуть.</p>
+
+            {% elif game.slug == "santa-delivery" %}
+                <p>🎅 Стань помощником Санты! Управляй волшебными санями, собирай подарки и доставляй их в дымоходы.</p>
+
+            {% elif game.slug == "chernobyl-fishing" %}
+                <p>🎣 Отправляйся на рыбалку в Чернобыльскую зону.</p>
+
+            {% elif game.slug == "match3" %}
+                <p>💎 Собирай комбинации, меняй местами элементы и набирай очки в PIXEL Match-3.</p>
+
+            {% elif game.slug == "football" %}
+                <p>⚽ Проверь свои футбольные навыки и постарайся забить как можно больше голов.</p>
+
+            {% elif game.slug == "basketball" %}
+                <p>🏀 Прицелься, бросай мяч и проверь свою меткость на баскетбольной площадке.</p>
+
+            {% elif game.slug == "tictactoe" %}
+                <p>❌ Классическая игра крестики-нолики. Сможешь победить соперника?</p>
+
+            {% elif game.slug == "simpsons" %}
+                <p>🍩 Проверь, насколько хорошо ты знаешь мир Симпсонов.</p>
+
+            {% elif game.slug == "chess" %}
+                <p>♟️ Испытай свою логику в классической шахматной партии.</p>
+
+            {% elif game.slug == "breakout" %}
+                <p>🧱 Разбивай блоки, управляй платформой и не теряй мяч.</p>
+
+            {% elif game.slug == "prison-pacman-2" %}
+                <p>👾 Исследуй лабиринт и постарайся выбраться из него.</p>
+
+            {% elif game.slug == "paint" %}
+                <p>🎨 Рисуй, экспериментируй с цветами и создавай собственные изображения.</p>
+
+            {% elif game.slug == "mahjong" %}
+                <p>🀄 Находи одинаковые свободные плитки и очищай игровое поле.</p>
+
+            {% else %}
+                <p>Браузерная игра из коллекции PIXEL. Попробуй свои силы!</p>
+            {% endif %}
+
+            {% if game.slug == "christmas-circuit" %}
+                <a class="button" href="{% url 'christmas_circuit' %}">Играть →</a>
+
+            {% elif game.slug == "christmas-tower" %}
+                <a class="button" href="{% url 'christmas_tower' %}">Играть →</a>
+
+            {% elif game.slug == "santa-delivery" %}
+                <a class="button" href="{% url 'santa_delivery' %}">Играть →</a>
+
+            {% elif game.slug == "chernobyl-fishing" %}
+                <a class="button" href="{% url 'chernobyl_fishing' %}">Играть →</a>
+
+            {% else %}
+                <a class="button" href="{% url game.slug %}">Играть →</a>
+            {% endif %}
+
+        </div>
+
+        {% empty %}
+
+        <div class="card">
+            <h3>Игры пока скрыты</h3>
+            <p>Когда игры будут опубликованы, они появятся здесь.</p>
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    <div id="emptySearch">
+        <h3>🔎 Ничего не найдено</h3>
+        <p>Попробуй другое название игры.</p>
+    </div>
+
+</section>
+
+<footer>
+    <div class="footer-logo">PIXEL</div>
+    <p>Мир игр — без границ</p>
+    <p>PIXEL © 2026</p>
+</footer>
+
+{% if christmas_mode %}
+    {% include "games/christmas_effects.html" %}
+{% endif %}
+
+<script>
+function searchGames() {
+    var input = document.getElementById("gameSearch");
+    var query = input.value.toLowerCase().trim();
+
+    var cards = document.querySelectorAll("#gameCards .card");
+    var count = 0;
+
+    cards.forEach(function(card) {
+        var name = card.getAttribute("data-name") || "";
+
+        if (name.indexOf(query) !== -1) {
+            card.style.display = "flex";
+            count++;
+        } else {
+            card.style.display = "none";
+        }
+    });
+
+    document.getElementById("gameCount").textContent = count;
+
+    document.getElementById("emptySearch").style.display =
+        count === 0 ? "block" : "none";
+}
+</script>
+
+</body>
+</html>

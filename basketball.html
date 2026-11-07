@@ -1,0 +1,1009 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Basketball</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #10121a;
+    color: white;
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+h1 {
+    margin: 15px 0 5px;
+    font-size: 32px;
+}
+
+.info {
+    color: #bbb;
+    margin-bottom: 10px;
+}
+
+.game-wrap {
+    width: 100%;
+    max-width: 1100px;
+    margin: auto;
+    padding: 10px;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    background: linear-gradient(#202638, #151923);
+    border: 3px solid #444;
+    border-radius: 14px;
+}
+
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+button {
+    border: none;
+    border-radius: 12px;
+    padding: 14px 22px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    background: #30384f;
+    color: white;
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+.mobile-controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 12px;
+}
+
+.mobile-controls button {
+    min-width: 90px;
+    font-size: 25px;
+}
+
+.back {
+    display: inline-block;
+    margin: 15px;
+    color: #aaa;
+    text-decoration: none;
+}
+
+@media (min-width: 800px) {
+    .mobile-controls {
+        display: none;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<h1>🏀 BASKETBALL</h1>
+<div class="info">
+    ← → движение &nbsp; | &nbsp; SPACE — зарядить и бросить &nbsp; | &nbsp; R — заново
+</div>
+
+<div class="game-wrap">
+    <canvas id="game" width="1100" height="750"></canvas>
+
+    <div class="controls">
+        <button id="shootBtn">🏀 БРОСОК</button>
+        <button id="restartBtn">🔄 ЗАНОВО</button>
+    </div>
+
+    <div class="mobile-controls">
+        <button id="leftBtn">⬅️</button>
+        <button id="rightBtn">➡️</button>
+    </div>
+</div>
+
+<a class="back" href="/">← Назад в MY GAMES</a>
+
+<script>
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const W = canvas.width;
+const H = canvas.height;
+
+let player = {
+    x: 200,
+    y: 570,
+    w: 50,
+    h: 80,
+    speed: 6
+};
+
+let ball = {
+    x: 250,
+    y: 550,
+    vx: 0,
+    vy: 0,
+    r: 17
+};
+
+let score = 0;
+let holding = true;
+let charging = false;
+let power = 0;
+
+let keys = {};
+
+let particles = [];
+let messages = [];
+
+let scoredThisShot = false;
+
+const hoop = {
+    x: 950,
+    y: 300,
+    width: 110
+};
+
+document.addEventListener("keydown", function(e) {
+
+    keys[e.key] = true;
+
+    if (e.code === "Space") {
+        e.preventDefault();
+
+        if (holding && !charging) {
+            charging = true;
+        }
+    }
+
+    if (e.key.toLowerCase() === "r") {
+        resetGame();
+    }
+
+    if (e.key === "Escape") {
+        window.location.href = "/";
+    }
+});
+
+document.addEventListener("keyup", function(e) {
+
+    keys[e.key] = false;
+
+    if (e.code === "Space" && charging) {
+        throwBall();
+    }
+});
+
+function throwBall() {
+
+    charging = false;
+    holding = false;
+    scoredThisShot = false;
+
+    ball.vx = 7;
+    ball.vy = -(7 + power * 0.15);
+
+    power = 0;
+}
+
+function resetGame() {
+
+    score = 0;
+
+    player.x = 200;
+
+    ball.x = player.x + 30;
+    ball.y = player.y - 15;
+
+    ball.vx = 0;
+    ball.vy = 0;
+
+    holding = true;
+    charging = false;
+
+    power = 0;
+
+    particles = [];
+    messages = [];
+}
+
+function update() {
+
+    // движение игрока
+
+    if (keys["ArrowLeft"]) {
+        player.x -= player.speed;
+    }
+
+    if (keys["ArrowRight"]) {
+        player.x += player.speed;
+    }
+
+    if (player.x < 30) {
+        player.x = 30;
+    }
+
+    if (player.x + player.w > W - 30) {
+        player.x = W - 30 - player.w;
+    }
+
+    // заряд броска
+
+    if (charging) {
+
+        power += 1.2;
+
+        if (power > 80) {
+            power = 80;
+        }
+    }
+
+    // мяч в руках
+
+    if (holding) {
+
+        ball.x = player.x + 55;
+        ball.y = player.y - 15;
+
+    } else {
+
+        // физика
+
+        ball.x += ball.vx;
+        ball.y += ball.vy;
+
+        ball.vy += 0.32;
+
+        // пол
+
+        if (ball.y + ball.r > 650) {
+
+            ball.y = 650 - ball.r;
+            ball.vy *= -0.72;
+
+            ball.vx *= 0.85;
+
+            createParticles(
+                ball.x,
+                ball.y + ball.r,
+                5
+            );
+        }
+
+        // стены
+
+        if (ball.x - ball.r < 20) {
+
+            ball.x = 20 + ball.r;
+            ball.vx *= -0.8;
+        }
+
+        if (ball.x + ball.r > W - 20) {
+
+            ball.x = W - 20 - ball.r;
+            ball.vx *= -0.8;
+        }
+
+        checkHoop();
+
+        // если мяч улетел/остановился
+
+        if (
+            ball.y > H + 100 ||
+            (
+                Math.abs(ball.vx) < 0.15 &&
+                Math.abs(ball.vy) < 0.15 &&
+                ball.y > 600
+            )
+        ) {
+
+            resetBall();
+        }
+    }
+
+    updateParticles();
+    updateMessages();
+}
+
+function checkHoop() {
+
+    const left = hoop.x - hoop.width / 2;
+    const right = hoop.x + hoop.width / 2;
+
+    const rimY = hoop.y;
+
+    // попадание сверху вниз
+
+    if (
+        !scoredThisShot &&
+        ball.vy > 0 &&
+        ball.x > left + 5 &&
+        ball.x < right - 5 &&
+        ball.y > rimY - 18 &&
+        ball.y < rimY + 18
+    ) {
+
+        score += 2;
+        scoredThisShot = true;
+
+        createParticles(ball.x, ball.y, 30);
+
+        messages.push({
+            text: "+2",
+            x: ball.x,
+            y: ball.y - 30,
+            life: 80
+        });
+
+        setTimeout(function() {
+            resetBall();
+        }, 500);
+    }
+
+    // щит
+
+    if (
+        ball.x + ball.r > 1000 &&
+        ball.x - ball.r < 1015 &&
+        ball.y > 170 &&
+        ball.y < 305
+    ) {
+
+        ball.x = 1000 - ball.r;
+
+        ball.vx *= -0.75;
+    }
+
+    // передняя часть кольца
+
+    const dx = ball.x - left;
+
+    if (
+        ball.y > rimY - 10 &&
+        ball.y < rimY + 15 &&
+        ball.x > left - 5 &&
+        ball.x < right + 5
+    ) {
+
+        if (Math.abs(ball.vy) > 1) {
+
+            ball.vy *= -0.7;
+        }
+    }
+}
+
+function resetBall() {
+
+    ball.x = player.x + 55;
+    ball.y = player.y - 15;
+
+    ball.vx = 0;
+    ball.vy = 0;
+
+    holding = true;
+    scoredThisShot = false;
+}
+
+function createParticles(x, y, amount) {
+
+    for (let i = 0; i < amount; i++) {
+
+        particles.push({
+            x: x,
+            y: y,
+
+            vx: (Math.random() - 0.5) * 8,
+            vy: (Math.random() - 0.5) * 8,
+
+            life: 40 + Math.random() * 30,
+
+            size: 2 + Math.random() * 5
+        });
+    }
+}
+
+function updateParticles() {
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+
+        const p = particles[i];
+
+        p.x += p.vx;
+        p.y += p.vy;
+
+        p.vy += 0.15;
+
+        p.life--;
+
+        if (p.life <= 0) {
+            particles.splice(i, 1);
+        }
+    }
+}
+
+function updateMessages() {
+
+    for (let i = messages.length - 1; i >= 0; i--) {
+
+        const m = messages[i];
+
+        m.y -= 1;
+        m.life--;
+
+        if (m.life <= 0) {
+            messages.splice(i, 1);
+        }
+    }
+}
+
+function drawBackground() {
+
+    // площадка
+
+    ctx.fillStyle = "#242b3d";
+    ctx.fillRect(0, 0, W, H);
+
+    // стены
+
+    ctx.fillStyle = "#171b27";
+    ctx.fillRect(0, 0, W, 90);
+
+    // пол
+
+    ctx.fillStyle = "#684c35";
+    ctx.fillRect(0, 650, W, 100);
+
+    // линии площадки
+
+    ctx.strokeStyle = "#c7b59a";
+    ctx.lineWidth = 4;
+
+    ctx.beginPath();
+
+    ctx.moveTo(0, 650);
+    ctx.lineTo(W, 650);
+
+    ctx.stroke();
+
+    // центральная линия
+
+    ctx.beginPath();
+
+    ctx.moveTo(550, 650);
+    ctx.lineTo(550, 750);
+
+    ctx.stroke();
+
+    // трёхочковая дуга
+
+    ctx.beginPath();
+
+    ctx.arc(850, 300, 270, 0.5, Math.PI * 1.5);
+
+    ctx.stroke();
+}
+
+function drawHoop() {
+
+    // щит
+
+    ctx.fillStyle = "#e8edf5";
+
+    ctx.fillRect(
+        1000,
+        170,
+        18,
+        135
+    );
+
+    // рамка щита
+
+    ctx.strokeStyle = "#b7becb";
+    ctx.lineWidth = 5;
+
+    ctx.strokeRect(
+        970,
+        210,
+        45,
+        55
+    );
+
+    // кольцо
+
+    ctx.strokeStyle = "#ff6b2c";
+    ctx.lineWidth = 9;
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+        hoop.x,
+        hoop.y,
+        hoop.width / 2,
+        12,
+        0,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.stroke();
+
+    // сетка
+
+    ctx.strokeStyle = "rgba(255,255,255,0.65)";
+    ctx.lineWidth = 2;
+
+    for (let i = -45; i <= 45; i += 15) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            hoop.x + i,
+            hoop.y + 5
+        );
+
+        ctx.lineTo(
+            hoop.x + i * 0.7,
+            hoop.y + 55
+        );
+
+        ctx.stroke();
+    }
+
+    for (let i = -35; i <= 35; i += 14) {
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            hoop.x + i,
+            hoop.y + 15
+        );
+
+        ctx.lineTo(
+            hoop.x + i * 0.7,
+            hoop.y + 45
+        );
+
+        ctx.stroke();
+    }
+}
+
+function drawPlayer() {
+
+    // ноги
+
+    ctx.fillStyle = "#161616";
+
+    ctx.fillRect(
+        player.x + 8,
+        player.y + 55,
+        13,
+        30
+    );
+
+    ctx.fillRect(
+        player.x + 30,
+        player.y + 55,
+        13,
+        30
+    );
+
+    // тело
+
+    ctx.fillStyle = "#2867d8";
+
+    ctx.fillRect(
+        player.x,
+        player.y,
+        player.w,
+        58
+    );
+
+    // голова
+
+    ctx.fillStyle = "#e0a878";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        player.x + 25,
+        player.y - 12,
+        20,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    // волосы
+
+    ctx.fillStyle = "#3b2416";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        player.x + 25,
+        player.y - 20,
+        19,
+        Math.PI,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    // рука
+
+    ctx.strokeStyle = "#e0a878";
+    ctx.lineWidth = 12;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        player.x + 45,
+        player.y + 18
+    );
+
+    ctx.lineTo(
+        player.x + 58,
+        player.y + 5
+    );
+
+    ctx.stroke();
+}
+
+function drawBall() {
+
+    // тень
+
+    ctx.fillStyle = "rgba(0,0,0,0.3)";
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+        ball.x + 5,
+        ball.y + ball.r + 5,
+        ball.r * 0.9,
+        5,
+        0,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    // мяч
+
+    ctx.fillStyle = "#f47b20";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        ball.x,
+        ball.y,
+        ball.r,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    // полосы мяча
+
+    ctx.strokeStyle = "#54250d";
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+
+    ctx.arc(
+        ball.x,
+        ball.y,
+        ball.r * 0.75,
+        -0.8,
+        0.8
+    );
+
+    ctx.stroke();
+
+    ctx.beginPath();
+
+    ctx.arc(
+        ball.x,
+        ball.y,
+        ball.r * 0.75,
+        2.3,
+        3.9
+    );
+
+    ctx.stroke();
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        ball.x - ball.r,
+        ball.y
+    );
+
+    ctx.quadraticCurveTo(
+        ball.x,
+        ball.y + 8,
+        ball.x + ball.r,
+        ball.y
+    );
+
+    ctx.stroke();
+}
+
+function drawParticles() {
+
+    for (const p of particles) {
+
+        ctx.fillStyle =
+            "rgba(255,180,60," +
+            Math.max(0, p.life / 70) +
+            ")";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            p.x,
+            p.y,
+            p.size,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+    }
+}
+
+function drawMessages() {
+
+    ctx.textAlign = "center";
+
+    for (const m of messages) {
+
+        ctx.fillStyle =
+            "rgba(255,255,255," +
+            Math.min(1, m.life / 30) +
+            ")";
+
+        ctx.font = "bold 45px Arial";
+
+        ctx.fillText(
+            m.text,
+            m.x,
+            m.y
+        );
+    }
+
+    ctx.textAlign = "left";
+}
+
+function drawUI() {
+
+    // счёт
+
+    ctx.fillStyle = "rgba(0,0,0,0.65)";
+
+    ctx.fillRect(
+        25,
+        20,
+        250,
+        80
+    );
+
+    ctx.fillStyle = "white";
+
+    ctx.font = "bold 32px Arial";
+
+    ctx.fillText(
+        "СЧЁТ: " + score,
+        45,
+        57
+    );
+
+    ctx.font = "18px Arial";
+
+    ctx.fillStyle = "#aaa";
+
+    ctx.fillText(
+        "Попадание = +2",
+        45,
+        84
+    );
+
+    // шкала силы
+
+    if (charging) {
+
+        ctx.fillStyle = "rgba(0,0,0,0.7)";
+
+        ctx.fillRect(
+            25,
+            115,
+            300,
+            35
+        );
+
+        ctx.fillStyle = "#ff8a30";
+
+        ctx.fillRect(
+            30,
+            120,
+            power / 80 * 290,
+            25
+        );
+
+        ctx.fillStyle = "white";
+
+        ctx.font = "18px Arial";
+
+        ctx.fillText(
+            "СИЛА БРОСКА",
+            340,
+            143
+        );
+    }
+
+    // подсказка
+
+    if (holding && !charging) {
+
+        ctx.fillStyle = "rgba(0,0,0,0.6)";
+
+        ctx.fillRect(
+            370,
+            25,
+            360,
+            55
+        );
+
+        ctx.fillStyle = "white";
+
+        ctx.font = "20px Arial";
+
+        ctx.textAlign = "center";
+
+        ctx.fillText(
+            "Зажми SPACE для броска",
+            550,
+            59
+        );
+
+        ctx.textAlign = "left";
+    }
+}
+
+function draw() {
+
+    drawBackground();
+
+    drawHoop();
+
+    drawPlayer();
+
+    drawBall();
+
+    drawParticles();
+
+    drawMessages();
+
+    drawUI();
+}
+
+function gameLoop() {
+
+    update();
+
+    draw();
+
+    requestAnimationFrame(gameLoop);
+}
+
+
+// мобильное управление
+
+document.getElementById("leftBtn")
+.addEventListener("touchstart", function(e) {
+
+    e.preventDefault();
+    keys["ArrowLeft"] = true;
+
+});
+
+document.getElementById("leftBtn")
+.addEventListener("touchend", function(e) {
+
+    e.preventDefault();
+    keys["ArrowLeft"] = false;
+
+});
+
+document.getElementById("rightBtn")
+.addEventListener("touchstart", function(e) {
+
+    e.preventDefault();
+    keys["ArrowRight"] = true;
+
+});
+
+document.getElementById("rightBtn")
+.addEventListener("touchend", function(e) {
+
+    e.preventDefault();
+    keys["ArrowRight"] = false;
+
+});
+
+
+// кнопка броска
+
+const shootBtn =
+    document.getElementById("shootBtn");
+
+shootBtn.addEventListener("mousedown", function() {
+
+    if (holding && !charging) {
+        charging = true;
+    }
+
+});
+
+shootBtn.addEventListener("mouseup", function() {
+
+    if (charging) {
+        throwBall();
+    }
+
+});
+
+shootBtn.addEventListener("touchstart", function(e) {
+
+    e.preventDefault();
+
+    if (holding && !charging) {
+        charging = true;
+    }
+
+});
+
+shootBtn.addEventListener("touchend", function(e) {
+
+    e.preventDefault();
+
+    if (charging) {
+        throwBall();
+    }
+
+});
+
+
+// рестарт
+
+document.getElementById("restartBtn")
+.addEventListener("click", resetGame);
+
+
+// запуск
+
+resetGame();
+gameLoop();
+
+</script>
+
+</body>
+</html>
