@@ -14,7 +14,7 @@
 @media(max-width:700px){.wrap{padding:13px}.grid{grid-template-columns:1fr}.hero{padding:20px}.panel{padding:16px}.mobile-controls{display:flex}.back{font-size:12px}}
 </style>
 </head>
-<body><div class="wrap">
+<body data-user="{{ request.user.id|default:'0' }}"><div class="wrap">
 <div class="top"><div class="brand"><b>PIXEL</b> / ARCADE</div><a class="back" href="/">← На главную</a></div>
 <section class="hero"><div class="tag">ОРИГИНАЛЬНАЯ АРКАДНАЯ ИГРА</div><h1>⚙ PIXEL TANKS</h1><p>Выбирай сторону, выходи на арену и сражайся. Тренируйся против компьютерных соперников или зови игроков в онлайн-комнату.</p></section>
 <div class="grid" id="lobby">
@@ -64,7 +64,7 @@ async function refreshRooms(){try{let j=await api('/tanks/api/rooms/');let el=do
 async function joinRoom(code){try{let j=await api('/tanks/api/rooms/'+code+'/join/',{team:chosenTeam});joinLocalRoom(j)}catch(e){msg(e.message)}}
 function joinLocalRoom(j){roomCode=j.code;mode='online';running=true;remote=j.state.players||[];window.myId=Number(document.body.dataset.user||0);let mine=remote.find(p=>p.id===window.myId);player={x:mine?mine.x:80,y:mine?mine.y:80,a:0,hp:3,team:chosenTeam};openGame('ОНЛАЙН • КОМНАТА '+roomCode,'Ты: '+teamName(chosenTeam)+' · Ожидание второго игрока')}
 let pollBusy=false,sendBusy=false;
-async function onlineTick(){let now=Date.now();if(now-lastSend>160&&!sendBusy){lastSend=now;sendBusy=true;api('/tanks/api/rooms/'+roomCode+'/state/',{x:Math.round(player.x),y:Math.round(player.y),angle:Math.round(player.a),fire:!!keys[' ']}).catch(()=>{}).finally(()=>sendBusy=false)}if(now-lastPoll>500&&!pollBusy){lastPoll=now;pollBusy=true;api('/tanks/api/rooms/'+roomCode+'/state/').then(j=>{remote=j.state.players||[];let bullets=j.state.bullets||[];shots=bullets.filter(b=>b.owner!==window.myId).map(b=>({x:b.x,y:b.y,a:b.angle,team:b.team,dead:false}));let count=remote.length;document.getElementById('gameInfo').textContent='Комната '+roomCode+' · Игроков: '+count+'/2';if(count===2)msg('Соперник подключился! Бой начался.');else msg('Ждём второго игрока. Передай ему код: '+roomCode)}).catch(e=>msg(e.message)).finally(()=>pollBusy=false)}}
+async function onlineTick(){let now=Date.now();if(now-lastSend>160&&!sendBusy){lastSend=now;sendBusy=true;api('/tanks/api/rooms/'+roomCode+'/state/',{x:Math.round(player.x),y:Math.round(player.y),angle:Math.round(player.a),fire:!!keys[' ']}).catch(()=>{}).finally(()=>sendBusy=false)}if(now-lastPoll>500&&!pollBusy){lastPoll=now;pollBusy=true;api('/tanks/api/rooms/'+roomCode+'/state/').then(j=>{remote=j.state.players||[];let bullets=j.state.bullets||[];shots=bullets.filter(b=>b.owner!==window.myId).map(b=>{let age=Math.max(0,(Date.now()/1000-b.t));return {x:b.x+Math.cos(b.angle*Math.PI/180)*5*age*60,y:b.y+Math.sin(b.angle*Math.PI/180)*5*age*60,a:b.angle,team:b.team,dead:false}});let count=remote.length;document.getElementById('gameInfo').textContent='Комната '+roomCode+' · Игроков: '+count+'/2';if(count===2)msg('Соперник подключился! Бой начался.');else msg('Ждём второго игрока. Передай ему код: '+roomCode)}).catch(e=>msg(e.message)).finally(()=>pollBusy=false)}}
 function leaveOnline(){if(roomCode){let c=roomCode;roomCode=null;api('/tanks/api/rooms/'+c+'/leave/',{}).catch(()=>{})}}
 refreshRooms();
 </script></body></html>
