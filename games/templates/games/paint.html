@@ -124,9 +124,7 @@ button.active {
     padding: 7px 3px;
 }
 
-.tool .emoji {
-    font-size: 21px;
-}
+.tool .emoji{font-size:21px}.layer-list{display:flex;flex-direction:column;gap:6px;max-height:190px;overflow:auto}.layer-item{display:flex;align-items:center;gap:6px;padding:7px;border:1px solid var(--border);border-radius:8px;background:#222538}.layer-item.active{border-color:var(--accent);background:#30294f}.layer-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;text-align:left}
 
 .tool.active {
     background: #5141a2;
@@ -379,9 +377,7 @@ canvas {
         <button class="tool" data-tool="rectangle">
             <span class="emoji">▭</span>Прямоугольник
         </button>
-        <button class="tool" data-tool="circle">
-            <span class="emoji">⭕</span>Круг
-        </button>
+        <button class="tool" data-tool="circle"><span class="emoji">⭕</span>Круг</button><button class="tool" data-tool="semicircle"><span class="emoji">◒</span>Полукруг</button>
         <button class="tool" data-tool="triangle">
             <span class="emoji">△</span>Треугольник
         </button>
@@ -400,7 +396,7 @@ canvas {
         <input type="color" id="color" value="#795cff">
     </div>
 
-    <div class="section-title">БЫСТРАЯ ПАЛИТРА</div>
+    <div class="setting"><label>Второй цвет градиента</label><input type="color" id="gradientColor" value="#ffffff"></div><div class="section-title">СЛОИ</div><div class="setting"><div id="layerList" class="layer-list"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px"><button id="addLayer">＋ Слой</button><button id="renameLayer">✎ Имя</button><button id="moveLayerUp">↑ Вверх</button><button id="moveLayerDown">↓ Вниз</button><button id="deleteLayer" style="grid-column:1/-1">Удалить слой</button></div></div><div class="section-title">БЫСТРАЯ ПАЛИТРА</div>
 
     <div class="setting">
         <div class="palette" id="palette">
@@ -521,7 +517,11 @@ canvas {
 
 <script>
 const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d", {willReadFrequently:true});
+const displayCtx=canvas.getContext("2d",{willReadFrequently:true});let layers=[],activeLayerId=1,nextLayerId=1,ctx;
+function makeLayer(name){const surface=document.createElement("canvas");surface.width=canvas.width;surface.height=canvas.height;return{id:nextLayerId++,name,surface,context:surface.getContext("2d",{willReadFrequently:true}),visible:true};}
+function activeLayer(){return layers.find(l=>l.id===activeLayerId)||layers[0]}function setActiveLayer(){ctx=activeLayer().context}function renderLayers(){displayCtx.clearRect(0,0,canvas.width,canvas.height);layers.forEach(l=>{if(l.visible)displayCtx.drawImage(l.surface,0,0)})}
+function renderLayerList(){const list=document.getElementById("layerList");if(!list)return;list.innerHTML="";[...layers].reverse().forEach(l=>{const row=document.createElement("div");row.className="layer-item"+(l.id===activeLayerId?" active":"");const eye=document.createElement("button");eye.textContent=l.visible?"◉":"○";eye.onclick=e=>{e.stopPropagation();l.visible=!l.visible;renderLayers();renderLayerList();saveState()};const name=document.createElement("button");name.className="layer-name";name.textContent=l.name;name.onclick=()=>{activeLayerId=l.id;setActiveLayer();renderLayerList()};row.append(eye,name);list.append(row)});const i=layers.findIndex(l=>l.id===activeLayerId);document.getElementById("deleteLayer").disabled=layers.length<2;document.getElementById("moveLayerUp").disabled=i===layers.length-1;document.getElementById("moveLayerDown").disabled=i===0}
+layers=[makeLayer("Фон")];activeLayerId=layers[0].id;setActiveLayer();
 
 const colorInput = document.getElementById("color");
 const sizeInput = document.getElementById("size");
@@ -556,7 +556,8 @@ const toolNames = {
     text: "Текст",
     gradient: "Градиент",
     star: "Звезда",
-    diamond: "Ромб"
+    diamond: "Ромб",
+    semicircle: "Полукруг"
 };
 
 // --------------------
@@ -696,19 +697,14 @@ loadSavedFonts();
 // ХОЛСТ
 // --------------------
 
-function resetCanvas() {
-    ctx.globalAlpha = 1;
-    ctx.globalCompositeOperation = "source-over";
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
+function resetCanvas(){layers.forEach(l=>l.context.clearRect(0,0,canvas.width,canvas.height));layers[0].context.fillStyle="#ffffff";layers[0].context.fillRect(0,0,canvas.width,canvas.height);setActiveLayer();renderLayers()}
 
 function saveState() {
     if (historyIndex < history.length - 1) {
         history = history.slice(0, historyIndex + 1);
     }
 
-    history.push(canvas.toDataURL("image/png"));
+    history.push(layers.map((l,order)=>({id:l.id,order,name:l.name,visible:l.visible,data:l.surface.toDataURL("image/png")})));
 
     if (history.length > MAX_HISTORY) {
         history.shift();
@@ -721,16 +717,7 @@ function saveState() {
 function restoreState(index) {
     if (index < 0 || index >= history.length) return;
 
-    const image = new Image();
-
-    image.onload = function() {
-        ctx.globalAlpha = 1;
-        ctx.globalCompositeOperation = "source-over";
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(image, 0, 0);
-    };
-
-    image.src = history[index];
+    const snap=history[index];let count=0;const restored=[];snap.forEach(item=>{const im=new Image();im.onload=()=>{const surface=document.createElement("canvas");surface.width=canvas.width;surface.height=canvas.height;const context=surface.getContext("2d",{willReadFrequently:true});context.drawImage(im,0,0);restored.push({id:item.id,name:item.name,visible:item.visible,surface,context});if(++count===snap.length){layers=restored.sort((a,b)=>a.order-b.order);nextLayerId=Math.max(...layers.map(l=>l.id))+1;activeLayerId=layers[0].id;setActiveLayer();renderLayers();renderLayerList()}};im.src=item.data});
 }
 
 function updateHistoryButtons() {
@@ -820,7 +807,7 @@ function startDrawing(event) {
     lastY = pos.y;
 
     if (tool === "picker") {
-        const pixel = ctx.getImageData(
+        const pixel = displayCtx.getImageData(
             Math.floor(pos.x), Math.floor(pos.y), 1, 1
         ).data;
 
@@ -830,7 +817,7 @@ function startDrawing(event) {
 
     if (tool === "fill") {
         floodFill(Math.floor(pos.x), Math.floor(pos.y));
-        saveState();
+        renderLayers();saveState();
         return;
     }
 
@@ -843,14 +830,14 @@ function startDrawing(event) {
             ctx.textBaseline = "top";
             ctx.fillText(value, pos.x, pos.y);
             ctx.globalAlpha = 1;
-            saveState();
+            renderLayers();saveState();
         }
         return;
     }
 
     drawing = true;
 
-    if (["line", "rectangle", "circle", "triangle", "star", "diamond", "gradient"].includes(tool)) {
+    if (["line", "rectangle", "circle", "semicircle", "triangle", "star", "diamond", "gradient"].includes(tool)) {
         previewImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
     } else {
         applyStyle();
@@ -894,10 +881,10 @@ function draw(event) {
 
     const pos = getPosition(event);
 
-    if (["line", "rectangle", "circle", "triangle", "star", "diamond", "gradient"].includes(tool)) {
+    if (["line", "rectangle", "circle", "semicircle", "triangle", "star", "diamond", "gradient"].includes(tool)) {
         ctx.putImageData(previewImage, 0, 0);
         drawShape(startX, startY, pos.x, pos.y);
-        return;
+        renderLayers();return;
     }
 
     applyStyle();
@@ -923,6 +910,7 @@ function draw(event) {
 
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = "source-over";
+    renderLayers();
 
     lastX = pos.x;
     lastY = pos.y;
@@ -1001,10 +989,11 @@ function drawShape(x1, y1, x2, y2, mirrored = false) {
         if (mode === "fill") ctx.fill(); else ctx.stroke();
     }
 
+    if(tool==="semicircle"){const cx=(x1+x2)/2,cy=(y1+y2)/2,rx=Math.abs(x2-x1)/2,ry=Math.abs(y2-y1)/2;ctx.ellipse(cx,cy,Math.max(1,rx),Math.max(1,ry),0,Math.PI,0);if(mode==="fill"){ctx.lineTo(cx-rx,cy);ctx.closePath();ctx.fill()}else ctx.stroke()}
     if (tool === "gradient") {
         const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
         gradient.addColorStop(0, colorInput.value);
-        gradient.addColorStop(1, "#ffffff");
+        gradient.addColorStop(1, document.getElementById("gradientColor").value);
         ctx.fillStyle = gradient;
         ctx.globalAlpha = Number(opacityInput.value) / 100;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -1030,7 +1019,7 @@ function stopDrawing(event) {
 
     const pos = event ? getPosition(event) : {x:lastX, y:lastY};
 
-    if (["line", "rectangle", "circle", "triangle", "star", "diamond", "gradient"].includes(tool)) {
+    if (["line", "rectangle", "circle", "semicircle", "triangle", "star", "diamond", "gradient"].includes(tool)) {
         ctx.putImageData(previewImage, 0, 0);
         drawShape(startX, startY, pos.x, pos.y);
     }
@@ -1041,7 +1030,7 @@ function stopDrawing(event) {
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = "source-over";
 
-    saveState();
+    renderLayers();saveState();
 }
 
 // --------------------
@@ -1111,6 +1100,7 @@ function floodFill(startX, startY) {
     }
 
     ctx.putImageData(imageData, 0, 0);
+    renderLayers();
 }
 
 // --------------------
@@ -1222,7 +1212,7 @@ document.getElementById("rotateCanvas").addEventListener("click", function() {
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.rotate(Math.PI / 2);
     ctx.drawImage(temp, -rotatedWidth / 2, -rotatedHeight / 2, rotatedWidth, rotatedHeight);
-    ctx.restore(); saveState();
+    ctx.restore();renderLayers();saveState();
 });
 
 function applyFilter(type) {
@@ -1244,7 +1234,7 @@ function applyFilter(type) {
         }
     }
     ctx.putImageData(image, 0, 0);
-    saveState();
+    renderLayers();saveState();
 }
 
 document.getElementById("filterGray").addEventListener("click", () => applyFilter("gray"));
@@ -1308,7 +1298,7 @@ imageFile.addEventListener("change", function() {
                 h
             );
 
-            saveState();
+            renderLayers();saveState();
         };
 
         image.src = e.target.result;
@@ -1346,6 +1336,10 @@ function downloadImage(type) {
 }
 
 document.getElementById("savePNG").addEventListener("click", () => downloadImage("png"));
+document.getElementById("addLayer").onclick=()=>{const l=makeLayer("Слой "+nextLayerId);layers.push(l);activeLayerId=l.id;setActiveLayer();renderLayers();renderLayerList();saveState()};
+document.getElementById("renameLayer").onclick=()=>{const l=activeLayer(),n=prompt("Название слоя:",l.name);if(n&&n.trim()){l.name=n.trim().slice(0,32);renderLayerList();saveState()}};
+document.getElementById("deleteLayer").onclick=()=>{if(layers.length<2||!confirm("Удалить выбранный слой?"))return;const i=layers.findIndex(l=>l.id===activeLayerId);layers.splice(i,1);activeLayerId=layers[Math.max(0,i-1)].id;setActiveLayer();renderLayers();renderLayerList();saveState()};
+function moveLayer(d){const i=layers.findIndex(l=>l.id===activeLayerId),j=i+d;if(j<0||j>=layers.length)return;[layers[i],layers[j]]=[layers[j],layers[i]];renderLayers();renderLayerList();saveState()};document.getElementById("moveLayerUp").onclick=()=>moveLayer(1);document.getElementById("moveLayerDown").onclick=()=>moveLayer(-1);
 
 const jpgButton = document.createElement("button");
 jpgButton.textContent = "JPG";
@@ -1381,7 +1375,7 @@ document.addEventListener("keydown", function(event) {
     }
 });
 
-setZoom(1);
+setZoom(1);renderLayers();renderLayerList();
 </script>
 
 </body>
