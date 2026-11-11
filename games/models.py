@@ -60,3 +60,20 @@ class SiteSettings(models.Model):
 
     def __str__(self):
         return "Настройки PIXEL"
+
+
+class PlayerProfile(models.Model):
+    user = models.OneToOneField('auth.User', on_delete=models.CASCADE, related_name='player_profile')
+    google_sub = models.CharField(max_length=255, unique=True, verbose_name="Google ID")
+    nickname = models.CharField(max_length=32, unique=True, verbose_name="Никнейм")
+    avatar_url = models.URLField(max_length=500, blank=True, verbose_name="Аватар Google")
+    nickname_changed_at = models.DateTimeField(null=True, blank=True, verbose_name="Последняя смена никнейма")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата регистрации")
+
+    class Meta:
+        verbose_name = "Профиль игрока"
+        verbose_name_plural = "Профили игроков"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.nickname
