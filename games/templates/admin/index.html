@@ -1,0 +1,16 @@
+{% extends "admin/index.html" %}
+{% load i18n %}
+{% block content %}
+<section class="pixel-dashboard">
+  <div class="pixel-dashboard-head">
+    <div><span class="pixel-eyebrow">PIXEL / CONTROL CENTER</span><h1>Панель управления</h1><p>Управляйте играми, публикациями и оформлением платформы.</p></div>
+    <a href="/" target="_blank" class="pixel-site-button">Открыть PIXEL ↗</a>
+  </div>
+  <div class="pixel-stat-grid">
+    <div class="pixel-stat"><span>Всего игр</span><strong>{{ app_list.0.models|length|default:"—" }}</strong><small>Настройки доступны в разделе «Игры»</small></div>
+    <div class="pixel-stat"><span>Быстрый доступ</span><strong>ИГРЫ</strong><small>Видимость, доступ, категории, порядок, NEW</small></div>
+    <div class="pixel-stat"><span>Публикации</span><strong>PIXEL</strong><small>Статьи и новости проекта</small></div>
+  </div>
+</section>
+{{ block.super }}
+{% endblock %}
