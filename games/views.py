@@ -20,7 +20,7 @@ from django.db import transaction
 from django.utils.crypto import get_random_string
 from django.contrib.auth.decorators import login_required
 
-from .models import Game, Article, PlayerProfile
+from .models import Game, Article, PlayerProfile, TankRoom
 
 
 def home(request):
