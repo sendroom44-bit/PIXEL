@@ -721,7 +721,7 @@ function saveState() {
 function restoreState(index) {
     if (index < 0 || index >= history.length) return;
 
-    const snap=history[index];if(snap.width&&snap.height){canvas.width=snap.width;canvas.height=snap.height;document.getElementById("canvasInfo").textContent=canvas.width+" × "+canvas.height+" px;"}let count=0;const restored=[];snap.forEach(item=>{const im=new Image();im.onload=()=>{const surface=document.createElement("canvas");surface.width=canvas.width;surface.height=canvas.height;const context=surface.getContext("2d",{willReadFrequently:true});context.drawImage(im,0,0);restored.push({id:item.id,name:item.name,visible:item.visible,surface,context});if(++count===snap.length){layers=restored.sort((a,b)=>a.order-b.order);nextLayerId=Math.max(...layers.map(l=>l.id))+1;activeLayerId=layers[0].id;setActiveLayer();renderLayers();renderLayerList()}};im.src=item.data});
+    const snap=history[index];if(snap.width&&snap.height){canvas.width=snap.width;canvas.height=snap.height;document.getElementById("canvasInfo").textContent=canvas.width+" × "+canvas.height+" px";setZoom(zoom);}let count=0;const restored=[];snap.forEach(item=>{const im=new Image();im.onload=()=>{const surface=document.createElement("canvas");surface.width=canvas.width;surface.height=canvas.height;const context=surface.getContext("2d",{willReadFrequently:true});context.drawImage(im,0,0);restored.push({id:item.id,name:item.name,visible:item.visible,surface,context});if(++count===snap.length){layers=restored.sort((a,b)=>a.order-b.order);nextLayerId=Math.max(...layers.map(l=>l.id))+1;activeLayerId=layers[0].id;setActiveLayer();renderLayers();renderLayerList()}};im.src=item.data});
 }
 
 function updateHistoryButtons() {
