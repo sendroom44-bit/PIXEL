@@ -225,6 +225,7 @@ input[type="color"] {
     justify-content: center;
 }
 
+ .crop-selection{display:none;position:absolute;border:2px dashed #a28dff;background:#8b72ff22;pointer-events:none;z-index:4}
 .canvas-frame {
     background: #fff;
     box-shadow: 0 15px 50px #0008;
@@ -386,7 +387,7 @@ canvas {
         </button>
         <button class="tool" data-tool="gradient"><span class="emoji">🌈</span>Градиент</button>
         <button class="tool" data-tool="star"><span class="emoji">⭐</span>Звезда</button>
-        <button class="tool" data-tool="diamond"><span class="emoji">◇</span>Ромб</button><button class="tool" data-tool="roundedRect"><span class="emoji">▢</span>Скруглённый прямоугольник</button><button class="tool" data-tool="arrow"><span class="emoji">➜</span>Стрелка</button><button class="tool" data-tool="spray"><span class="emoji">💨</span>Аэрограф</button>
+        <button class="tool" data-tool="diamond"><span class="emoji">◇</span>Ромб</button><button class="tool" data-tool="roundedRect"><span class="emoji">▢</span>Скруглённый прямоугольник</button><button class="tool" data-tool="arrow"><span class="emoji">➜</span>Стрелка</button><button class="tool" data-tool="spray"><span class="emoji">💨</span>Аэрограф</button><button class="tool" data-tool="crop"><span class="emoji">✂</span>Обрезка</button>
     </div>
 
     <div class="section-title">ЦВЕТ</div>
@@ -499,7 +500,7 @@ canvas {
 
     <div class="canvas-stage" id="canvasStage">
         <div class="canvas-frame">
-            <canvas id="canvas" width="1200" height="750"></canvas>
+            <canvas id="canvas" width="1200" height="750"></canvas><div id="cropSelection" class="crop-selection"></div>
         </div>
     </div>
 
@@ -543,6 +544,7 @@ let historyIndex = -1;
 const MAX_HISTORY = 25;
 
 let previewImage = null;
+const cropOverlay=document.getElementById("cropSelection");
 
 const toolNames = {
     brush: "Кисть",
@@ -557,7 +559,7 @@ const toolNames = {
     gradient: "Градиент",
     star: "Звезда",
     diamond: "Ромб",
-    semicircle: "Полукруг", roundedRect: "Скруглённый прямоугольник", arrow: "Стрелка", spray: "Аэрограф"
+    semicircle: "Полукруг", roundedRect: "Скруглённый прямоугольник", arrow: "Стрелка", spray: "Аэрограф", crop: "Обрезка"
 };
 
 // --------------------
@@ -697,6 +699,8 @@ loadSavedFonts();
 // ХОЛСТ
 // --------------------
 
+function updateCropOverlay(x1,y1,x2,y2){const z=zoom;cropOverlay.style.left=Math.min(x1,x2)*z+"px";cropOverlay.style.top=Math.min(y1,y2)*z+"px";cropOverlay.style.width=Math.abs(x2-x1)*z+"px";cropOverlay.style.height=Math.abs(y2-y1)*z+"px";}
+function applyCropSelection(x,y){const left=Math.max(0,Math.floor(Math.min(startX,x))),top=Math.max(0,Math.floor(Math.min(startY,y))),right=Math.min(canvas.width,Math.ceil(Math.max(startX,x))),bottom=Math.min(canvas.height,Math.ceil(Math.max(startY,y)));cropOverlay.style.display="none";if(right-left<5||bottom-top<5)return;const w=right-left,h=bottom-top;layers.forEach(l=>{const temp=document.createElement("canvas");temp.width=w;temp.height=h;temp.getContext("2d").drawImage(l.surface,left,top,w,h,0,0,w,h);l.surface.width=w;l.surface.height=h;l.context=l.surface.getContext("2d",{willReadFrequently:true});l.context.drawImage(temp,0,0)});canvas.width=w;canvas.height=h;setActiveLayer();renderLayers();renderLayerList();document.getElementById("canvasInfo").textContent=w+" × "+h+" px";setZoom(zoom);}
 function resetCanvas(){layers.forEach(l=>l.context.clearRect(0,0,canvas.width,canvas.height));layers[0].context.fillStyle="#ffffff";layers[0].context.fillRect(0,0,canvas.width,canvas.height);setActiveLayer();renderLayers()}
 
 function saveState() {
@@ -704,7 +708,7 @@ function saveState() {
         history = history.slice(0, historyIndex + 1);
     }
 
-    history.push(layers.map((l,order)=>({id:l.id,order,name:l.name,visible:l.visible,data:l.surface.toDataURL("image/png")})));
+    const snapshot=layers.map((l,order)=>({id:l.id,order,name:l.name,visible:l.visible,data:l.surface.toDataURL("image/png")}));snapshot.width=canvas.width;snapshot.height=canvas.height;history.push(snapshot);
 
     if (history.length > MAX_HISTORY) {
         history.shift();
@@ -717,7 +721,7 @@ function saveState() {
 function restoreState(index) {
     if (index < 0 || index >= history.length) return;
 
-    const snap=history[index];let count=0;const restored=[];snap.forEach(item=>{const im=new Image();im.onload=()=>{const surface=document.createElement("canvas");surface.width=canvas.width;surface.height=canvas.height;const context=surface.getContext("2d",{willReadFrequently:true});context.drawImage(im,0,0);restored.push({id:item.id,name:item.name,visible:item.visible,surface,context});if(++count===snap.length){layers=restored.sort((a,b)=>a.order-b.order);nextLayerId=Math.max(...layers.map(l=>l.id))+1;activeLayerId=layers[0].id;setActiveLayer();renderLayers();renderLayerList()}};im.src=item.data});
+    const snap=history[index];if(snap.width&&snap.height){canvas.width=snap.width;canvas.height=snap.height;document.getElementById("canvasInfo").textContent=canvas.width+" × "+canvas.height+" px;"}let count=0;const restored=[];snap.forEach(item=>{const im=new Image();im.onload=()=>{const surface=document.createElement("canvas");surface.width=canvas.width;surface.height=canvas.height;const context=surface.getContext("2d",{willReadFrequently:true});context.drawImage(im,0,0);restored.push({id:item.id,name:item.name,visible:item.visible,surface,context});if(++count===snap.length){layers=restored.sort((a,b)=>a.order-b.order);nextLayerId=Math.max(...layers.map(l=>l.id))+1;activeLayerId=layers[0].id;setActiveLayer();renderLayers();renderLayerList()}};im.src=item.data});
 }
 
 function updateHistoryButtons() {
@@ -832,7 +836,8 @@ function startDrawing(event) {
 
     drawing = true;
 
-    if (["line", "rectangle", "circle", "semicircle", "triangle", "star", "diamond", "gradient", "roundedRect", "arrow"].includes(tool)) {
+    if(tool==="crop"){cropOverlay.style.display="block";updateCropOverlay(pos.x,pos.y,pos.x,pos.y);}
+    else if (["line", "rectangle", "circle", "semicircle", "triangle", "star", "diamond", "gradient", "roundedRect", "arrow"].includes(tool)) {
         previewImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
     } else {
         applyStyle();
@@ -875,6 +880,7 @@ function draw(event) {
     event.preventDefault();
 
     const pos = getPosition(event);
+    if(tool==="crop"){updateCropOverlay(startX,startY,pos.x,pos.y);return;}
 
     if (["line", "rectangle", "circle", "semicircle", "triangle", "star", "diamond", "gradient", "roundedRect", "arrow"].includes(tool)) {
         ctx.putImageData(previewImage, 0, 0);
@@ -1013,7 +1019,8 @@ function stopDrawing(event) {
 
     const pos = event ? getPosition(event) : {x:lastX, y:lastY};
 
-    if (["line", "rectangle", "circle", "semicircle", "triangle", "star", "diamond", "gradient", "roundedRect", "arrow"].includes(tool)) {
+    if(tool==="crop"){applyCropSelection(pos.x,pos.y);}
+    else if (["line", "rectangle", "circle", "semicircle", "triangle", "star", "diamond", "gradient", "roundedRect", "arrow"].includes(tool)) {
         ctx.putImageData(previewImage, 0, 0);
         drawShape(startX, startY, pos.x, pos.y);
     }
