@@ -27,7 +27,7 @@
 <main class="pixel-main" id="top">
   <div class="topbar">
     <div class="breadcrumb">PIXEL <span style="color:#777b9e">/</span> Игровая платформа</div>
-    <div class="top-actions"><span class="status-pill">● ПЛАТФОРМА ОНЛАЙН</span></div>
+    <div class="top-actions" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span class="status-pill">● ПЛАТФОРМА ОНЛАЙН</span>{% if user.is_authenticated %}<a href="{% url 'account' %}" style="padding:10px 15px;border:1px solid #65558f;border-radius:12px;color:#e9e2ff;text-decoration:none;font-weight:700">👤 Мой профиль</a>{% else %}<a href="{% url 'login' %}" style="padding:10px 15px;border:1px solid #65558f;border-radius:12px;color:#e9e2ff;text-decoration:none;font-weight:700">Войти / Регистрация</a>{% endif %}</div>
   </div>
 
   <section class="hero-panel">
@@ -122,6 +122,7 @@
   <a class="active" href="#top"><span>⌂</span>Главная</a>
   <a href="#games"><span>▦</span>Игры</a>
   <a href="{% url 'articles' %}"><span>▤</span>Журнал</a>
+  {% if user.is_authenticated %}<a href="{% url 'account' %}"><span>👤</span>Профиль</a>{% else %}<a href="{% url 'login' %}"><span>↗</span>Войти</a>{% endif %}
 </nav>
 {% if christmas_mode %}{% include "games/christmas_effects.html" %}{% endif %}
 <script>

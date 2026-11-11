@@ -1,0 +1,39 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#090914">
+<title>Профиль — PIXEL</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;padding:30px 18px;background:radial-gradient(circle at 15% 5%,#292052 0,transparent 36%),linear-gradient(145deg,#090914,#111126 60%,#090914);color:#f5f3ff;font-family:Arial,sans-serif}.wrap{max-width:850px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:34px}.brand{color:#fff;text-decoration:none;font-weight:900;letter-spacing:2px;font-size:22px}.back{color:#b7a5ff;text-decoration:none}.panel{padding:32px;border:1px solid #343052;border-radius:24px;background:rgba(20,19,42,.94);box-shadow:0 25px 90px #0007}.profile{display:flex;align-items:center;gap:22px}.avatar{width:100px;height:100px;flex:0 0 100px;border-radius:50%;object-fit:cover;border:3px solid #9875ff;background:#282442}.fallback{display:grid;place-items:center;font-size:40px}.tag{color:#a991ff;font-size:11px;font-weight:bold;letter-spacing:2px}h1{margin:8px 0;font-size:30px}.email{color:#aaa7c5;overflow-wrap:anywhere}.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:28px 0}.stat{padding:17px;border:1px solid #343052;border-radius:14px;background:#17162e}.stat small{display:block;color:#918bab;margin-bottom:8px}.stat strong{font-size:15px}.form{margin-top:28px;padding-top:25px;border-top:1px solid #343052}.form label{display:block;margin-bottom:10px;font-weight:bold}.form input{width:100%;padding:14px;border:1px solid #494365;border-radius:11px;background:#0e0d20;color:#fff;font-size:16px;outline:none}.form input:focus{border-color:#a58aff}.hint{color:#918bab;font-size:12px;line-height:1.5}.save{margin-top:14px;padding:13px 20px;border:0;border-radius:11px;background:linear-gradient(135deg,#9875ff,#6748db);color:#fff;font-weight:bold;cursor:pointer}.logout{margin-top:24px;padding:12px 18px;border:1px solid #51445e;border-radius:10px;background:transparent;color:#e4d9ef;cursor:pointer}.messages{padding:12px 14px;border-radius:10px;background:#34253e;color:#eadbff;list-style:none}.messages li+li{margin-top:6px}@media(max-width:560px){.panel{padding:22px}.profile{align-items:flex-start;gap:14px}.avatar{width:72px;height:72px;flex-basis:72px}.stats{grid-template-columns:1fr}h1{font-size:24px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top"><a class="brand" href="{% url 'home' %}">PIXEL</a><a class="back" href="{% url 'home' %}">← На главную</a></header>
+  <main class="panel">
+    {% if messages %}<ul class="messages">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>{% endif %}
+    <section class="profile">
+      {% if profile.avatar_url %}<img class="avatar" src="{{ profile.avatar_url }}" alt="Аватар игрока">{% else %}<div class="avatar fallback">👤</div>{% endif %}
+      <div><div class="tag">ПРОФИЛЬ ИГРОКА</div><h1>{{ profile.nickname }}</h1><div class="email">{{ request.user.email }}</div></div>
+    </section>
+    <section class="stats">
+      <div class="stat"><small>Дата регистрации</small><strong>{{ profile.created_at|date:"d.m.Y" }}</strong></div>
+      <div class="stat"><small>Способ входа</small><strong>Google</strong></div>
+    </section>
+    <section class="form">
+      <form method="post">
+        {% csrf_token %}
+        <label for="nickname">Изменить никнейм</label>
+        <input id="nickname" name="nickname" maxlength="32" value="{{ profile.nickname }}" autocomplete="nickname" required>
+        <p class="hint">До 32 символов. Если ник занят, PIXEL подберёт свободный вариант с номером. После изменения следующий раз поменять ник можно через 48 часов.</p>
+        <button class="save" type="submit">Сохранить никнейм</button>
+      </form>
+    </section>
+    <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="logout" type="submit">Выйти из аккаунта</button></form>
+  </main>
+</div>
+</body>
+</html>
