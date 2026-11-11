@@ -704,7 +704,7 @@ function saveState() {
         history = history.slice(0, historyIndex + 1);
     }
 
-    history.push(layers.map(l=>({id:l.id,name:l.name,visible:l.visible,data:l.surface.toDataURL("image/png")})));
+    history.push(layers.map((l,order)=>({id:l.id,order,name:l.name,visible:l.visible,data:l.surface.toDataURL("image/png")})));
 
     if (history.length > MAX_HISTORY) {
         history.shift();
@@ -717,7 +717,7 @@ function saveState() {
 function restoreState(index) {
     if (index < 0 || index >= history.length) return;
 
-    const snap=history[index];let count=0;const restored=[];snap.forEach(item=>{const im=new Image();im.onload=()=>{const surface=document.createElement("canvas");surface.width=canvas.width;surface.height=canvas.height;const context=surface.getContext("2d",{willReadFrequently:true});context.drawImage(im,0,0);restored.push({id:item.id,name:item.name,visible:item.visible,surface,context});if(++count===snap.length){layers=restored.sort((a,b)=>a.id-b.id);nextLayerId=Math.max(...layers.map(l=>l.id))+1;activeLayerId=layers[0].id;setActiveLayer();renderLayers();renderLayerList()}};im.src=item.data});
+    const snap=history[index];let count=0;const restored=[];snap.forEach(item=>{const im=new Image();im.onload=()=>{const surface=document.createElement("canvas");surface.width=canvas.width;surface.height=canvas.height;const context=surface.getContext("2d",{willReadFrequently:true});context.drawImage(im,0,0);restored.push({id:item.id,name:item.name,visible:item.visible,surface,context});if(++count===snap.length){layers=restored.sort((a,b)=>a.order-b.order);nextLayerId=Math.max(...layers.map(l=>l.id))+1;activeLayerId=layers[0].id;setActiveLayer();renderLayers();renderLayerList()}};im.src=item.data});
 }
 
 function updateHistoryButtons() {
