@@ -4,7 +4,7 @@ from .views import (
     mahjong, football, basketball, tictactoe, simpsons, chess, breakout,
     prison_pacman, prison_pacman2, paint, city_simulator, articles,
     article_detail, christmas_tower, santa_delivery, match3,
-    chernobyl_fishing, christmas_circuit, puzzle,
+    chernobyl_fishing, christmas_circuit, puzzle, tanks, tanks_rooms, tanks_join, tanks_room_state, tanks_leave,
 )
 
 urlpatterns = [
@@ -33,4 +33,9 @@ urlpatterns = [
     path('chernobyl-fishing/', chernobyl_fishing, name='chernobyl_fishing'),
     path('christmas-circuit/', christmas_circuit, name='christmas_circuit'),
     path('puzzle/', puzzle, name='puzzle'),
+    path('tanks/', tanks, name='tanks'),
+    path('tanks/api/rooms/', tanks_rooms, name='tanks_rooms'),
+    path('tanks/api/rooms/<str:code>/join/', tanks_join, name='tanks_join'),
+    path('tanks/api/rooms/<str:code>/state/', tanks_room_state, name='tanks_room_state'),
+    path('tanks/api/rooms/<str:code>/leave/', tanks_leave, name='tanks_leave'),
 ]
