@@ -36,8 +36,8 @@ button,a{font:inherit}button{touch-action:manipulation}.page{width:min(1680px,10
 const canvas=document.getElementById('field'),ctx=canvas.getContext('2d'),csrf=document.querySelector('[name=csrfmiddlewaretoken]').value;
 let chosenTeam='ussr',mode='idle',running=false,keys={},player={x:90,y:90,a:0,hp:3,team:'ussr'},bots=[],allies=[],shots=[],remote=[],roomCode=null,lastSend=0,lastPoll=0,fireQueued=false,raf=0;
 const walls=[{x:170,y:95,w:105,h:34},{x:420,y:95,w:120,h:34},{x:700,y:95,w:105,h:34},{x:310,y:235,w:125,h:38},{x:555,y:235,w:125,h:38},{x:90,y:330,w:115,h:38},{x:755,y:330,w:115,h:38},{x:170,y:500,w:105,h:34},{x:420,y:500,w:120,h:34},{x:700,y:500,w:105,h:34}];
-const cacti=[{x:350,y:145,r:19},{x:610,y:165,r:18},{x:265,y:405,r:20},{x:690,y:435,r:19},{x:865,y:245,r:17},{x:105,y:220,r:16}];
-const ponds=[{x:365,y:365,w:205,h:105},{x:45,y:420,w:90,h:65}];
+const cacti=[{x:350,y:145,r:19},{x:610,y:165,r:18},{x:265,y:405,r:20},{x:845,y:430,r:19},{x:865,y:245,r:17},{x:105,y:220,r:16}];
+const ponds=[{x:570,y:380,w:220,h:100},{x:45,y:420,w:90,h:65}];
 let pathFrame=0;
 function chooseTeam(t){chosenTeam=t;document.querySelectorAll('.team').forEach(b=>b.classList.toggle('active',b.dataset.team===t))}
 function msg(s){document.getElementById('message').textContent=s}
