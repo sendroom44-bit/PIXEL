@@ -346,10 +346,27 @@ def tanks_room_state(request, code):
     me['x'] = max(28, min(612, int(data.get('x', me.get('x', 80)))))
     me['y'] = max(28, min(452, int(data.get('y', me.get('y', 80)))))
     me['angle'] = int(data.get('angle', me.get('angle', 0))) % 360
-    bullets = [b for b in room.state.get('bullets', []) if timezone.now().timestamp() - b.get('t', 0) < 1.8]
+    now = timezone.now().timestamp()
+    bullets = []
+    for bullet in room.state.get('bullets', []):
+        elapsed = min(0.5, max(0, now - bullet.get('t', now)))
+        angle = bullet.get('angle', 0) * 3.141592653589793 / 180
+        bullet['x'] += __import__('math').cos(angle) * 5 * elapsed * 60
+        bullet['y'] += __import__('math').sin(angle) * 5 * elapsed * 60
+        bullet['t'] = now
+        hit = False
+        if bullet['x'] < 0 or bullet['x'] > 640 or bullet['y'] < 0 or bullet['y'] > 480:
+            hit = True
+        for target in players:
+            if target.get('id') != bullet.get('owner') and target.get('team') != bullet.get('team') and target.get('hp', 3) > 0:
+                if (target['x'] - bullet['x']) ** 2 + (target['y'] - bullet['y']) ** 2 < 18 ** 2:
+                    target['hp'] = max(0, target.get('hp', 3) - 1)
+                    hit = True
+        if not hit:
+            bullets.append(bullet)
     if data.get('fire'):
         bullets.append({'x': me['x'], 'y': me['y'], 'angle': me['angle'],
-                        'team': me['team'], 'owner': request.user.pk, 't': timezone.now().timestamp()})
+                        'team': me['team'], 'owner': request.user.pk, 't': now})
     room.state['bullets'] = bullets[-30:]
     room.state['players'] = players
     room.save(update_fields=['state', 'updated_at'])
