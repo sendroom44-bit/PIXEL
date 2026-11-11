@@ -1,30 +1,18 @@
-﻿
+{% load static %}
 <!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Статьи — PIXEL</title>
-</head>
-<body>
-    <h1>Журнал PIXEL</h1>
-    <a href="/">На главную</a>
-
-    {% for article in articles %}
-        <article>
-            <h2>
-                <a href="{% url 'article_detail' article.slug %}">
-                    {{ article.title }}
-                </a>
-            </h2>
-
-            {% if article.cover %}
-                <img src="{{ article.cover.url }}" width="300">
-            {% endif %}
-
-            <p>{{ article.description }}</p>
-        </article>
-    {% empty %}
-        <p>Пока опубликованных статей нет.</p>
-    {% endfor %}
-</body>
-</html>
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="theme-color" content="#090914"><title>Журнал PIXEL</title><link rel="stylesheet" href="{% static 'games/pixel2.css' %}">
+<style>
+.journal-head{padding:34px;border:1px solid var(--line);border-radius:22px;background:radial-gradient(circle at 85% 15%,#9875ff35,transparent 35%),linear-gradient(120deg,#20183f,#121629)}
+.journal-head h1{font-size:clamp(30px,5vw,48px);margin:12px 0}.journal-head p{color:var(--muted);max-width:600px;line-height:1.7}
+.article-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:22px}
+.article-card{overflow:hidden;border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#191a34,#101222)}
+.article-card img{width:100%;height:210px;object-fit:cover;display:block}
+.article-body{padding:20px}.article-category{font-size:10px;color:#c3adff;font-weight:900;letter-spacing:1.5px;text-transform:uppercase}
+.article-body h2{font-size:19px;margin:10px 0}.article-body p{color:var(--muted);font-size:12px;line-height:1.7}.article-link{display:inline-block;margin-top:10px;color:#c8b8ff;font-size:12px;font-weight:900}
+@media(max-width:650px){.article-grid{grid-template-columns:1fr}.journal-head{padding:24px}}
+</style></head>
+<body><div class="pixel-shell"><aside class="pixel-sidebar"><a class="pixel-brand" href="{% url 'home' %}"><span class="pixel-mark">P</span><span><strong>PIXEL</strong><small>МИР ИГР — БЕЗ ГРАНИЦ</small></span></a><div class="side-label">Навигация</div><a class="side-link" href="{% url 'home' %}"><span class="side-icon">⌂</span>Главная</a><a class="side-link" href="{% url 'home' %}#games"><span class="side-icon">▦</span>Каталог игр</a><a class="side-link active" href="{% url 'articles' %}"><span class="side-icon">▤</span>Журнал PIXEL</a><div class="side-bottom">✦ Новости, заметки и материалы из мира PIXEL.</div></aside>
+<main class="pixel-main"><div class="topbar"><div class="breadcrumb"><a href="{% url 'home' %}">PIXEL</a> / Журнал</div><span class="status-pill">PIXEL MAGAZINE</span></div><section class="journal-head"><div class="hero-kicker">✦ PIXEL MAGAZINE</div><h1>Журнал PIXEL</h1><p>Новости платформы, игровые материалы и интересные публикации. Всё самое важное — в одном месте.</p><a class="primary-action" href="{% url 'home' %}">← Вернуться к играм</a></section>
+<div class="section-head"><div><h2>Публикации</h2><p>Читайте последние материалы</p></div><span class="count-chip">{{ articles|length }} МАТЕРИАЛОВ</span></div>
+<div class="article-grid">{% for article in articles %}<article class="article-card">{% if article.cover %}<img src="{{ article.cover.url }}" alt="{{ article.title }}">{% endif %}<div class="article-body"><div class="article-category">{{ article.category }}</div><h2>{{ article.title }}</h2><p>{{ article.description }}</p><a class="article-link" href="{% url 'article_detail' article.slug %}">Читать материал ↗</a></div></article>{% empty %}<div class="empty-state" style="display:block">Пока опубликованных статей нет.</div>{% endfor %}</div>
+<footer class="site-footer"><span>© PIXEL 2026</span><span>Мир игр — без границ</span></footer></main></div><nav class="mobile-nav"><a href="{% url 'home' %}"><span>⌂</span>Главная</a><a href="{% url 'home' %}#games"><span>▦</span>Игры</a><a class="active" href="{% url 'articles' %}"><span>▤</span>Журнал</a></nav></body></html>
