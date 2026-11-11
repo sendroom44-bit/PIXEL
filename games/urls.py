@@ -19,6 +19,7 @@ from .views import (
     match3,
     chernobyl_fishing,
     christmas_circuit,
+    puzzle,
 )
 
 urlpatterns = [
@@ -41,4 +42,5 @@ urlpatterns = [
     path('articles/<slug:slug>/', article_detail, name='article_detail'),
     path('chernobyl-fishing/', chernobyl_fishing, name='chernobyl_fishing'),
     path('christmas-circuit/', christmas_circuit, name='christmas_circuit'),
+    path('puzzle/', puzzle, name='puzzle'),
 ]
