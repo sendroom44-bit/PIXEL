@@ -4,7 +4,7 @@ from .models import Game, Article
 
 
 def home(request):
-    games = Game.objects.filter(is_visible=True)
+    games = Game.objects.filter(is_visible=True, is_enabled=True).order_by('sort_order', 'name')
     return render(request, 'games/home.html', {'games': games})
 
 
