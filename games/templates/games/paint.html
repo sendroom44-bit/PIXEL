@@ -856,11 +856,11 @@ function drawShape(x1, y1, x2, y2, mirrored = false) {
         gradient.addColorStop(0, colorInput.value);
         gradient.addColorStop(1, "#ffffff");
         ctx.fillStyle = gradient;
-        ctx.globalAlpha = 1;
+        ctx.globalAlpha = Number(opacityInput.value) / 100;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    if (!mirrored && document.getElementById("symmetry").checked) {
+    if (!mirrored && tool !== "gradient" && document.getElementById("symmetry").checked) {
         ctx.save();
         ctx.translate(canvas.width, 0);
         ctx.scale(-1, 1);
@@ -1066,9 +1066,12 @@ document.getElementById("rotateCanvas").addEventListener("click", function() {
     temp.width = canvas.width; temp.height = canvas.height;
     temp.getContext("2d").drawImage(canvas, 0, 0);
     ctx.save(); ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const scale = Math.min(canvas.width / temp.height, canvas.height / temp.width);
+    const rotatedWidth = temp.height * scale;
+    const rotatedHeight = temp.width * scale;
     ctx.translate(canvas.width / 2, canvas.height / 2);
     ctx.rotate(Math.PI / 2);
-    ctx.drawImage(temp, -canvas.width / 2, -canvas.height / 2);
+    ctx.drawImage(temp, -rotatedWidth / 2, -rotatedHeight / 2, rotatedWidth, rotatedHeight);
     ctx.restore(); saveState();
 });
 
