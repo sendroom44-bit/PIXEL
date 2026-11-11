@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Game, Article, SiteSettings
+from .models import Game, Article, SiteSettings, PlayerProfile
 
 
 @admin.register(Game)
@@ -34,3 +34,11 @@ class SiteSettingsAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+@admin.register(PlayerProfile)
+class PlayerProfileAdmin(admin.ModelAdmin):
+    list_display = ('nickname', 'user', 'created_at', 'nickname_changed_at')
+    search_fields = ('nickname', 'user__email', 'user__username')
+    readonly_fields = ('user', 'google_sub', 'avatar_url', 'created_at', 'nickname_changed_at')
+    ordering = ('-created_at',)
