@@ -1,4 +1,4 @@
-﻿
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -401,6 +401,70 @@ footer {
         padding: 22px;
     }
 }
+ 
+/* PERMANENT WINTER FOREST */
+body {
+    background:
+      radial-gradient(ellipse at 50% 0%, rgba(112,65,190,.32), transparent 55%),
+      linear-gradient(180deg, #100d22 0%, #17112b 48%, #090d1b 100%);
+    background-attachment: fixed;
+}
+body::before {
+    content: "🌲　❄　🌲　　 🌲　❄　　 🌲　　🌲";
+    position: fixed; inset: 0 0 auto; height: 100vh;
+    z-index: -1; pointer-events: none; overflow: hidden;
+    color: #b7c9ff; opacity: .22; font-size: clamp(24px, 5vw, 58px);
+    line-height: 1.8; letter-spacing: 10px; white-space: pre-wrap;
+    text-shadow: 0 0 24px #8c6bff;
+    background:
+      linear-gradient(180deg, transparent 0 62%, rgba(6,10,25,.75) 100%),
+      repeating-linear-gradient(115deg, transparent 0 8%, rgba(30,44,82,.12) 8.2% 9%);
+}
+header {
+    position: relative;
+    background:
+      linear-gradient(180deg, rgba(10,8,25,.72), rgba(22,13,43,.82)),
+      radial-gradient(ellipse at 50% 0%, #6540a5 0%, transparent 70%);
+}
+.logo { position: relative; display: inline-block; }
+.logo::after {
+    content: "🎅"; position: absolute; right: -22px; top: -23px;
+    font-size: 30px; letter-spacing: 0; transform: rotate(18deg);
+    filter: drop-shadow(0 3px 5px #080611);
+}
+.hero {
+    background:
+      linear-gradient(rgba(12,9,27,.58), rgba(12,9,27,.78)),
+      radial-gradient(ellipse at 50% 0%, #54358b, transparent 70%),
+      linear-gradient(135deg, #11101b, #21143b, #10151e);
+}
+.featured-card {
+    border-color: #8d6be7;
+    background:
+      radial-gradient(circle at 85% 30%, #7051ad55, transparent 35%),
+      linear-gradient(120deg, #21153d, #111a30);
+    box-shadow: 0 0 28px #8155df33;
+}
+.card { background: linear-gradient(145deg, rgba(35,28,58,.96), rgba(14,15,30,.97)); border-color: #55417c; }
+nav { background: rgba(17,13,32,.94); }
+footer { background: rgba(13,12,25,.96); }
+@media (max-width: 550px) {
+    .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
+    .card { padding: 13px 11px; border-radius: 13px; }
+    .card h3 { font-size: 16px; line-height: 1.25; }
+    .card p { font-size: 12px; }
+    .icon { font-size: 34px; }
+    .button { align-self: stretch; text-align: center; min-height: 46px; padding: 13px 8px; }
+    nav { gap: 5px; padding: 10px 6px; }
+    nav a { padding: 11px 10px; }
+    .search-box { min-width: 100%; min-height: 48px; }
+    .logo { font-size: 38px; letter-spacing: 5px; }
+    .logo::after { right: -18px; top: -20px; font-size: 25px; }
+}
+@media (max-width: 360px) {
+    .cards { grid-template-columns: 1fr; }
+}
+
 </style>
 </head>
 
