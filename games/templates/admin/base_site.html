@@ -1,0 +1,6 @@
+{% extends "admin/base.html" %}
+{% load static %}
+{% block title %}PIXEL CONTROL{% endblock %}
+{% block branding %}<div id="site-name"><a href="{% url 'admin:index' %}"><span class="pixel-admin-mark">P</span> PIXEL <span class="pixel-admin-sub">CONTROL CENTER</span></a></div>{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'games/admin.css' %}">{% endblock %}
+{% block nav-global %}<a class="pixel-public-link" href="/" target="_blank">Открыть сайт ↗</a>{% endblock %}
