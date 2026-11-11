@@ -56,11 +56,6 @@
       </div>
     </div>
     <div class="game-grid" id="gameCards">
-    <article class="game-card" data-name="пазл-пятнашки" data-category="logic" style="--glow:#66e4df">
-        <div class="game-card-top"><div class="game-icon">🧩</div><span class="new-badge">NEW</span></div>
-        <h3>PIXEL Puzzle</h3><p>Собирай изображения, передвигая фрагменты по клеткам.</p>
-        <a class="game-open" href="{% url 'puzzle' %}"><span>Играть сейчас</span><span>↗</span></a>
-      </article>
     {% for game in games %}
       <article class="game-card" data-name="{{ game.name|lower }}" data-category="{{ game.category }}" style="--glow:{% if game.slug == 'football' %}#36c77b{% elif game.slug == 'basketball' %}#e99b45{% elif game.slug == 'christmas-circuit' %}#70e3df{% elif game.slug == 'christmas-tower' %}#9875ff{% else %}#9875ff{% endif %}">
         <div class="game-card-top">
@@ -80,6 +75,7 @@
             {% elif game.slug == "christmas-circuit" %}⚡
             {% elif game.slug == "chernobyl-fishing" %}🎣
             {% elif game.slug == "match3" %}💎
+            {% elif game.slug == "puzzle" %}🧩
             {% else %}🎮{% endif %}
           </div>
           {% if game.is_new or game.slug == "christmas-circuit" %}<span class="new-badge">NEW</span>{% endif %}
@@ -108,6 +104,7 @@
         {% elif game.slug == "christmas-tower" %}<a class="game-open" href="{% url 'christmas_tower' %}"><span>Играть сейчас</span><span>↗</span></a>
         {% elif game.slug == "santa-delivery" %}<a class="game-open" href="{% url 'santa_delivery' %}"><span>Играть сейчас</span><span>↗</span></a>
         {% elif game.slug == "chernobyl-fishing" %}<a class="game-open" href="{% url 'chernobyl_fishing' %}"><span>Играть сейчас</span><span>↗</span></a>
+        {% elif game.slug == "puzzle" %}<a class="game-open" href="{% url 'puzzle' %}"><span>Играть сейчас</span><span>↗</span></a>
         {% elif game.slug == "prison-pacman" %}<a class="game-open" href="{% url 'prison_pacman' %}"><span>Играть сейчас</span><span>↗</span></a>
         {% elif game.slug == "prison-pacman-2" %}<a class="game-open" href="{% url 'prison_pacman2' %}"><span>Играть сейчас</span><span>↗</span></a>
         {% else %}<a class="game-open" href="{% url game.slug %}"><span>Играть сейчас</span><span>↗</span></a>{% endif %}
