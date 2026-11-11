@@ -1,14 +1,18 @@
-
 from django.contrib import admin
 from .models import Game, Article, SiteSettings
 
 
 @admin.register(Game)
 class GameAdmin(admin.ModelAdmin):
-    list_display = ('name', 'slug', 'is_visible', 'is_new')
-    list_editable = ('is_visible', 'is_new')
-    list_filter = ('is_visible', 'is_new')
-    search_fields = ('name', 'slug')
+    list_display = ('name', 'category', 'sort_order', 'is_visible', 'is_enabled', 'is_new')
+    list_editable = ('category', 'sort_order', 'is_visible', 'is_enabled', 'is_new')
+    list_filter = ('category', 'is_visible', 'is_enabled', 'is_new')
+    search_fields = ('name', 'slug', 'description')
+    ordering = ('sort_order', 'name')
+    fieldsets = (
+        ('Основное', {'fields': ('name', 'slug', 'description', 'category')}),
+        ('Публикация и доступ', {'fields': ('sort_order', 'is_visible', 'is_enabled', 'is_new')}),
+    )
 
 
 @admin.register(Article)
@@ -17,11 +21,13 @@ class ArticleAdmin(admin.ModelAdmin):
     list_filter = ('category', 'is_published')
     search_fields = ('title', 'description')
     prepopulated_fields = {'slug': ('title',)}
+    date_hierarchy = 'created_at'
 
 
 @admin.register(SiteSettings)
 class SiteSettingsAdmin(admin.ModelAdmin):
     list_display = ('__str__',)
+    fieldsets = (('Оформление PIXEL', {'fields': ('christmas_mode',)}),)
 
     def has_add_permission(self, request):
         return not SiteSettings.objects.exists()
