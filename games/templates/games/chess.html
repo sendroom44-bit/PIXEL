@@ -813,7 +813,7 @@ function updateCheckHighlight() {
 
 function clickSquare(square) {
 
-    if (botThinking || game.game_over()) {
+    if (botThinking || game.game_over() || trainingMode === "opening") {
         return;
     }
 
@@ -1309,7 +1309,11 @@ function setTrainingMode(mode){
  ["play","puzzle","opening"].forEach(x=>document.getElementById(x+"Mode").classList.toggle("active",x===mode));
  document.getElementById("puzzleControls").hidden=mode!=="puzzle";
  document.getElementById("openingControls").hidden=mode!=="opening";
- if(mode==="play"){puzzleSolved=false;activePuzzle=null;document.getElementById("trainingMessage").textContent="Обычная партия. Можно играть против компьютера или вдвоём.";}
+ if(mode==="play"){
+  puzzleSolved=false;activePuzzle=null;game=new Chess();selectedSquare=null;legalMoves=[];lastFrom=null;lastTo=null;botThinking=false;
+  updateMoves();updateStatus();createBoard();
+  document.getElementById("trainingMessage").textContent="Обычная партия. Можно играть против компьютера или вдвоём.";
+ }
  if(mode==="puzzle")document.getElementById("trainingMessage").textContent="Выбери задачу и найди мат в один ход.";
  if(mode==="opening"){document.getElementById("trainingMessage").textContent="Изучай дебют по ходам и объяснениям.";startOpening();}
 }
