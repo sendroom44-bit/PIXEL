@@ -71,6 +71,10 @@ def chernobyl_fishing(request):
 def christmas_circuit(request):
     return render(request, 'games/christmas_circuit.html')
 
+def puzzle(request):
+    return render(request, 'games/puzzle.html')
+
+
 def articles(request):
     articles_list = Article.objects.filter(is_published=True)
     return render(request, 'games/articles.html', {
