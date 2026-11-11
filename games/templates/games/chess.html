@@ -481,6 +481,60 @@ body.flash .square.dark {
         height: 20%;
     }
 }
+
+/* Новые фоны и темы доски */
+.training{margin-top:12px;padding:12px;border-radius:13px;background:rgba(255,255,255,.82)}
+.training-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}
+.training-tabs button{margin:0;padding:9px 5px;font-size:13px}
+.training-tabs .training-tab:not(.active){background:#d6cbe5;color:#333}
+.training label{display:block;margin-top:8px;font-size:13px;font-weight:bold}
+.training-hint,.training-message{font-size:13px;line-height:1.45;margin:9px 0 2px;white-space:pre-line}
+.training-message{padding:9px;border-radius:9px;background:rgba(140,120,184,.12)}
+.training [hidden]{display:none!important}
+body.midnight{color:#edf0ff;background:radial-gradient(ellipse at 20% 0%,#27345f,#11182e 48%,#080b17)}
+body.midnight .panel,body.midnight .status,body.midnight .settings,body.midnight .moves,body.midnight .training{background:#19233d;color:#edf0ff}
+body.midnight .training-message{background:#29385d}body.midnight #board{border-color:#5369a5}
+body.midnight .square.light{background:#c6d3ed}body.midnight .square.dark{background:#536b9a}
+body.midnight button,body.midnight .back{background:#5369a5}
+body.midnight .secondary,body.midnight .training-tab:not(.active){background:#34415f;color:#fff}
+body.forest{color:#eff8e9;background:linear-gradient(145deg,#193d32,#10251f 55%,#091713)}
+body.forest .panel,body.forest .status,body.forest .settings,body.forest .moves,body.forest .training{background:#203c32;color:#eff8e9}
+body.forest .training-message{background:#315747}body.forest #board{border-color:#648d66}
+body.forest .square.light{background:#dce8c9}body.forest .square.dark{background:#78966a}
+body.forest button,body.forest .back{background:#527b58}
+body.forest .secondary,body.forest .training-tab:not(.active){background:#3d5b49;color:#fff}
+body.ocean{color:#e9f8ff;background:linear-gradient(135deg,#073b58,#086b83 55%,#062c48)}
+body.ocean .panel,body.ocean .status,body.ocean .settings,body.ocean .moves,body.ocean .training{background:#124b63;color:#e9f8ff}
+body.ocean .training-message{background:#1c6278}body.ocean #board{border-color:#3b91a5}
+body.ocean .square.light{background:#d8f0ed}body.ocean .square.dark{background:#68aeb0}
+body.ocean button,body.ocean .back{background:#287e96}
+body.ocean .secondary,body.ocean .training-tab:not(.active){background:#286477;color:#fff}
+body.sunset{color:#fff5ef;background:linear-gradient(145deg,#512d55,#a34f61 55%,#e18b62)}
+body.sunset .panel,body.sunset .status,body.sunset .settings,body.sunset .moves,body.sunset .training{background:#59394f;color:#fff5ef}
+body.sunset .training-message{background:#75495b}body.sunset #board{border-color:#d58a70}
+body.sunset .square.light{background:#f8dfc5}body.sunset .square.dark{background:#bd7b70}
+body.sunset button,body.sunset .back{background:#b96868}
+body.sunset .secondary,body.sunset .training-tab:not(.active){background:#744e61;color:#fff}
+body.cyber{color:#e9fff9;background:linear-gradient(135deg,#090d20,#17203c 55%,#24133a)}
+body.cyber .panel,body.cyber .status,body.cyber .settings,body.cyber .moves,body.cyber .training{background:#151d35;color:#e9fff9;border:1px solid #315e70}
+body.cyber .training-message{background:#1e3448}body.cyber #board{border-color:#40d9c0}
+body.cyber .square.light{background:#b8e8dc}body.cyber .square.dark{background:#287d79}
+body.cyber button,body.cyber .back{background:#147d79}
+body.cyber .secondary,body.cyber .training-tab:not(.active){background:#34405b;color:#fff}
+body.wood{color:#3c2618;background:repeating-linear-gradient(8deg,#b98250 0,#c89562 18px,#ae7446 36px,#c18a55 54px)}
+body.wood .panel,body.wood .status,body.wood .settings,body.wood .moves,body.wood .training{background:rgba(250,231,202,.94);color:#3c2618}
+body.wood .training-message{background:#ead0a9}body.wood #board{border-color:#70452b}
+body.wood .square.light{background:#f0d5a9}body.wood .square.dark{background:#98643e}
+body.wood button,body.wood .back{background:#80502f}
+body.wood .secondary,body.wood .training-tab:not(.active){background:#d9b88c;color:#3c2618}
+body.aurora{color:#f2f7ff;background:linear-gradient(135deg,#101b3d,#164b59 48%,#39235d)}
+body.aurora .panel,body.aurora .status,body.aurora .settings,body.aurora .moves,body.aurora .training{background:#172b43;color:#f2f7ff}
+body.aurora .training-message{background:#25465a}body.aurora #board{border-color:#64c7b3}
+body.aurora .square.light{background:#d7eee0}body.aurora .square.dark{background:#659e91}
+body.aurora button,body.aurora .back{background:#397f82}
+body.aurora .secondary,body.aurora .training-tab:not(.active){background:#344b61;color:#fff}
+@media(max-width:850px){.training-tabs button{font-size:12px}}
+
 </style>
 </head>
 
@@ -549,12 +603,42 @@ body.flash .square.dark {
                         <option value="red">Пастельно-красный</option>
                         <option value="gray">Пастельно-серый</option>
                         <option value="graphite">Графит</option>
-                        <option value="flash">Мигающий</option>
+                        <option value="midnight">Полночь</option><option value="forest">Лес</option>
+                        <option value="ocean">Океан</option><option value="sunset">Закат</option>
+                        <option value="cyber">Киберпанк</option><option value="wood">Дерево</option>
+                        <option value="aurora">Северное сияние</option><option value="flash">Мигающий</option>
                     </select>
                 </div>
 
             </div>
 
+            
+            <div class="training">
+                <b>Тренировка</b>
+                <div class="training-tabs">
+                    <button type="button" class="training-tab active" id="playMode">Партия</button>
+                    <button type="button" class="training-tab" id="puzzleMode">Задачи</button>
+                    <button type="button" class="training-tab" id="openingMode">Дебюты</button>
+                </div>
+                <div id="puzzleControls" hidden>
+                    <label for="puzzleSelect">Шахматная задача</label>
+                    <select id="puzzleSelect"><option value="0">Мат в 1 ход · Задача 1</option><option value="1">Мат в 1 ход · Задача 2</option></select>
+                    <button type="button" id="loadPuzzle">Начать задачу</button>
+                    <p class="training-hint">Найди единственный ход, который ставит мат.</p>
+                </div>
+                <div id="openingControls" hidden>
+                    <label for="openingSelect">Выбери дебют</label>
+                    <select id="openingSelect">
+                        <option value="italian">Итальянская партия</option>
+                        <option value="spanish">Испанская партия</option>
+                        <option value="sicilian">Сицилианская защита</option>
+                    </select>
+                    <button type="button" id="startOpening">Начать изучение</button>
+                    <button type="button" id="nextOpening" class="secondary">Следующий ход</button>
+                    <p id="openingExplanation" class="training-hint">Разбери последовательность ходов и идеи дебюта.</p>
+                </div>
+                <div id="trainingMessage" class="training-message">Выбери режим: обычная партия, задачи или дебюты.</div>
+            </div>
             <div class="moves" id="moves">
                 <b>Ходы</b>
                 <div id="moveList"></div>
@@ -786,7 +870,13 @@ function clickSquare(square) {
 }
 
 function makeMove(from, to) {
-
+    if(trainingMode==="puzzle" && activePuzzle){
+        if(puzzleSolved)return;
+        if(from!==activePuzzle.from || to!==activePuzzle.to){
+            document.getElementById("trainingMessage").textContent="Не этот ход. Попробуй найти мат в один ход.";
+            return;
+        }
+    }
     const movingPiece = game.get(from);
 
     if (!movingPiece) {
@@ -811,7 +901,10 @@ function makeMove(from, to) {
 
     updateMoves();
     updateStatus();
-
+    if(trainingMode==="puzzle" && activePuzzle && game.in_checkmate()){
+        puzzleSolved=true;statusElement.textContent="Мат! Задача решена.";
+        document.getElementById("trainingMessage").textContent="Верно! Ты нашёл мат в один ход. Выбери следующую задачу.";
+    }
     createBoard();
 
     if (
@@ -1183,10 +1276,7 @@ document.getElementById("resign").addEventListener("click", () => {
     botThinking = true;
 });
 
-themeSelect.addEventListener("change", () => {
-
-    document.body.className = themeSelect.value;
-});
+themeSelect.addEventListener("change",()=>{document.body.className=themeSelect.value;try{localStorage.setItem("pixelChessTheme",themeSelect.value);}catch(e){}});
 
 animationCheckbox.addEventListener("change", () => {
     createBoard();
@@ -1203,9 +1293,56 @@ botLevel.addEventListener("change", () => {
     }
 });
 
-createBoard();
-updateMoves();
-updateStatus();
+
+let trainingMode="play",puzzleSolved=false,activePuzzle=null,openingStep=0;
+const puzzles=[
+ {fen:"7k/8/5KQ1/8/8/8/8/8 w - - 0 1",from:"g6",to:"g7"},
+ {fen:"7k/5K2/6Q1/8/8/8/8/8 w - - 0 1",from:"g6",to:"g7"}
+];
+const openingLines={
+ italian:{title:"Итальянская партия",moves:["e4","e5","Nf3","Nc6","Bc4","Bc5"],notes:["Белые занимают центр пешкой e4.","Чёрные отвечают симметрично.","Конь развивается и атакует e5.","Чёрные защищают пешку и развивают коня.","Слон нацелен на слабое поле f7.","Чёрные развивают слона."]},
+ spanish:{title:"Испанская партия",moves:["e4","e5","Nf3","Nc6","Bb5","a6","Ba4","Nf6"],notes:["Белые занимают центр.","Чёрные борются за центр.","Конь атакует e5.","Чёрные защищают пешку.","Слон связывает коня c6 с защитой e5.","Чёрные спрашивают слона.","Слон сохраняет давление.","Чёрные развивают второго коня и атакуют e4."]},
+ sicilian:{title:"Сицилианская защита",moves:["e4","c5","Nf3","d6","d4","cxd4","Nxd4","Nf6"],notes:["Белые занимают центр.","Чёрные атакуют центр с фланга.","Белые развивают коня.","Чёрные поддерживают контроль центра.","Белые открывают центр ходом d4.","Чёрные меняют центральную пешку.","Белые возвращают пешку конём.","Чёрные развивают коня и нападают на e4."]}
+};
+function setTrainingMode(mode){
+ trainingMode=mode;
+ ["play","puzzle","opening"].forEach(x=>document.getElementById(x+"Mode").classList.toggle("active",x===mode));
+ document.getElementById("puzzleControls").hidden=mode!=="puzzle";
+ document.getElementById("openingControls").hidden=mode!=="opening";
+ if(mode==="play"){puzzleSolved=false;activePuzzle=null;document.getElementById("trainingMessage").textContent="Обычная партия. Можно играть против компьютера или вдвоём.";}
+ if(mode==="puzzle")document.getElementById("trainingMessage").textContent="Выбери задачу и найди мат в один ход.";
+ if(mode==="opening"){document.getElementById("trainingMessage").textContent="Изучай дебют по ходам и объяснениям.";startOpening();}
+}
+function loadPuzzle(){
+ const p=puzzles[Number(document.getElementById("puzzleSelect").value)];
+ game=new Chess(p.fen);activePuzzle=p;puzzleSolved=false;selectedSquare=null;legalMoves=[];lastFrom=null;lastTo=null;botThinking=false;
+ updateMoves();updateStatus();statusElement.textContent="Задача: мат в 1 ход";document.getElementById("trainingMessage").textContent="Подумай, каким ходом белые могут поставить мат.";createBoard();
+}
+function startOpening(){
+ const o=openingLines[document.getElementById("openingSelect").value];
+ game=new Chess();openingStep=0;selectedSquare=null;legalMoves=[];lastFrom=null;lastTo=null;botThinking=false;
+ updateMoves();updateStatus();createBoard();
+ document.getElementById("openingExplanation").textContent=o.title+": начальная позиция. Нажимай «Следующий ход».";
+ document.getElementById("trainingMessage").textContent="Изучаем: "+o.title;
+}
+function nextOpeningMove(){
+ const o=openingLines[document.getElementById("openingSelect").value];
+ if(openingStep>=o.moves.length){document.getElementById("trainingMessage").textContent="Дебют разобран! Можно начать сначала или выбрать другой.";return;}
+ const m=game.move(o.moves[openingStep]);if(!m){document.getElementById("trainingMessage").textContent="Линия не продолжилась. Нажми «Начать изучение».";return;}
+ lastFrom=m.from;lastTo=m.to;openingStep++;selectedSquare=null;legalMoves=[];updateMoves();updateStatus();createBoard();
+ document.getElementById("openingExplanation").textContent=o.title+" · "+openingStep+"/"+o.moves.length+"\n"+m.san+" — "+o.notes[openingStep-1];
+ document.getElementById("trainingMessage").textContent=openingStep===o.moves.length?"Линия завершена. Отличная работа!":"Ход "+(m.color==="w"?"белых":"чёрных")+": "+m.san;
+}
+document.getElementById("playMode").addEventListener("click",()=>setTrainingMode("play"));
+document.getElementById("puzzleMode").addEventListener("click",()=>{setTrainingMode("puzzle");loadPuzzle();});
+document.getElementById("openingMode").addEventListener("click",()=>setTrainingMode("opening"));
+document.getElementById("loadPuzzle").addEventListener("click",loadPuzzle);
+document.getElementById("startOpening").addEventListener("click",startOpening);
+document.getElementById("nextOpening").addEventListener("click",nextOpeningMove);
+document.getElementById("openingSelect").addEventListener("change",startOpening);
+
+try{const saved=localStorage.getItem("pixelChessTheme");if(saved&&themeSelect.querySelector('option[value="'+saved+'"]')){themeSelect.value=saved;document.body.className=saved;}}catch(e){}
+createBoard();updateMoves();updateStatus();
 </script>
 
 </body>
