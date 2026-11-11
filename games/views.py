@@ -1,11 +1,183 @@
-﻿
-from django.shortcuts import render, get_object_or_404
-from .models import Game, Article
+import hmac
+import json
+import secrets
+import time
+from datetime import timedelta
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
+from urllib.error import URLError, HTTPError
+
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import login, logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.http import HttpResponseBadRequest
+from django.shortcuts import render, get_object_or_404, redirect
+from django.utils import timezone
+from django.views.decorators.http import require_POST
+
+from .models import Game, Article, PlayerProfile
 
 
 def home(request):
     games = Game.objects.filter(is_visible=True, is_enabled=True).order_by('sort_order', 'name')
     return render(request, 'games/home.html', {'games': games})
+
+
+def login_page(request):
+    if request.user.is_authenticated:
+        return redirect('account')
+    return render(request, 'games/login.html')
+
+
+def google_login(request):
+    if not settings.GOOGLE_CLIENT_ID or not settings.GOOGLE_CLIENT_SECRET:
+        messages.error(request, 'Вход через Google пока не настроен. Администратору нужно добавить OAuth-ключи в Render.')
+        return redirect('login')
+    state = secrets.token_urlsafe(32)
+    request.session['google_oauth_state'] = state
+    params = {
+        'client_id': settings.GOOGLE_CLIENT_ID,
+        'redirect_uri': settings.GOOGLE_REDIRECT_URI,
+        'response_type': 'code',
+        'scope': 'openid email profile',
+        'state': state,
+        'prompt': 'select_account',
+    }
+    return redirect('https://accounts.google.com/o/oauth2/v2/auth?' + urlencode(params))
+
+
+def google_callback(request):
+    error = request.GET.get('error')
+    if error:
+        messages.error(request, 'Вход через Google отменён или не выполнен.')
+        return redirect('login')
+
+    returned_state = request.GET.get('state', '')
+    saved_state = request.session.pop('google_oauth_state', '')
+    if not saved_state or not hmac.compare_digest(saved_state, returned_state):
+        return HttpResponseBadRequest('Проверка безопасности не пройдена. Вернитесь на страницу входа и попробуйте снова.')
+
+    code = request.GET.get('code')
+    if not code:
+        messages.error(request, 'Google не вернул код авторизации. Попробуйте ещё раз.')
+        return redirect('login')
+
+    token_payload = urlencode({
+        'code': code,
+        'client_id': settings.GOOGLE_CLIENT_ID,
+        'client_secret': settings.GOOGLE_CLIENT_SECRET,
+        'redirect_uri': settings.GOOGLE_REDIRECT_URI,
+        'grant_type': 'authorization_code',
+    }).encode('utf-8')
+    try:
+        token_request = Request(
+            'https://oauth2.googleapis.com/token',
+            data=token_payload,
+            headers={'Content-Type': 'application/x-www-form-urlencoded'},
+            method='POST',
+        )
+        with urlopen(token_request, timeout=12) as response:
+            token_data = json.loads(response.read().decode('utf-8'))
+        access_token = token_data.get('access_token')
+        if not access_token:
+            raise ValueError('Google не выдал access token')
+
+        userinfo_request = Request(
+            'https://www.googleapis.com/oauth2/v3/userinfo',
+            headers={'Authorization': 'Bearer ' + access_token},
+        )
+        with urlopen(userinfo_request, timeout=12) as response:
+            google_data = json.loads(response.read().decode('utf-8'))
+    except (HTTPError, URLError, TimeoutError, ValueError, KeyError, json.JSONDecodeError):
+        messages.error(request, 'Не удалось подтвердить аккаунт Google. Попробуйте войти ещё раз.')
+        return redirect('login')
+
+    google_sub = str(google_data.get('sub', '')).strip()
+    email = str(google_data.get('email', '')).strip().lower()
+    verified = google_data.get('email_verified') is True or str(google_data.get('email_verified', '')).lower() == 'true'
+    if not google_sub or not email or not verified:
+        messages.error(request, 'Google не подтвердил адрес почты. Используйте подтверждённый Google-аккаунт.')
+        return redirect('login')
+
+    profile = PlayerProfile.objects.select_related('user').filter(google_sub=google_sub).first()
+    if profile:
+        user = profile.user
+        profile.avatar_url = google_data.get('picture', '')[:500]
+        profile.save(update_fields=['avatar_url'])
+        if user.email != email:
+            user.email = email
+            user.save(update_fields=['email'])
+    else:
+        base_username = 'google_' + google_sub
+        username = base_username[:150]
+        user = User.objects.filter(username=username).first()
+        if user is None:
+            user = User(username=username, email=email, first_name=str(google_data.get('given_name', ''))[:150])
+            user.set_unusable_password()
+            user.save()
+        display_name = str(google_data.get('name') or google_data.get('given_name') or 'Игрок PIXEL').strip()
+        nickname = _unique_nickname(display_name)
+        profile = PlayerProfile.objects.create(
+            user=user,
+            google_sub=google_sub,
+            nickname=nickname,
+            avatar_url=str(google_data.get('picture', ''))[:500],
+        )
+
+    login(request, user, backend='django.contrib.auth.backends.ModelBackend')
+    request.session.pop('google_oauth_state', None)
+    return redirect('account')
+
+
+def _unique_nickname(value, exclude_profile_id=None):
+    cleaned = ''.join(ch for ch in value if ch.isalnum() or ch in ' _-').strip()
+    cleaned = ' '.join(cleaned.split())[:32] or 'Игрок'
+    candidate = cleaned
+    number = 1
+    while PlayerProfile.objects.filter(nickname__iexact=candidate).exclude(pk=exclude_profile_id).exists():
+        suffix = ' (' + str(number) + ')'
+        candidate = cleaned[:32 - len(suffix)] + suffix
+        number += 1
+    return candidate
+
+
+@login_required(login_url='login')
+def account(request):
+    profile, created = PlayerProfile.objects.get_or_create(
+        user=request.user,
+        defaults={
+            'google_sub': 'legacy_' + str(request.user.pk),
+            'nickname': _unique_nickname(request.user.first_name or request.user.username),
+        },
+    )
+    if request.method == 'POST':
+        requested_nickname = request.POST.get('nickname', '').strip()
+        if profile.nickname_changed_at and timezone.now() < profile.nickname_changed_at + timedelta(hours=48):
+            available_at = profile.nickname_changed_at + timedelta(hours=48)
+            messages.error(request, 'Никнейм можно будет изменить ' + timezone.localtime(available_at).strftime('%d.%m.%Y в %H:%M') + '.')
+        elif not requested_nickname:
+            messages.error(request, 'Введи новый никнейм.')
+        elif len(requested_nickname) > 32:
+            messages.error(request, 'Никнейм должен быть не длиннее 32 символов.')
+        else:
+            new_nickname = _unique_nickname(requested_nickname, profile.pk)
+            if new_nickname == profile.nickname:
+                messages.info(request, 'Этот никнейм уже установлен.')
+            else:
+                profile.nickname = new_nickname
+                profile.nickname_changed_at = timezone.now()
+                profile.save(update_fields=['nickname', 'nickname_changed_at'])
+                messages.success(request, 'Никнейм обновлён: ' + new_nickname)
+        return redirect('account')
+    return render(request, 'games/account.html', {'profile': profile})
+
+
+@require_POST
+def logout_view(request):
+    logout(request)
+    return redirect('home')
 
 
 def mahjong(request):
@@ -71,23 +243,16 @@ def chernobyl_fishing(request):
 def christmas_circuit(request):
     return render(request, 'games/christmas_circuit.html')
 
+
 def puzzle(request):
     return render(request, 'games/puzzle.html')
 
 
 def articles(request):
     articles_list = Article.objects.filter(is_published=True)
-    return render(request, 'games/articles.html', {
-        'articles': articles_list
-    })
+    return render(request, 'games/articles.html', {'articles': articles_list})
 
 
 def article_detail(request, slug):
-    article = get_object_or_404(
-        Article,
-        slug=slug,
-        is_published=True
-    )
-    return render(request, 'games/article_detail.html', {
-        'article': article
-    })
+    article = get_object_or_404(Article, slug=slug, is_published=True)
+    return render(request, 'games/article_detail.html', {'article': article})
