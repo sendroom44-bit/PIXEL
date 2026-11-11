@@ -1,4 +1,4 @@
-﻿
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -495,6 +495,48 @@ header {
         padding: 10px;
     }
 }
+
+/* PIXEL ART OVERHAUL */
+:root{--bg:#090b19;--panel:#141a32;--panel2:#1b2442;--line:#394a78;--text:#e8efff;--muted:#9aabd0;--cyan:#68e0db;--violet:#a58bff;--gold:#ffd477}
+body{background:radial-gradient(ellipse at 50% -20%,#27315c 0,#10152b 48%,#080b18 100%);color:var(--text);font-family:Consolas,"Courier New",monospace}
+button{border:2px solid #566b9e;border-radius:4px;background:#27365f;color:#f3f6ff;padding:11px 14px;box-shadow:0 3px 0 #10172d;transition:filter .12s,transform .12s}
+button:hover{filter:brightness(1.22);transform:translateY(-1px)}
+button:active{transform:translateY(2px);box-shadow:0 1px 0 #10172d}
+button:disabled{filter:grayscale(.6);opacity:.45;transform:none}
+header{background:#111832;border-bottom:3px solid #53699b;box-shadow:0 5px 0 #080c1b;padding:17px 22px}
+.logo{font-size:22px;letter-spacing:2px;text-shadow:2px 2px #080b18}
+.logo span{color:#7be4dd}
+.header-info,.stat-name,.item small,.location small{color:var(--muted)}
+.container{max-width:1480px;padding:20px}
+.stat,.panel{background:linear-gradient(180deg,#1b2443,#121a32);border:2px solid var(--line);border-radius:5px;box-shadow:0 5px 0 #080d20, inset 0 1px 0 rgba(255,255,255,.05)}
+.stat{padding:13px}
+.stat-name{font-size:12px;letter-spacing:1px}
+.stat-value{font-size:21px;color:#fff;text-shadow:2px 2px #10172d}
+.bar,.meter{background:#080f25;border:1px solid #40517e;border-radius:2px;height:9px}
+.bar-fill{background:#6ee1bc;box-shadow:0 0 8px #6ee1bc}
+.main{gap:18px}
+.panel{padding:17px}
+.panel h2{font-size:16px;letter-spacing:1px;color:#dce7ff;text-transform:uppercase}
+.scene{height:370px;background:#111c38;border:3px solid #637bb0;border-radius:3px;image-rendering:pixelated}
+.scene>*:not(#pixelScene){display:none!important}
+.scene>.location-label,.scene>.scene-caption{display:block!important}
+#pixelScene{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges}
+.location-label,.scene-caption{display:block!important;z-index:2;background:#111a33;color:#dffcff;border:2px solid #526b9d;border-radius:2px;padding:7px 10px}
+.scene-caption{background:rgba(10,15,31,.8)}
+.fishing-status{background:#101a34;border:2px solid #405781;border-radius:3px;color:#cce8ff;line-height:1.5}
+.primary{background:#226d78;border-color:#5acbc5}.secondary{background:#29375f}.danger{background:#733d61;border-color:#b76a9a}.gold{background:#80602a;border-color:#d9ad55;color:#fff4d6}
+.location{background:#192443;border:2px solid #394d7b;border-radius:3px}
+.location.active{background:#263e63;border-color:#6ee1d6;box-shadow:inset 0 0 0 1px #6ee1d6}
+.tab{background:#263252;border:1px solid #536b9d}.tab.active{background:#226d78;border-color:#6ee1d6}
+.item{background:#182342;border:1px solid #354a77;border-radius:3px}
+.mini-title{color:#75e1d8;letter-spacing:1px}
+.fishing-box{background:#0e1830;border:2px solid #647db1;border-radius:3px}
+.meter-fill{background:#6ee1bc}.tension-fill{background:#ffb66d}
+.log{color:#aebfe2}.log-entry{border-color:#293b63}
+.footer{color:#7588b2}
+@media(max-width:850px){.scene{height:300px}}
+@media(max-width:430px){.scene{height:245px}.container{padding:10px}}
+
 </style>
 </head>
 
@@ -546,6 +588,7 @@ header {
                 <h2>📍 Текущая территория</h2>
 
                 <div class="scene" id="scene">
+                    <canvas id="pixelScene" width="320" height="180" aria-label="Пиксельный пейзаж зоны у воды"></canvas>
                     <div class="sun"></div>
                     <div class="trees" id="trees">
                         <div class="tree"></div>
@@ -608,6 +651,9 @@ header {
 
                         <button class="primary" id="reelBtn" onclick="reelFish()" disabled>
                             Подтянуть леску
+                        </button>
+                        <button class="secondary" id="relaxBtn" onclick="relaxLine()" disabled>
+                            Ослабить леску
                         </button>
 
                         <button class="danger" onclick="stopFishing()">
@@ -752,6 +798,8 @@ let state = {...defaultState};
 let biteTimer = null;
 let biteTimeout = null;
 let decayTimer = null;
+let sceneFrame = 0;
+let sceneTimer = null;
 
 const locations = [
     {
@@ -974,6 +1022,8 @@ function hookFish() {
     $("fishingDescription").textContent = "Нажимай «Подтянуть леску». Следи за натяжением!";
     $("hookBtn").disabled = true;
     $("reelBtn").disabled = false;
+    $("relaxBtn").disabled = false;
+    $("fishingDescription").textContent = "Подтягивай, чтобы приблизить рыбу. Если леска натянется слишком сильно — ослабь её!";
 
     setStatus("Рыба на крючке! Аккуратно подтягивай.");
     log("Ты подсёк рыбу. Начинается вываживание!");
@@ -982,35 +1032,37 @@ function hookFish() {
 
 function reelFish() {
     if (state.phase !== "reeling") return;
-
-    state.progress += 12 + Math.random() * 5;
-    state.tension += 9 + Math.random() * 8;
-
-    if (state.tension > 88) {
-        state.phase = "idle";
-        state.fishing = false;
-
-        clearTimeout(biteTimer);
-        $("fishingBox").classList.remove("show");
-
-        setStatus("Леска не выдержала натяжения!");
-        log("Рыба сорвалась! Слишком сильное натяжение.","bad");
-
-        updateUI();
-        saveGame();
+    state.tension += 13 + Math.random() * 7;
+    state.progress += Math.max(3, 10 + Math.random() * 5 - state.tension * 0.035);
+    if (state.tension >= 96) {
+        loseFish("Леска не выдержала! В следующий раз чаще ослабляй её.");
         return;
     }
-
-    if (state.progress >= 100) {
-        catchFish();
-        return;
-    }
-
     updateFishingBars();
+    $("fishingDescription").textContent = "Рыба сопротивляется. Прогресс вываживания: " + Math.round(state.progress) + "%. Натяжение: " + Math.round(state.tension) + "%.";
+    if (state.progress >= 100) catchFish();
+}
 
-    $("fishingDescription").textContent =
-        "Рыба сопротивляется! Прогресс: " +
-        Math.round(state.progress) + "%";
+function relaxLine() {
+    if (state.phase !== "reeling") return;
+    state.tension = Math.max(8, state.tension - (24 + Math.random() * 8));
+    state.progress = Math.max(0, state.progress - 2);
+    updateFishingBars();
+    $("fishingDescription").textContent = "Леска ослаблена. Натяжение: " + Math.round(state.tension) + "%. Теперь можно снова подтягивать.";
+}
+
+function loseFish(message) {
+    clearTimeout(biteTimer);
+    clearTimeout(biteTimeout);
+    state.phase = "idle";
+    state.fishing = false;
+    $("fishingBox").classList.remove("show");
+    $("reelBtn").disabled = true;
+    $("relaxBtn").disabled = true;
+    setStatus(message);
+    log("Рыба ушла. " + message, "bad");
+    updateUI();
+    saveGame();
 }
 
 function updateFishingBars() {
@@ -1050,7 +1102,10 @@ function catchFish() {
     addXP(data.xp);
 
     $("fishingBox").classList.remove("show");
+    $("reelBtn").disabled = true;
+    $("relaxBtn").disabled = true;
 
+    if (state.location === 3) state.radiation = Math.min(100, state.radiation + (state.suit ? 2 : 7));
     setStatus("Поймано: " + fish.name + " (" + fish.weight + " кг)!");
     log("Улов: " + fish.name + ", " + fish.weight + " кг. Цена: " + fish.price + " ₽.","good");
 
@@ -1390,6 +1445,8 @@ function survivalTick() {
         state.health = Math.max(0,state.health - 0.5);
     }
 
+    if (state.location === 3) state.radiation = Math.min(100, state.radiation + (state.suit ? 0.03 : 0.12));
+
     if (state.radiation >= 80) {
         state.health = Math.max(0,state.health - 0.3);
     }
@@ -1401,11 +1458,69 @@ function survivalTick() {
     updateUI();
 }
 
+
+function drawPixelScene() {
+    const canvas = $("pixelScene");
+    if (!canvas) return;
+    const c = canvas.getContext("2d");
+    c.imageSmoothingEnabled = false;
+    const w = 320, h = 180, loc = state.location;
+    const palettes = [
+        ["#263b58","#496b70","#1d5261","#173345"],
+        ["#3c4057","#6b6470","#315765","#1b3547"],
+        ["#1d3548","#355c61","#1b5261","#102f40"],
+        ["#34364c","#62586a","#294b5d","#142d40"]
+    ][loc];
+    c.fillStyle = "#17233d"; c.fillRect(0,0,w,h);
+    c.fillStyle = loc===2?"#a2b9a0":"#e5b979"; c.fillRect(252,18,20,20);
+    c.fillStyle = "#fff0c5"; c.fillRect(256,22,12,12);
+    c.fillStyle = palettes[0]; c.fillRect(0,0,w,86);
+    // distant skyline / forest
+    for(let i=0;i<12;i++){
+        const x=i*29-8, ht=24+(i*17%42);
+        c.fillStyle=i%3===0?"#293a4d":"#20364a";
+        c.fillRect(x,83-ht,22,ht);
+        if(loc===1||loc===3){c.fillStyle="#66717b";c.fillRect(x+4,83-ht+8,5,7);c.fillRect(x+13,83-ht+8,5,7);}
+        else {c.fillStyle="#183a39";c.fillRect(x+7,83-ht-12,8,16);c.fillRect(x+2,83-ht-5,18,10);}
+    }
+    // shoreline and water
+    c.fillStyle=palettes[1];c.fillRect(0,82,w,13);
+    c.fillStyle=palettes[2];c.fillRect(0,95,w,85);
+    c.fillStyle=palettes[3];c.fillRect(0,148,w,32);
+    for(let i=0;i<26;i++){
+        const x=(i*37+sceneFrame*2)%330, y=102+(i*19%65);
+        c.fillStyle=i%3===0?"#72b5b0":"#367b86";
+        c.fillRect(x,y,8+(i%4)*2,2);
+    }
+    // old buildings / trees
+    if(loc===1||loc===3){
+        c.fillStyle="#4c5360";c.fillRect(205,47,65,38);c.fillStyle="#202b42";c.fillRect(214,57,12,18);c.fillRect(242,57,12,18);c.fillStyle="#6c7480";c.fillRect(199,43,76,6);
+    } else {
+        for(let i=0;i<5;i++){const x=10+i*43;c.fillStyle="#152f35";c.fillRect(x+9,43,5,45);c.fillStyle=loc===2?"#24534a":"#315446";c.fillRect(x,35,24,12);c.fillRect(x+4,26,16,12);c.fillRect(x+8,18,8,12);}
+    }
+    // pier
+    c.fillStyle="#70583f";c.fillRect(20,111,116,7);c.fillStyle="#4b3b34";c.fillRect(29,118,7,31);c.fillRect(116,118,7,31);c.fillStyle="#a17b51";for(let x=25;x<135;x+=16)c.fillRect(x,112,2,5);
+    // fisherman sprite
+    c.fillStyle="#1a2133";c.fillRect(68,83,12,22);c.fillRect(65,103,6,12);c.fillRect(77,103,6,12);
+    c.fillStyle="#d3b28a";c.fillRect(69,75,10,9);c.fillStyle="#293d68";c.fillRect(67,86,14,14);c.fillStyle="#18233d";c.fillRect(65,72,15,4);c.fillRect(76,75,5,4);
+    c.fillStyle="#b9cbe2";c.fillRect(81,89,13,2);c.fillRect(93,90,2,19);
+    // bobber
+    const bobY=109+Math.sin(sceneFrame/3)*2;
+    c.fillStyle="#f5eee0";c.fillRect(90,bobY,5,6);c.fillStyle="#e65f70";c.fillRect(90,bobY,5,3);
+    if(state.phase==="bite"){c.fillStyle="#f8d16b";c.fillRect(88,bobY-5,9,3);}
+    // foreground reeds
+    for(let i=0;i<9;i++){const x=i*39+((i%2)*7);c.fillStyle="#263e3c";c.fillRect(x,157,3,18);c.fillStyle="#8a9a5b";c.fillRect(x-3,153,3,6);}
+    sceneFrame++;
+}
+
 function startGame() {
     loadGame();
 
     renderShop();
     updateUI();
+    drawPixelScene();
+    if (sceneTimer) clearInterval(sceneTimer);
+    sceneTimer = setInterval(drawPixelScene, 180);
 
     log("Ты прибыл в Зону. Пора искать место для рыбалки.");
     log("У тебя есть 500 рублей и немного снаряжения.");
