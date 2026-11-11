@@ -43,7 +43,7 @@ class AdminSecondFactorMiddleware:
 
     def __call__(self, request):
         path = request.path
-        if path.startswith(ADMIN_PREFIX) and path != VERIFY_PATH:
+        if path.startswith(ADMIN_PREFIX) and path != VERIFY_PATH and not path.startswith('/control-room/logout/'):
             user = getattr(request, 'user', None)
             if user and user.is_authenticated and user.is_staff:
                 verified_at = request.session.get('pixel_admin_verified_at')
