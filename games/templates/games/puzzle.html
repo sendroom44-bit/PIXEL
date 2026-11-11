@@ -1,0 +1,67 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#0b0b18"><title>PIXEL Puzzle — пятнашки</title>
+<style>
+:root{--bg:#0b0b18;--panel:#15152a;--line:#292943;--muted:#9b9bb8;--violet:#9b7cff;--cyan:#66e4df}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#29204e 0,transparent 55%),var(--bg);color:#f5f3ff;font-family:Arial,sans-serif;min-height:100vh}
+a{color:inherit;text-decoration:none}.wrap{width:min(1120px,calc(100% - 32px));margin:auto;padding:22px 0 45px}
+.top{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}.brand{font-weight:900;letter-spacing:2px;font-size:21px}.brand b{color:var(--violet)}.back{color:#c7c3e5;font-size:14px;padding:10px 14px;border:1px solid var(--line);border-radius:12px}
+.heading{text-align:center;margin:20px 0 24px}.eyebrow{font-size:11px;letter-spacing:3px;color:var(--cyan);font-weight:bold}.heading h1{font-size:clamp(32px,6vw,54px);margin:10px 0 8px;letter-spacing:-1.5px}.heading p{color:var(--muted);margin:0}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px;align-items:start}
+.panel{background:linear-gradient(145deg,rgba(28,27,52,.96),rgba(17,18,35,.98));border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:0 20px 70px #0004}
+.board-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}.board-head strong{font-size:15px}.stats{display:flex;gap:8px}.stat{background:#0e1021;border:1px solid #292b48;border-radius:11px;padding:8px 11px;text-align:center;min-width:74px}.stat small{display:block;color:var(--muted);font-size:10px;margin-bottom:3px}.stat b{font-size:16px;font-variant-numeric:tabular-nums}
+.board{width:min(100%,650px);aspect-ratio:1;margin:auto;display:grid;gap:5px;background:#090b18;padding:6px;border-radius:16px;touch-action:manipulation;user-select:none}
+.tile{border:0;border-radius:8px;background-repeat:no-repeat;position:relative;cursor:pointer;overflow:hidden;min-width:0;min-height:0;transition:filter .12s,transform .12s;box-shadow:inset 0 0 0 1px #ffffff22}
+.tile:focus-visible{outline:3px solid var(--cyan);outline-offset:2px}.tile:active{filter:brightness(1.2);transform:scale(.97)}.tile.empty{background:#101225!important;box-shadow:inset 0 0 0 2px #343653;cursor:default}.tile:not(.empty):after{content:attr(data-number);position:absolute;left:7px;top:6px;background:#080a18aa;color:#fff;border:1px solid #ffffff35;border-radius:7px;padding:3px 6px;font-size:11px;font-weight:bold}
+.controls{display:flex;gap:9px;flex-wrap:wrap;margin-top:15px}.btn{border:1px solid #373653;background:#20203a;color:#fff;border-radius:11px;padding:11px 14px;font-weight:bold;cursor:pointer}.btn.primary{background:linear-gradient(100deg,#8667ed,#5c7be8);border:0}.btn:hover{filter:brightness(1.13)}
+.side h2{font-size:16px;margin:0 0 13px}.gallery{display:grid;grid-template-columns:1fr 1fr;gap:9px}.picture{border:2px solid transparent;border-radius:12px;padding:0;overflow:hidden;background:#0b0d1b;cursor:pointer;text-align:left;color:#fff}.picture.active{border-color:var(--cyan);box-shadow:0 0 0 2px #66e4df22}.picture img{display:block;width:100%;aspect-ratio:1.35;object-fit:cover}.picture span{display:block;padding:8px;font-size:12px;font-weight:bold}
+.field{margin-top:18px}.field label{display:block;color:var(--muted);font-size:12px;margin-bottom:8px}.sizes{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.size{padding:10px 4px;border-radius:10px;background:#0e1021;border:1px solid var(--line);color:#ddd;cursor:pointer;font-weight:bold}.size.active{background:#302753;border-color:var(--violet);color:#fff}
+.tip{color:var(--muted);font-size:12px;line-height:1.6;margin:16px 0 0}.win{display:none;margin-top:14px;padding:13px;border-radius:12px;background:#123c3b;border:1px solid #267a73;color:#b9fff3;font-weight:bold;text-align:center}
+@media(max-width:800px){.layout{grid-template-columns:1fr}.side{order:2}.board-panel{order:1}.gallery{grid-template-columns:repeat(4,minmax(0,1fr))}.picture span{font-size:10px;padding:6px}.wrap{width:min(100% - 20px,650px);padding-top:14px}.panel{padding:12px;border-radius:17px}.board{gap:3px;padding:4px}.tile{border-radius:5px}.tile:not(.empty):after{font-size:9px;left:4px;top:4px;padding:2px 4px}.stats{gap:5px}.stat{min-width:62px;padding:7px 8px}}
+@media(max-width:420px){.gallery{grid-template-columns:repeat(2,minmax(0,1fr))}.board-head{align-items:flex-start;flex-direction:column}.heading{margin:14px 0 18px}}
+</style>
+</head>
+<body><div class="wrap">
+<header class="top"><a class="brand" href="{% url 'home' %}"><b>PIXEL</b> / PUZZLE</a><a class="back" href="{% url 'home' %}">← В каталог</a></header>
+<section class="heading"><div class="eyebrow">ЛОГИКА · ВНИМАНИЕ · СКОРОСТЬ</div><h1>Собери картинку</h1><p>Передвигай фрагменты по клеткам, пока изображение не восстановится</p></section>
+<div class="layout">
+<section class="panel board-panel">
+<div class="board-head"><strong id="pictureTitle">Неоновый город</strong><div class="stats"><div class="stat"><small>ХОДЫ</small><b id="moves">0</b></div><div class="stat"><small>ВРЕМЯ</small><b id="time">00:00</b></div></div></div>
+<div class="board" id="board" aria-label="Игровое поле пятнашек"></div>
+<div class="controls"><button class="btn primary" id="shuffle">Перемешать</button><button class="btn" id="preview">Показать картинку</button><button class="btn" id="reset">Начать заново</button></div>
+<div class="win" id="win">✦ Отлично! Картинка собрана!</div>
+</section>
+<aside class="panel side"><h2>Выбери изображение</h2><div class="gallery" id="gallery">
+<button class="picture active" data-name="Неоновый город" data-src="{% static 'games/puzzles/neon-city.svg' %}"><img src="{% static 'games/puzzles/neon-city.svg' %}" alt=""><span>Неоновый город</span></button>
+<button class="picture" data-name="Зимний экспресс" data-src="{% static 'games/puzzles/winter-train.svg' %}"><img src="{% static 'games/puzzles/winter-train.svg' %}" alt=""><span>Зимний экспресс</span></button>
+<button class="picture" data-name="Космос" data-src="{% static 'games/puzzles/space.svg' %}"><img src="{% static 'games/puzzles/space.svg' %}" alt=""><span>Космос</span></button>
+<button class="picture" data-name="Лесная долина" data-src="{% static 'games/puzzles/forest.svg' %}"><img src="{% static 'games/puzzles/forest.svg' %}" alt=""><span>Лесная долина</span></button>
+</div>
+<div class="field"><label>СЛОЖНОСТЬ</label><div class="sizes"><button class="size active" data-size="3">3 × 3</button><button class="size" data-size="4">4 × 4</button><button class="size" data-size="5">5 × 5</button></div></div>
+<p class="tip">Нажимай на фрагмент рядом с пустой клеткой. На компьютере также работают стрелки клавиатуры. Каждая новая игра перемешивается так, чтобы её точно можно было решить.</p>
+</aside>
+</div></div>
+<script>
+(function(){
+const board=document.getElementById('board'),movesEl=document.getElementById('moves'),timeEl=document.getElementById('time'),winEl=document.getElementById('win');
+let size=3,tiles=[],moves=0,seconds=0,timer=null,started=false,solved=true,source="{% static 'games/puzzles/neon-city.svg' %}",title='Неоновый город',previewing=false;
+function formatTime(){return String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0')}
+function startClock(){if(timer)return;timer=setInterval(()=>{if(started){seconds++;timeEl.textContent=formatTime()}},1000)}
+function resetStats(){moves=0;seconds=0;started=false;movesEl.textContent='0';timeEl.textContent='00:00';winEl.style.display='none';if(timer){clearInterval(timer);timer=null}}
+function draw(){board.style.gridTemplateColumns='repeat('+size+',1fr)';board.innerHTML='';tiles.forEach((value,index)=>{const cell=document.createElement('button');cell.type='button';cell.className='tile'+(value===0?' empty':'');cell.setAttribute('aria-label',value===0?'Пустая клетка':'Фрагмент '+value);if(value!==0){const original=value-1,row=Math.floor(original/size),col=original%size;cell.dataset.number=value;cell.style.backgroundImage='url("'+source+'")';cell.style.backgroundSize=(size*100)+'% '+(size*100)+'%';cell.style.backgroundPosition=(size===1?0:col/(size-1)*100)+'% '+(size===1?0:row/(size-1)*100)+'%';cell.addEventListener('click',()=>move(index))}board.appendChild(cell)})}
+function isSolved(){return tiles.every((v,i)=>v===(i===tiles.length-1?0:i+1))}
+function move(index){if(previewing||tiles[index]===0)return;const empty=tiles.indexOf(0),r=Math.floor(index/size),c=index%size,er=Math.floor(empty/size),ec=empty%size;if(Math.abs(r-er)+Math.abs(c-ec)!==1)return;[tiles[index],tiles[empty]]=[tiles[empty],tiles[index]];moves++;movesEl.textContent=moves;started=true;startClock();draw();if(isSolved()){started=false;if(timer){clearInterval(timer);timer=null}winEl.style.display='block';winEl.textContent='✦ Победа! '+moves+' ходов · '+formatTime()}}
+function shuffle(){tiles=Array.from({length:size*size},(_,i)=>i===size*size-1?0:i+1);let previous=-1;for(let i=0;i<size*size*size*25;i++){const empty=tiles.indexOf(0),r=Math.floor(empty/size),c=empty%size,opts=[];if(r>0)opts.push(empty-size);if(r<size-1)opts.push(empty+size);if(c>0)opts.push(empty-1);if(c<size-1)opts.push(empty+1);const choices=opts.filter(x=>x!==previous);const next=choices[Math.floor(Math.random()*choices.length)]??opts[0];[tiles[empty],tiles[next]]=[tiles[next],tiles[empty]];previous=empty}if(isSolved())shuffle();resetStats();draw()}
+function selectPicture(button){document.querySelectorAll('.picture').forEach(x=>x.classList.toggle('active',x===button));source=button.dataset.src;title=button.dataset.name;document.getElementById('pictureTitle').textContent=title;shuffle()}
+document.querySelectorAll('.picture').forEach(b=>b.addEventListener('click',()=>selectPicture(b)));
+document.querySelectorAll('.size').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('.size').forEach(x=>x.classList.toggle('active',x===b));size=Number(b.dataset.size);shuffle()}));
+document.getElementById('shuffle').addEventListener('click',shuffle);
+document.getElementById('reset').addEventListener('click',()=>{tiles=Array.from({length:size*size},(_,i)=>i===size*size-1?0:i+1);resetStats();draw()});
+document.getElementById('preview').addEventListener('click',()=>{previewing=!previewing;board.style.backgroundImage=previewing?'url("'+source+'")':'none';board.style.backgroundSize='100% 100%';board.querySelectorAll('.tile').forEach(x=>x.style.visibility=previewing?'hidden':'visible');document.getElementById('preview').textContent=previewing?'Скрыть картинку':'Показать картинку'});
+document.addEventListener('keydown',e=>{const empty=tiles.indexOf(0),r=Math.floor(empty/size),c=empty%size;let target=-1;if(e.key==='ArrowUp'&&r<size-1)target=empty+size;if(e.key==='ArrowDown'&&r>0)target=empty-size;if(e.key==='ArrowLeft'&&c<size-1)target=empty+1;if(e.key==='ArrowRight'&&c>0)target=empty-1;if(target>=0){e.preventDefault();move(target)}});
+shuffle();
+})();
+</script></body></html>
