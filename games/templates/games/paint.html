@@ -225,6 +225,7 @@ input[type="color"] {
     justify-content: center;
 }
 
+ .crop-selection{display:none;position:absolute;border:2px dashed #a28dff;background:#8b72ff22;pointer-events:none;z-index:4}
 .canvas-frame {
     background: #fff;
     box-shadow: 0 15px 50px #0008;
@@ -386,7 +387,7 @@ canvas {
         </button>
         <button class="tool" data-tool="gradient"><span class="emoji">🌈</span>Градиент</button>
         <button class="tool" data-tool="star"><span class="emoji">⭐</span>Звезда</button>
-        <button class="tool" data-tool="diamond"><span class="emoji">◇</span>Ромб</button>
+        <button class="tool" data-tool="diamond"><span class="emoji">◇</span>Ромб</button><button class="tool" data-tool="roundedRect"><span class="emoji">▢</span>Скруглённый прямоугольник</button><button class="tool" data-tool="arrow"><span class="emoji">➜</span>Стрелка</button><button class="tool" data-tool="spray"><span class="emoji">💨</span>Аэрограф</button><button class="tool" data-tool="crop"><span class="emoji">✂</span>Обрезка</button>
     </div>
 
     <div class="section-title">ЦВЕТ</div>
@@ -454,7 +455,7 @@ canvas {
         </select>
     </div>
 
-    <div class="section-title">МОИ ШРИФТЫ</div>
+    <div class="section-title">КИСТЬ И ЗАЛИВКА</div><div class="setting"><label>Тип кисти</label><select id="brushType" style="width:100%;background:#30344c;color:white;border:0;padding:9px;border-radius:7px"><option value="round">Мягкая круглая</option><option value="square">Квадратная</option><option value="pencil">Карандаш</option><option value="marker">Маркер</option></select></div><div class="setting"><label>Допуск заливки <span id="toleranceValue">24</span></label><input type="range" id="fillTolerance" min="0" max="100" value="24"></div><div class="section-title">МОИ ШРИФТЫ</div>
     <div class="setting">
         <label>Шрифт для инструмента «Текст»</label>
         <select id="fontFamily" style="width:100%;background:#30344c;color:white;border:0;padding:9px;border-radius:7px;margin-bottom:8px">
@@ -487,7 +488,7 @@ canvas {
         <button id="rotateCanvas">⟳ Поворот 90°</button>
         <button id="filterGray">Ч/Б</button>
         <button id="filterSepia">Сепия</button>
-        <button id="filterInvert">Инверсия</button>
+        <button id="filterInvert">Инверсия</button><button id="filterBlur">Размытие</button><button id="filterPixel">Пикселизация</button><button id="filterPoster">Постеризация</button><button id="filterSharpen">Резкость</button><div class="separator"></div><button id="exportProject">📦 Сохранить проект</button><button id="importProject">📥 Открыть проект</button><button id="resizeCanvas">↔ Размер холста</button>
 
         <div class="separator"></div>
 
@@ -499,7 +500,7 @@ canvas {
 
     <div class="canvas-stage" id="canvasStage">
         <div class="canvas-frame">
-            <canvas id="canvas" width="1200" height="750"></canvas>
+            <canvas id="canvas" width="1200" height="750"></canvas><div id="cropSelection" class="crop-selection"></div>
         </div>
     </div>
 
@@ -513,7 +514,7 @@ canvas {
 </div>
 
 <input type="file" id="imageFile" accept="image/*" class="hidden">
-<input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2" class="hidden">
+<input type="file" id="fontFile" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2" class="hidden"><input type="file" id="projectFile" accept=".pixelpaint,application/json,.json" class="hidden">
 
 <script>
 const canvas = document.getElementById("canvas");
@@ -543,6 +544,7 @@ let historyIndex = -1;
 const MAX_HISTORY = 25;
 
 let previewImage = null;
+const cropOverlay=document.getElementById("cropSelection");
 
 const toolNames = {
     brush: "Кисть",
@@ -557,7 +559,7 @@ const toolNames = {
     gradient: "Градиент",
     star: "Звезда",
     diamond: "Ромб",
-    semicircle: "Полукруг"
+    semicircle: "Полукруг", roundedRect: "Скруглённый прямоугольник", arrow: "Стрелка", spray: "Аэрограф", crop: "Обрезка"
 };
 
 // --------------------
@@ -697,6 +699,8 @@ loadSavedFonts();
 // ХОЛСТ
 // --------------------
 
+function updateCropOverlay(x1,y1,x2,y2){const z=zoom;cropOverlay.style.left=Math.min(x1,x2)*z+"px";cropOverlay.style.top=Math.min(y1,y2)*z+"px";cropOverlay.style.width=Math.abs(x2-x1)*z+"px";cropOverlay.style.height=Math.abs(y2-y1)*z+"px";}
+function applyCropSelection(x,y){const left=Math.max(0,Math.floor(Math.min(startX,x))),top=Math.max(0,Math.floor(Math.min(startY,y))),right=Math.min(canvas.width,Math.ceil(Math.max(startX,x))),bottom=Math.min(canvas.height,Math.ceil(Math.max(startY,y)));cropOverlay.style.display="none";if(right-left<5||bottom-top<5)return;const w=right-left,h=bottom-top;layers.forEach(l=>{const temp=document.createElement("canvas");temp.width=w;temp.height=h;temp.getContext("2d").drawImage(l.surface,left,top,w,h,0,0,w,h);l.surface.width=w;l.surface.height=h;l.context=l.surface.getContext("2d",{willReadFrequently:true});l.context.drawImage(temp,0,0)});canvas.width=w;canvas.height=h;setActiveLayer();renderLayers();renderLayerList();document.getElementById("canvasInfo").textContent=w+" × "+h+" px";setZoom(zoom);}
 function resetCanvas(){layers.forEach(l=>l.context.clearRect(0,0,canvas.width,canvas.height));layers[0].context.fillStyle="#ffffff";layers[0].context.fillRect(0,0,canvas.width,canvas.height);setActiveLayer();renderLayers()}
 
 function saveState() {
@@ -704,7 +708,7 @@ function saveState() {
         history = history.slice(0, historyIndex + 1);
     }
 
-    history.push(layers.map((l,order)=>({id:l.id,order,name:l.name,visible:l.visible,data:l.surface.toDataURL("image/png")})));
+    const snapshot=layers.map((l,order)=>({id:l.id,order,name:l.name,visible:l.visible,data:l.surface.toDataURL("image/png")}));snapshot.width=canvas.width;snapshot.height=canvas.height;history.push(snapshot);
 
     if (history.length > MAX_HISTORY) {
         history.shift();
@@ -717,7 +721,7 @@ function saveState() {
 function restoreState(index) {
     if (index < 0 || index >= history.length) return;
 
-    const snap=history[index];let count=0;const restored=[];snap.forEach(item=>{const im=new Image();im.onload=()=>{const surface=document.createElement("canvas");surface.width=canvas.width;surface.height=canvas.height;const context=surface.getContext("2d",{willReadFrequently:true});context.drawImage(im,0,0);restored.push({id:item.id,name:item.name,visible:item.visible,surface,context});if(++count===snap.length){layers=restored.sort((a,b)=>a.order-b.order);nextLayerId=Math.max(...layers.map(l=>l.id))+1;activeLayerId=layers[0].id;setActiveLayer();renderLayers();renderLayerList()}};im.src=item.data});
+    const snap=history[index];if(snap.width&&snap.height){canvas.width=snap.width;canvas.height=snap.height;document.getElementById("canvasInfo").textContent=canvas.width+" × "+canvas.height+" px";setZoom(zoom);}let count=0;const restored=[];snap.forEach(item=>{const im=new Image();im.onload=()=>{const surface=document.createElement("canvas");surface.width=canvas.width;surface.height=canvas.height;const context=surface.getContext("2d",{willReadFrequently:true});context.drawImage(im,0,0);restored.push({id:item.id,name:item.name,visible:item.visible,surface,context});if(++count===snap.length){layers=restored.sort((a,b)=>a.order-b.order);nextLayerId=Math.max(...layers.map(l=>l.id))+1;activeLayerId=layers[0].id;setActiveLayer();renderLayers();renderLayerList()}};im.src=item.data});
 }
 
 function updateHistoryButtons() {
@@ -782,12 +786,7 @@ function getPosition(event) {
 // --------------------
 
 function applyStyle() {
-    ctx.lineWidth = Number(sizeInput.value);
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.strokeStyle = colorInput.value;
-    ctx.fillStyle = colorInput.value;
-    ctx.globalAlpha = Number(opacityInput.value) / 100;
+    const brush=document.getElementById("brushType").value;ctx.lineWidth=Number(sizeInput.value);ctx.lineCap=brush==="square"?"square":"round";ctx.lineJoin="round";ctx.strokeStyle=colorInput.value;ctx.fillStyle=colorInput.value;ctx.globalAlpha=Number(opacityInput.value)/100*(brush==="marker"?.42:1);
 }
 
 // --------------------
@@ -837,12 +836,13 @@ function startDrawing(event) {
 
     drawing = true;
 
-    if (["line", "rectangle", "circle", "semicircle", "triangle", "star", "diamond", "gradient"].includes(tool)) {
+    if(tool==="crop"){cropOverlay.style.display="block";updateCropOverlay(pos.x,pos.y,pos.x,pos.y);}
+    else if (["line", "rectangle", "circle", "semicircle", "triangle", "star", "diamond", "gradient", "roundedRect", "arrow"].includes(tool)) {
         previewImage = ctx.getImageData(0, 0, canvas.width, canvas.height);
     } else {
         applyStyle();
-
-        if (tool === "eraser") {
+        if (tool === "spray") sprayAt(pos.x,pos.y);
+        else if (tool === "eraser") {
             ctx.globalCompositeOperation = "destination-out";
         }
 
@@ -880,19 +880,17 @@ function draw(event) {
     event.preventDefault();
 
     const pos = getPosition(event);
+    if(tool==="crop"){updateCropOverlay(startX,startY,pos.x,pos.y);return;}
 
-    if (["line", "rectangle", "circle", "semicircle", "triangle", "star", "diamond", "gradient"].includes(tool)) {
+    if (["line", "rectangle", "circle", "semicircle", "triangle", "star", "diamond", "gradient", "roundedRect", "arrow"].includes(tool)) {
         ctx.putImageData(previewImage, 0, 0);
         drawShape(startX, startY, pos.x, pos.y);
         renderLayers();return;
     }
 
     applyStyle();
-
-    if (tool === "eraser") {
-        ctx.globalCompositeOperation = "destination-out";
-    }
-
+    if(tool==="spray"){sprayAt(pos.x,pos.y);renderLayers();lastX=pos.x;lastY=pos.y;return;}
+    if (tool === "eraser") ctx.globalCompositeOperation = "destination-out";
     ctx.beginPath();
     ctx.moveTo(lastX, lastY);
     ctx.lineTo(pos.x, pos.y);
@@ -933,6 +931,8 @@ function drawShape(x1, y1, x2, y2, mirrored = false) {
         ctx.stroke();
     }
 
+    if(tool==="roundedRect"){const x=Math.min(x1,x2),y=Math.min(y1,y2),w=Math.abs(x2-x1),h=Math.abs(y2-y1),r=Math.min(24,w/2,h/2);ctx.roundRect(x,y,w,h,r);if(mode==="fill")ctx.fill();else ctx.stroke();}
+    if(tool==="arrow"){const a=Math.atan2(y2-y1,x2-x1),head=Math.max(14,Number(sizeInput.value)*3);ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.moveTo(x2,y2);ctx.lineTo(x2-head*Math.cos(a-Math.PI/6),y2-head*Math.sin(a-Math.PI/6));ctx.moveTo(x2,y2);ctx.lineTo(x2-head*Math.cos(a+Math.PI/6),y2-head*Math.sin(a+Math.PI/6));ctx.stroke();}
     if (tool === "rectangle") {
         const x = Math.min(x1, x2);
         const y = Math.min(y1, y2);
@@ -1019,7 +1019,8 @@ function stopDrawing(event) {
 
     const pos = event ? getPosition(event) : {x:lastX, y:lastY};
 
-    if (["line", "rectangle", "circle", "semicircle", "triangle", "star", "diamond", "gradient"].includes(tool)) {
+    if(tool==="crop"){applyCropSelection(pos.x,pos.y);}
+    else if (["line", "rectangle", "circle", "semicircle", "triangle", "star", "diamond", "gradient", "roundedRect", "arrow"].includes(tool)) {
         ctx.putImageData(previewImage, 0, 0);
         drawShape(startX, startY, pos.x, pos.y);
     }
@@ -1063,7 +1064,7 @@ function floodFill(startX, startY) {
 
     const stack = [[startX, startY]];
     const visited = new Uint8Array(width * height);
-    const tolerance = 24;
+    const tolerance = Number(document.getElementById("fillTolerance").value);
 
     while (stack.length) {
         const point = stack.pop();
@@ -1107,6 +1108,7 @@ function floodFill(startX, startY) {
 // ЦВЕТА
 // --------------------
 
+function sprayAt(x,y){const radius=Math.max(5,Number(sizeInput.value)*1.8),dots=Math.max(18,Math.round(radius*2));ctx.save();ctx.globalAlpha=Number(opacityInput.value)/100*.35;ctx.fillStyle=colorInput.value;for(let i=0;i<dots;i++){const a=Math.random()*Math.PI*2,d=Math.sqrt(Math.random())*radius;ctx.beginPath();ctx.arc(x+Math.cos(a)*d,y+Math.sin(a)*d,Math.max(1,Number(sizeInput.value)/9),0,Math.PI*2);ctx.fill()}ctx.restore()}
 function rgbToHex(r, g, b) {
     return "#" + [r, g, b].map(v =>
         Math.round(v).toString(16).padStart(2, "0")
@@ -1240,6 +1242,11 @@ function applyFilter(type) {
 document.getElementById("filterGray").addEventListener("click", () => applyFilter("gray"));
 document.getElementById("filterSepia").addEventListener("click", () => applyFilter("sepia"));
 document.getElementById("filterInvert").addEventListener("click", () => applyFilter("invert"));
+function applyPixelEffect(type){if(type==="blur"){const t=document.createElement("canvas");t.width=canvas.width;t.height=canvas.height;const c=t.getContext("2d");c.filter="blur(3px)";c.drawImage(activeLayer().surface,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(t,0,0)}else if(type==="pixel"){const n=8,t=document.createElement("canvas");t.width=Math.ceil(canvas.width/n);t.height=Math.ceil(canvas.height/n);const c=t.getContext("2d");c.imageSmoothingEnabled=false;c.drawImage(activeLayer().surface,0,0,t.width,t.height);ctx.imageSmoothingEnabled=false;ctx.clearRect(0,0,canvas.width,canvas.height);ctx.drawImage(t,0,0,t.width,t.height,0,0,canvas.width,canvas.height);ctx.imageSmoothingEnabled=true}else{const im=ctx.getImageData(0,0,canvas.width,canvas.height),d=im.data,src=new Uint8ClampedArray(d);for(let y=1;y<canvas.height-1;y++)for(let x=1;x<canvas.width-1;x++)for(let k=0;k<3;k++){const i=(y*canvas.width+x)*4+k;if(type==="poster")d[i]=Math.round(src[i]/42)*42;else d[i]=Math.max(0,Math.min(255,src[i]*5-src[i-4]-src[i+4]-src[i-canvas.width*4]-src[i+canvas.width*4]))}ctx.putImageData(im,0,0)}renderLayers();saveState()}
+document.getElementById("filterBlur").onclick=()=>applyPixelEffect("blur");document.getElementById("filterPixel").onclick=()=>applyPixelEffect("pixel");document.getElementById("filterPoster").onclick=()=>applyPixelEffect("poster");document.getElementById("filterSharpen").onclick=()=>applyPixelEffect("sharpen");document.getElementById("fillTolerance").oninput=function(){document.getElementById("toleranceValue").textContent=this.value};
+document.getElementById("exportProject").onclick=()=>{const p={format:"PIXEL_PAINT",version:1,width:canvas.width,height:canvas.height,activeLayerId,layers:layers.map(l=>({id:l.id,name:l.name,visible:l.visible,data:l.surface.toDataURL("image/png")}))};const u=URL.createObjectURL(new Blob([JSON.stringify(p)],{type:"application/json"})),a=document.createElement("a");a.href=u;a.download="pixel-paint-project.pixelpaint";a.click();URL.revokeObjectURL(u)};
+const projectFile=document.getElementById("projectFile");document.getElementById("importProject").onclick=()=>projectFile.click();projectFile.onchange=function(){const f=this.files[0];if(!f)return;const reader=new FileReader();reader.onload=()=>{try{const p=JSON.parse(reader.result);if(p.format!=="PIXEL_PAINT"||!Array.isArray(p.layers)||!p.layers.length||p.layers.length>30||!Number.isInteger(p.width)||!Number.isInteger(p.height)||p.width<1||p.height<1||p.width>4000||p.height>4000)throw Error();Promise.all(p.layers.map(v=>new Promise((resolve,reject)=>{const im=new Image();im.onload=()=>{const c=document.createElement("canvas");c.width=p.width;c.height=p.height;const x=c.getContext("2d",{willReadFrequently:true});x.drawImage(im,0,0,p.width,p.height);resolve({id:Number(v.id)||1,name:String(v.name||"Слой").slice(0,32),visible:v.visible!==false,surface:c,context:x})};im.onerror=reject;im.src=v.data}))).then(ls=>{canvas.width=p.width;canvas.height=p.height;layers=ls;nextLayerId=Math.max(...ls.map(l=>l.id))+1;activeLayerId=ls.some(l=>l.id===p.activeLayerId)?p.activeLayerId:ls[0].id;setActiveLayer();renderLayers();renderLayerList();document.getElementById("canvasInfo").textContent=canvas.width+" × "+canvas.height+" px";history=[];historyIndex=-1;saveState();setZoom(zoom)}).catch(()=>alert("Не удалось открыть слои проекта"))}catch(e){alert("Неверный или повреждённый файл PIXEL Paint")}};reader.readAsText(f);this.value=""};
+document.getElementById("resizeCanvas").onclick=()=>{const w=Number(prompt("Ширина холста (100–4000):",canvas.width));if(!Number.isInteger(w)||w<100||w>4000)return;const h=Number(prompt("Высота холста (100–4000):",canvas.height));if(!Number.isInteger(h)||h<100||h>4000||!confirm("Изменить размер? Содержимое будет по центру."))return;layers.forEach(l=>{const t=document.createElement("canvas");t.width=canvas.width;t.height=canvas.height;t.getContext("2d").drawImage(l.surface,0,0);l.surface.width=w;l.surface.height=h;l.context=l.surface.getContext("2d",{willReadFrequently:true});l.context.drawImage(t,(w-t.width)/2,(h-t.height)/2)});canvas.width=w;canvas.height=h;setActiveLayer();renderLayers();renderLayerList();document.getElementById("canvasInfo").textContent=w+" × "+h+" px";history=[];historyIndex=-1;saveState();setZoom(zoom)};
 
 // --------------------
 // МАСШТАБ
