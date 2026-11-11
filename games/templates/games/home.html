@@ -43,7 +43,7 @@
   <section id="games">
     <div class="section-head">
       <div><h2>Игровой каталог</h2><p>Подбери игру под своё настроение</p></div>
-      <span class="count-chip"><span id="gameCount">{{ games|length|add:"1" }}</span> ИГР</span>
+      <span class="count-chip"><span id="gameCount">{{ games|length }}</span> ИГР</span>
     </div>
     <div class="toolbar">
       <div class="search-wrap"><span>⌕</span><input type="search" id="gameSearch" class="search-box" placeholder="Поиск по названию игры..." oninput="filterGames()"></div>
