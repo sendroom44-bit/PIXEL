@@ -31,6 +31,7 @@ def admin_otp_verify(request):
     if request.method == 'POST' and request.POST.get('resend') == '1':
         try:
             request.session.pop('pixel_otp_hash', None)
+            request.session.pop('pixel_otp_sent_at', None)
             issue_admin_code(request)
             error = request.session.get('pixel_otp_error', 'Новый код отправлен, проверьте почту.')
         except Exception:
