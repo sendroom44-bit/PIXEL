@@ -77,3 +77,18 @@ class PlayerProfile(models.Model):
 
     def __str__(self):
         return self.nickname
+
+
+class TankRoom(models.Model):
+    code = models.CharField(max_length=12, unique=True, db_index=True)
+    host = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='tank_rooms')
+    state = models.JSONField(default=dict)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        return 'Танки — ' + self.code

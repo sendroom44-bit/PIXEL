@@ -12,12 +12,15 @@ from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_http_methods
+from django.db import transaction
+from django.utils.crypto import get_random_string
+from django.contrib.auth.decorators import login_required
 
-from .models import Game, Article, PlayerProfile
+from .models import Game, Article, PlayerProfile, TankRoom
 
 
 def home(request):
@@ -256,3 +259,130 @@ def articles(request):
 def article_detail(request, slug):
     article = get_object_or_404(Article, slug=slug, is_published=True)
     return render(request, 'games/article_detail.html', {'article': article})
+
+
+# PIXEL Tanks: room state is stored in the database so players can meet across devices.
+def tanks(request):
+    return render(request, 'games/tanks.html')
+
+
+def _tank_player_name(user):
+    try:
+        return user.player_profile.nickname
+    except PlayerProfile.DoesNotExist:
+        return user.first_name or user.username
+
+
+@login_required(login_url='login')
+@require_http_methods(['GET', 'POST'])
+def tanks_rooms(request):
+    if request.method == 'GET':
+        now = timezone.now()
+        rooms = TankRoom.objects.filter(is_active=True, updated_at__gte=now - timedelta(minutes=3)).order_by('-updated_at')[:30]
+        return JsonResponse({'rooms': [
+            {'code': room.code, 'players': len(room.state.get('players', [])),
+             'host': room.state.get('players', [{}])[0].get('name', 'Игрок'),
+             'teams': [p.get('team') for p in room.state.get('players', [])]}
+            for room in rooms
+        ]})
+    try:
+        data = json.loads(request.body.decode('utf-8') or '{}')
+    except (ValueError, UnicodeDecodeError):
+        return JsonResponse({'error': 'Некорректный запрос'}, status=400)
+    team = data.get('team')
+    if team not in ('ussr', 'germany'):
+        return JsonResponse({'error': 'Выбери команду'}, status=400)
+    code = get_random_string(6, allowed_chars='ABCDEFGHJKLMNPQRSTUVWXYZ23456789')
+    player = {'id': request.user.pk, 'name': _tank_player_name(request.user)[:32],
+              'team': team, 'x': 80 if team == 'ussr' else 560, 'y': 80, 'angle': 0, 'hp': 3}
+    room = TankRoom.objects.create(code=code, host=request.user, state={'players': [player], 'bullets': [], 'map': 1})
+    return JsonResponse({'ok': True, 'code': room.code, 'state': room.state})
+
+
+@login_required(login_url='login')
+@require_POST
+def tanks_join(request, code):
+    try:
+        data = json.loads(request.body.decode('utf-8') or '{}')
+    except (ValueError, UnicodeDecodeError):
+        return JsonResponse({'error': 'Некорректный запрос'}, status=400)
+    team = data.get('team')
+    if team not in ('ussr', 'germany'):
+        return JsonResponse({'error': 'Выбери команду'}, status=400)
+    with transaction.atomic():
+        room = TankRoom.objects.select_for_update().filter(code=code.upper(), is_active=True).first()
+        if not room:
+            return JsonResponse({'error': 'Комната не найдена'}, status=404)
+        players = room.state.get('players', [])
+        existing = next((p for p in players if p.get('id') == request.user.pk), None)
+        if not existing and len(players) >= 2:
+            return JsonResponse({'error': 'Комната уже заполнена'}, status=409)
+        if existing:
+            existing['team'] = team
+        else:
+            players.append({'id': request.user.pk, 'name': _tank_player_name(request.user)[:32],
+                            'team': team, 'x': 80 if team == 'ussr' else 560, 'y': 400, 'angle': 0, 'hp': 3})
+        room.state['players'] = players
+        room.save(update_fields=['state', 'updated_at'])
+    return JsonResponse({'ok': True, 'code': room.code, 'state': room.state})
+
+
+@login_required(login_url='login')
+@require_http_methods(['GET', 'POST'])
+def tanks_room_state(request, code):
+    room = TankRoom.objects.filter(code=code.upper(), is_active=True).first()
+    if not room:
+        return JsonResponse({'error': 'Комната не найдена'}, status=404)
+    players = room.state.get('players', [])
+    me = next((p for p in players if p.get('id') == request.user.pk), None)
+    if not me:
+        return JsonResponse({'error': 'Ты не участник этой комнаты'}, status=403)
+    if request.method == 'GET':
+        return JsonResponse({'state': room.state, 'me': request.user.pk})
+    try:
+        data = json.loads(request.body.decode('utf-8') or '{}')
+    except (ValueError, UnicodeDecodeError):
+        return JsonResponse({'error': 'Некорректный запрос'}, status=400)
+    me['x'] = max(28, min(612, int(data.get('x', me.get('x', 80)))))
+    me['y'] = max(28, min(452, int(data.get('y', me.get('y', 80)))))
+    me['angle'] = int(data.get('angle', me.get('angle', 0))) % 360
+    now = timezone.now().timestamp()
+    bullets = []
+    for bullet in room.state.get('bullets', []):
+        elapsed = min(0.5, max(0, now - bullet.get('t', now)))
+        angle = bullet.get('angle', 0) * 3.141592653589793 / 180
+        bullet['x'] += __import__('math').cos(angle) * 5 * elapsed * 60
+        bullet['y'] += __import__('math').sin(angle) * 5 * elapsed * 60
+        bullet['t'] = now
+        hit = False
+        if bullet['x'] < 0 or bullet['x'] > 640 or bullet['y'] < 0 or bullet['y'] > 480:
+            hit = True
+        for target in players:
+            if target.get('id') != bullet.get('owner') and target.get('team') != bullet.get('team') and target.get('hp', 3) > 0:
+                if (target['x'] - bullet['x']) ** 2 + (target['y'] - bullet['y']) ** 2 < 18 ** 2:
+                    target['hp'] = max(0, target.get('hp', 3) - 1)
+                    hit = True
+        if not hit:
+            bullets.append(bullet)
+    if data.get('fire'):
+        bullets.append({'x': me['x'], 'y': me['y'], 'angle': me['angle'],
+                        'team': me['team'], 'owner': request.user.pk, 't': now})
+    room.state['bullets'] = bullets[-30:]
+    room.state['players'] = players
+    room.save(update_fields=['state', 'updated_at'])
+    return JsonResponse({'ok': True})
+
+
+@login_required(login_url='login')
+@require_POST
+def tanks_leave(request, code):
+    room = TankRoom.objects.filter(code=code.upper(), is_active=True).first()
+    if not room:
+        return JsonResponse({'ok': True})
+    room.state['players'] = [p for p in room.state.get('players', []) if p.get('id') != request.user.pk]
+    if not room.state['players']:
+        room.is_active = False
+        room.save(update_fields=['state', 'is_active', 'updated_at'])
+    else:
+        room.save(update_fields=['state', 'updated_at'])
+    return JsonResponse({'ok': True})
