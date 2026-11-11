@@ -5,7 +5,7 @@
 <main class="pixel-otp-card">
   <div class="pixel-otp-logo">P</div><div class="pixel-eyebrow">PIXEL / SECURITY</div>
   <h1>Подтвердите вход</h1>
-  <p>Мы отправили одноразовый код на почту <strong>{{ email }}</strong>. Код действует 5 минут.</p>
+  {% if sent %}<p>Мы отправили одноразовый код на почту <strong>{{ email }}</strong>. Код действует 5 минут.</p>{% else %}<p>Для подтверждения входа нужен код на <strong>{{ email }}</strong>. Если письмо не пришло, проверьте настройки SMTP.</p>{% endif %}
   {% if error %}<div class="pixel-otp-error">{{ error }}</div>{% endif %}
   <form method="post">{% csrf_token %}
     <label for="otp-code">Шестизначный код</label>
