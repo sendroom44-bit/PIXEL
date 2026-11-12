@@ -1,5 +1,6 @@
 import hmac
 import json
+import logging
 import secrets
 import time
 from datetime import timedelta
@@ -21,6 +22,8 @@ from django.utils.crypto import get_random_string
 from django.contrib.auth.decorators import login_required
 
 from .models import Game, Article, PlayerProfile, TankRoom
+
+logger = logging.getLogger(__name__)
 
 
 def home(request):
@@ -74,6 +77,7 @@ def google_callback(request):
         'redirect_uri': settings.GOOGLE_REDIRECT_URI,
         'grant_type': 'authorization_code',
     }).encode('utf-8')
+    oauth_stage = 'token_exchange'
     try:
         token_request = Request(
             'https://oauth2.googleapis.com/token',
@@ -87,14 +91,36 @@ def google_callback(request):
         if not access_token:
             raise ValueError('Google не выдал access token')
 
+        oauth_stage = 'userinfo'
         userinfo_request = Request(
             'https://www.googleapis.com/oauth2/v3/userinfo',
             headers={'Authorization': 'Bearer ' + access_token},
         )
         with urlopen(userinfo_request, timeout=12) as response:
             google_data = json.loads(response.read().decode('utf-8'))
-    except (HTTPError, URLError, TimeoutError, ValueError, KeyError, json.JSONDecodeError):
+    except HTTPError as exc:
+        # Log only Google's error code/description and HTTP status.
+        # Never log tokens, client secrets, authorization codes or request headers.
+        try:
+            error_body = json.loads(exc.read().decode('utf-8'))
+        except (ValueError, UnicodeDecodeError):
+            error_body = {}
+        logger.error(
+            'Google OAuth failed at %s: HTTP %s; error=%s; description=%s',
+            oauth_stage,
+            exc.code,
+            str(error_body.get('error', 'unknown'))[:100],
+            str(error_body.get('error_description', ''))[:300],
+        )
         messages.error(request, 'Не удалось подтвердить аккаунт Google. Попробуйте войти ещё раз.')
+        return redirect('login')
+    except URLError as exc:
+        logger.error('Google OAuth connection failed at %s: %s', oauth_stage, str(exc.reason)[:300])
+        messages.error(request, 'Не удалось связаться с Google. Попробуйте войти ещё раз.')
+        return redirect('login')
+    except (TimeoutError, ValueError, KeyError) as exc:
+        logger.error('Google OAuth response failed at %s: %s', oauth_stage, str(exc)[:300])
+        messages.error(request, 'Google вернул неожиданный ответ. Попробуйте войти ещё раз.')
         return redirect('login')
 
     google_sub = str(google_data.get('sub', '')).strip()
