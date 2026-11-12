@@ -26,7 +26,7 @@ button,a{font:inherit}button{touch-action:manipulation}.page{width:min(1680px,10
 <div class="game-top"><div class="game-title"><span class="live-dot"></span><div><b id="modeTitle">СРАЖЕНИЕ</b><small id="gameInfo">СССР против Германии</small></div></div><div class="game-actions"><button class="btn alt" onclick="showHelp()">? Управление</button><button class="btn alt" onclick="exitGame()">✕ Выйти</button></div></div>
 <div class="hud"><div class="hud-side"><span class="flag" id="myFlag"></span><div><b id="myTeamLabel">СССР</b><small>ТВОЯ КОМАНДА</small></div></div><div class="vs">VS</div><div class="hud-side right"><div><b id="enemyTeamLabel">ГЕРМАНИЯ</b><small>СОПЕРНИК</small></div><span class="flag de" id="enemyFlag"></span></div></div>
 <div class="arena-frame"><div class="arena"><canvas id="field" width="960" height="640"></canvas></div></div>
-<div class="game-bottom"><div class="help">ПК: <b>WASD</b> или <b>← ↑ ↓ →</b> — движение, <b>ПРОБЕЛ</b> — выстрел. На телефоне — кнопки ниже.</div></div>
+<div class="game-bottom"><div class="help">Клавиатура: <b>WASD</b> / <b>← ↑ ↓ →</b> — движение, <b>ПРОБЕЛ</b> — огонь. Мышь: <b>ЛКМ</b> — ехать к точке, <b>ПКМ</b> или двойной клик — выстрел. На телефоне — кнопки ниже.</div></div>
 <div class="mobile-controls"><div class="pad"><button data-key="ArrowUp" aria-label="Вверх">▲</button><button data-key="ArrowLeft" aria-label="Влево">◀</button><button data-key="ArrowDown" aria-label="Вниз">▼</button><button data-key="ArrowRight" aria-label="Вправо">▶</button></div><button class="fire" id="fireBtn">●<br>ОГОНЬ</button></div>
 </section>
 <div class="message" id="message"></div>
@@ -34,7 +34,7 @@ button,a{font:inherit}button{touch-action:manipulation}.page{width:min(1680px,10
 <form style="display:none">{% csrf_token %}</form>
 <script>
 const canvas=document.getElementById('field'),ctx=canvas.getContext('2d'),csrf=document.querySelector('[name=csrfmiddlewaretoken]').value;
-let chosenTeam='ussr',mode='idle',running=false,keys={},player={x:90,y:90,a:0,hp:3,team:'ussr'},bots=[],allies=[],shots=[],remote=[],roomCode=null,lastSend=0,lastPoll=0,fireQueued=false,raf=0,waveNumber=1,respawnAt=0;
+let chosenTeam='ussr',mode='idle',running=false,keys={},player={x:90,y:90,a:0,hp:3,team:'ussr'},bots=[],allies=[],shots=[],remote=[],roomCode=null,lastSend=0,lastPoll=0,fireQueued=false,raf=0,waveNumber=1,respawnAt=0,mouseTarget=null;
 const walls=[{x:170,y:95,w:105,h:34},{x:420,y:95,w:120,h:34},{x:700,y:95,w:105,h:34},{x:310,y:235,w:125,h:38},{x:555,y:235,w:125,h:38},{x:90,y:330,w:115,h:38},{x:755,y:330,w:115,h:38},{x:170,y:500,w:105,h:34},{x:420,y:500,w:120,h:34},{x:700,y:500,w:105,h:34}];
 const cacti=[{x:350,y:145,r:19},{x:610,y:165,r:18},{x:265,y:405,r:20},{x:845,y:430,r:19},{x:865,y:245,r:17},{x:105,y:220,r:16}];
 const ponds=[{x:570,y:380,w:220,h:100},{x:45,y:420,w:90,h:65}];
@@ -43,9 +43,26 @@ function chooseTeam(t){chosenTeam=t;document.querySelectorAll('.team').forEach(b
 function msg(s){document.getElementById('message').textContent=s}
 function showHelp(){msg('WASD / стрелки — движение, пробел — выстрел. На телефоне используй экранные кнопки.')}
 function enemyTeam(){return chosenTeam==='ussr'?'germany':'ussr'}
-function spawnEnemies(count){const spots=chosenTeam==='ussr'?[{x:850,y:160},{x:900,y:320},{x:850,y:550},{x:600,y:550},{x:560,y:160},{x:900,y:550}]:[{x:110,y:160},{x:60,y:320},{x:110,y:550},{x:270,y:550},{x:270,y:160},{x:60,y:550}];return Array.from({length:count},(_,i)=>{const p=spots[i%spots.length];return {x:p.x+(i>=spots.length?((i%3)-1)*22:0),y:p.y+(i>=spots.length?Math.floor(i/spots.length)*24:0),a:chosenTeam==='ussr'?180:0,hp:2,team:enemyTeam(),cool:45+i*13}})}
-function spawnAlly(){const x=chosenTeam==='ussr'?155:805,y=chosenTeam==='ussr'?535:105;allies.push({x,y,a:0,hp:3,team:chosenTeam,cool:28,ally:true})}
-function startBots(){leaveOnline();mode='bots';running=true;waveNumber=1;respawnAt=0;player={x:chosenTeam==='ussr'?95:865,y:chosenTeam==='ussr'?535:105,a:0,hp:3,team:chosenTeam};bots=spawnEnemies(4);allies=[];shots=[];openGame('БОТЫ • ОДИНОЧНАЯ БИТВА','Волна 1 · Союзники: 0 · Противники: 4')}
+function freeSpawn(x,y,used){return !blocked(x,y)&&!inWater(x,y)&&(!used||used.every(p=>Math.hypot(p.x-x,p.y-y)>42))}
+function spawnEnemies(count){
+ const candidates=[];
+ for(let y=55;y<=585;y+=48)for(let x=(chosenTeam==='ussr'?545:55);x<=(chosenTeam==='ussr'?910:415);x+=48)
+  if(freeSpawn(x,y,candidates))candidates.push({x,y});
+ const result=[];
+ for(let i=0;i<count;i++){
+  let p=candidates.find(q=>freeSpawn(q.x,q.y,result));
+  if(!p){for(let y=55;y<=585&&!p;y+=35)for(let x=(chosenTeam==='ussr'?535:45);x<=(chosenTeam==='ussr'?915:425)&&!p;x+=35)if(freeSpawn(x,y,result))p={x,y}}
+  if(!p)break;
+  result.push({x:p.x,y:p.y,a:chosenTeam==='ussr'?180:0,hp:2,team:enemyTeam(),cool:45+i*13});
+ }
+ return result
+}
+function spawnAlly(){
+ const p=chosenTeam==='ussr'?{x:105,y:575}:{x:855,y:575};
+ const alt=chosenTeam==='ussr'?{x:65,y:575}:{x:895,y:575};
+ const spot=freeSpawn(p.x,p.y,allies.concat([player]))?p:alt;
+ allies.push({x:spot.x,y:spot.y,a:0,hp:3,team:chosenTeam,cool:25,ally:true,pathWait:0});
+}
 function teamName(t){return t==='ussr'?'СССР':'ГЕРМАНИЯ'}
 function openGame(title,info){document.body.classList.add('in-game');document.getElementById('lobby').style.display='none';document.getElementById('gameArea').style.display='block';document.getElementById('modeTitle').textContent=title;document.getElementById('gameInfo').textContent=info;document.getElementById('myTeamLabel').textContent=teamName(chosenTeam);document.getElementById('enemyTeamLabel').textContent=teamName(chosenTeam==='ussr'?'germany':'ussr');document.getElementById('myFlag').className='flag'+(chosenTeam==='germany'?' de':'');document.getElementById('enemyFlag').className='flag'+(chosenTeam==='ussr'?' de':'');msg('Сражение началось!');cancelAnimationFrame(raf);loop()}
 function exitGame(){document.body.classList.remove('in-game');running=false;cancelAnimationFrame(raf);leaveOnline();mode='idle';document.getElementById('gameArea').style.display='none';document.getElementById('lobby').style.display='grid';msg('Ты вернулся в меню.')}
@@ -55,7 +72,7 @@ function inWater(x,y){return ponds.some(p=>x>p.x-10&&x<p.x+p.w+10&&y>p.y-10&&y<p
 function blocked(x,y){if(x<22||y<22||x>938||y>618)return true;if(walls.some(w=>x>w.x-18&&x<w.x+w.w+18&&y>w.y-18&&y<w.y+w.h+18))return true;return cacti.some(c=>Math.hypot(x-c.x,y-c.y)<c.r+18)}
 function aiBlocked(x,y){return blocked(x,y)||inWater(x,y)}
 function findWaypoint(t,target){const size=32,cols=30,rows=20,sx=Math.max(0,Math.min(cols-1,Math.floor(t.x/size))),sy=Math.max(0,Math.min(rows-1,Math.floor(t.y/size))),gx=Math.max(0,Math.min(cols-1,Math.floor(target.x/size))),gy=Math.max(0,Math.min(rows-1,Math.floor(target.y/size))),start=sy*cols+sx,goal=gy*cols+gx,parent=new Int32Array(cols*rows);parent.fill(-1);const q=[start],dirs=[[1,0],[-1,0],[0,1],[0,-1]];parent[start]=start;for(let qi=0;qi<q.length&&parent[goal]===-1;qi++){const id=q[qi],x=id%cols,y=Math.floor(id/cols);for(const [dx,dy] of dirs){const nx=x+dx,ny=y+dy,nid=ny*cols+nx;if(nx<0||ny<0||nx>=cols||ny>=rows||parent[nid]!==-1||aiBlocked(nx*size+16,ny*size+16))continue;parent[nid]=id;q.push(nid)}}if(parent[goal]===-1)return null;let step=goal;while(parent[step]!==start&&step!==start)step=parent[step];return {x:(step%cols)*size+16,y:Math.floor(step/cols)*size+16}}
-function moveAI(t,target,speed){if(!t.pathWait||--t.pathWait<=0||!t.waypoint||Math.hypot(t.waypoint.x-t.x,t.waypoint.y-t.y)<12){t.waypoint=findWaypoint(t,target);t.pathWait=16}if(!t.waypoint)return;const dx=t.waypoint.x-t.x,dy=t.waypoint.y-t.y,d=Math.hypot(dx,dy);if(d>2)moveTank(t,dx/d*speed,dy/d*speed)}
+function moveAI(t,target,speed){if(!t.pathWait||--t.pathWait<=0||!t.waypoint||Math.hypot(t.waypoint.x-t.x,t.waypoint.y-t.y)<12){t.waypoint=findWaypoint(t,target);t.pathWait=8}const point=t.waypoint||target;const dx=point.x-t.x,dy=point.y-t.y,d=Math.hypot(dx,dy);if(d>2)moveTank(t,dx/d*speed,dy/d*speed)}
 function checkWater(t){if(t.hp>0&&inWater(t.x,t.y)){t.hp=0;t.sunk=true;return true}return false}
 function shoot(t){shots.push({x:t.x+Math.cos(t.a*Math.PI/180)*21,y:t.y+Math.sin(t.a*Math.PI/180)*21,a:t.a,team:t.team,owner:t})}
 function moveTank(t,dx,dy){if(dx||dy){t.a=Math.atan2(dy,dx)*180/Math.PI;let nx=t.x+dx,ny=t.y+dy;if(!blocked(nx,t.y))t.x=nx;if(!blocked(t.x,ny))t.y=ny}}
@@ -79,42 +96,62 @@ if(player.hp>0)tank(player.x,player.y,player.a,player.team,player.hp);else if(pl
 shots.forEach(s=>{ctx.save();ctx.shadowColor=s.team==='ussr'?'#ff776d':'#d7e5ff';ctx.shadowBlur=13;ctx.fillStyle=s.team==='ussr'?'#ffb4a6':'#e4edff';ctx.beginPath();ctx.arc(s.x,s.y,5,0,Math.PI*2);ctx.fill();ctx.restore()});
 ctx.fillStyle='#101a20cc';ctx.fillRect(22,22,102,34);ctx.fillStyle='#fff';ctx.font='bold 15px Arial';ctx.fillText('БРОНЯ  '+Math.max(0,player.hp),34,44);
 }
-function loop(){if(!running)return;
-if(player.hp>0){
- let dx=0,dy=0;
- if(keys.ArrowUp||keys.w||keys.W)dy=-2.2;
- if(keys.ArrowDown||keys.s||keys.S)dy=2.2;
- if(keys.ArrowLeft||keys.a||keys.A)dx=-2.2;
- if(keys.ArrowRight||keys.d||keys.D)dx=2.2;
- moveTank(player,dx,dy);
- if(fireQueued||keys[' ']){if(!player.cool||player.cool<=0){shoot(player);player.cool=18}}
- fireQueued=false;
-}else{
- fireQueued=false;
- if(mode==='bots'&&respawnAt&&Date.now()>=respawnAt){
-  player.x=chosenTeam==='ussr'?95:865;player.y=chosenTeam==='ussr'?535:105;
-  player.hp=3;player.sunk=false;player.cool=0;respawnAt=0;
-  msg('Танк восстановлен! В бой!');
- }
+function canvasPoint(e){
+ const r=canvas.getBoundingClientRect();
+ return {x:(e.clientX-r.left)*canvas.width/r.width,y:(e.clientY-r.top)*canvas.height/r.height};
 }
-if(player.cool>0)player.cool--;
-if(mode==='bots'){
- botTick();collisions();
- if(player.hp<=0&&!respawnAt){respawnAt=Date.now()+5000;msg('Танк выведен из строя. Возрождение через 5 секунд…')}
- if(bots.length&&bots.every(b=>b.hp<=0)){
-  waveNumber++;spawnAlly();bots=spawnEnemies(4+(waveNumber-1)*2);shots=[];
-  document.getElementById('gameInfo').textContent='Волна '+waveNumber+' · Союзники: '+allies.length+' · Противники: '+bots.length;
-  msg('ПОБЕДА! +1 помощник. Но врагов стало на 2 больше — волна '+waveNumber+'!');
+canvas.addEventListener('pointerdown',e=>{
+ if(mode!=='bots'&&mode!=='online')return;
+ if(e.pointerType!=='mouse')return;
+ const p=canvasPoint(e);
+ if(e.button===2){e.preventDefault();mouseTarget=null;player.a=Math.atan2(p.y-player.y,p.x-player.x)*180/Math.PI;fireQueued=true}
+ else if(e.button===0){mouseTarget=p}
+});
+canvas.addEventListener('contextmenu',e=>e.preventDefault());
+canvas.addEventListener('dblclick',e=>{if(mode==='bots'||mode==='online'){const p=canvasPoint(e);player.a=Math.atan2(p.y-player.y,p.x-player.x)*180/Math.PI;fireQueued=true}});
+function loop(){
+ if(!running)return;
+ if(mode==='bots'&&player.hp<=0&&!respawnAt){respawnAt=Date.now()+5000;msg('Танк уничтожен. Возрождение через 5 секунд…')}
+ if(player.hp>0){
+  let dx=0,dy=0;
+  if(keys.ArrowUp||keys.w||keys.W)dy=-2.2;
+  if(keys.ArrowDown||keys.s||keys.S)dy=2.2;
+  if(keys.ArrowLeft||keys.a||keys.A)dx=-2.2;
+  if(keys.ArrowRight||keys.d||keys.D)dx=2.2;
+  if(dx||dy){mouseTarget=null;moveTank(player,dx,dy)}
+  else if(mouseTarget){const mx=mouseTarget.x-player.x,my=mouseTarget.y-player.y,dist=Math.hypot(mx,my);if(dist<9)mouseTarget=null;else moveTank(player,mx/dist*2.6,my/dist*2.6)}
+  if(fireQueued||keys[' ']){if(!player.cool||player.cool<=0){shoot(player);player.cool=18}}
+  fireQueued=false;
+ }else{
+  fireQueued=false;mouseTarget=null;
+  if(mode==='bots'&&respawnAt&&Date.now()>=respawnAt){
+   player.x=chosenTeam==='ussr'?95:865;player.y=chosenTeam==='ussr'?535:105;
+   player.hp=3;player.sunk=false;player.cool=0;respawnAt=0;
+   msg('Ты возродился! Снова в бой!');
+  }
  }
-}else if(mode==='online'){onlineTick()}
-draw();
-if(mode==='bots'&&respawnAt){
- ctx.fillStyle='#080b13cc';ctx.fillRect(250,275,460,90);
- ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='bold 25px Arial';
- ctx.fillText('ВОЗРОЖДЕНИЕ: '+Math.max(1,Math.ceil((respawnAt-Date.now())/1000))+' сек.',480,330);
- ctx.textAlign='left';
+ if(player.cool>0)player.cool--;
+ if(mode==='bots'){
+  botTick();collisions();
+  if(player.hp<=0&&!respawnAt){respawnAt=Date.now()+5000;msg('Танк уничтожен. Возрождение через 5 секунд…')}
+  if(bots.length&&bots.every(b=>b.hp<=0)){
+   waveNumber++;spawnAlly();bots=spawnEnemies(4+(waveNumber-1)*2);shots=[];
+   document.getElementById('gameInfo').textContent='Волна '+waveNumber+' · Союзники: '+allies.length+' · Противники: '+bots.length;
+   msg('ПОБЕДА! +1 помощник. В следующей волне +2 противника!');
+  }
+ }else if(mode==='online'){onlineTick()}
+ draw();
+ if(mode==='bots'&&respawnAt){
+  ctx.fillStyle='#080b13cc';ctx.fillRect(250,275,460,90);
+  ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='bold 25px Arial';
+  ctx.fillText('ВОЗРОЖДЕНИЕ: '+Math.max(1,Math.ceil((respawnAt-Date.now())/1000))+' сек.',480,330);
+  ctx.textAlign='left';
+ }
+ if(mouseTarget&&player.hp>0&&mode==='bots'){
+  ctx.save();ctx.strokeStyle='#e6f3a0';ctx.lineWidth=2;ctx.beginPath();ctx.arc(mouseTarget.x,mouseTarget.y,10,0,Math.PI*2);ctx.moveTo(mouseTarget.x-15,mouseTarget.y);ctx.lineTo(mouseTarget.x+15,mouseTarget.y);ctx.moveTo(mouseTarget.x,mouseTarget.y-15);ctx.lineTo(mouseTarget.x,mouseTarget.y+15);ctx.stroke();ctx.restore();
+ }
+ raf=requestAnimationFrame(loop)
 }
-raf=requestAnimationFrame(loop)}
 window.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true});window.addEventListener('keyup',e=>keys[e.key]=false);
 document.querySelectorAll('[data-key]').forEach(b=>{let k=b.dataset.key;b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>keys[k]=false))});
 document.getElementById('fireBtn').addEventListener('pointerdown',e=>{e.preventDefault();fireQueued=true});
