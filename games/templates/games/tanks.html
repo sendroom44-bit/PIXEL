@@ -79,7 +79,42 @@ if(player.hp>0)tank(player.x,player.y,player.a,player.team,player.hp);else if(pl
 shots.forEach(s=>{ctx.save();ctx.shadowColor=s.team==='ussr'?'#ff776d':'#d7e5ff';ctx.shadowBlur=13;ctx.fillStyle=s.team==='ussr'?'#ffb4a6':'#e4edff';ctx.beginPath();ctx.arc(s.x,s.y,5,0,Math.PI*2);ctx.fill();ctx.restore()});
 ctx.fillStyle='#101a20cc';ctx.fillRect(22,22,102,34);ctx.fillStyle='#fff';ctx.font='bold 15px Arial';ctx.fillText('БРОНЯ  '+Math.max(0,player.hp),34,44);
 }
-function loop(){if(!running)return;let dx=0,dy=0;if(player.hp>0){if(keys.ArrowUp||keys.w||keys.W)dy=-2.2;if(keys.ArrowDown||keys.s||keys.S)dy=2.2;if(keys.ArrowLeft||keys.a||keys.A)dx=-2.2;if(keys.ArrowRight||keys.d||keys.D)dx=2.2;moveTank(player,dx,dy);if(fireQueued||keys[' ']){if(!player.cool||player.cool<=0){shoot(player);player.cool=18}fireQueued=false}else{fireQueued=false;if(mode==='bots'&&respawnAt&&Date.now()>=respawnAt){player.x=chosenTeam==='ussr'?95:865;player.y=chosenTeam==='ussr'?535:105;player.hp=3;player.sunk=false;player.cool=0;respawnAt=0;msg('Танк восстановлен! В бой!')}}if(player.cool>0)player.cool--;if(mode==='bots'){botTick();collisions();if(player.hp<=0&&!respawnAt){respawnAt=Date.now()+5000;msg('Танк выведен из строя. Возрождение через 5 секунд…')}if(bots.length&&bots.every(b=>b.hp<=0)){waveNumber++;spawnAlly();bots=spawnEnemies(4+(waveNumber-1)*2);shots=[];document.getElementById('gameInfo').textContent='Волна '+waveNumber+' · Союзники: '+allies.length+' · Противники: '+bots.length;msg('ПОБЕДА! +1 помощник. Но врагов стало на 2 больше — волна '+waveNumber+'!')}}else if(mode==='online'){onlineTick()}draw();if(mode==='bots'&&respawnAt){ctx.fillStyle='#080b13cc';ctx.fillRect(250,275,460,90);ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='bold 25px Arial';ctx.fillText('ВОЗРОЖДЕНИЕ: '+Math.max(1,Math.ceil((respawnAt-Date.now())/1000))+' сек.',480,330);ctx.textAlign='left'}raf=requestAnimationFrame(loop)}
+function loop(){if(!running)return;
+if(player.hp>0){
+ let dx=0,dy=0;
+ if(keys.ArrowUp||keys.w||keys.W)dy=-2.2;
+ if(keys.ArrowDown||keys.s||keys.S)dy=2.2;
+ if(keys.ArrowLeft||keys.a||keys.A)dx=-2.2;
+ if(keys.ArrowRight||keys.d||keys.D)dx=2.2;
+ moveTank(player,dx,dy);
+ if(fireQueued||keys[' ']){if(!player.cool||player.cool<=0){shoot(player);player.cool=18}}
+ fireQueued=false;
+}else{
+ fireQueued=false;
+ if(mode==='bots'&&respawnAt&&Date.now()>=respawnAt){
+  player.x=chosenTeam==='ussr'?95:865;player.y=chosenTeam==='ussr'?535:105;
+  player.hp=3;player.sunk=false;player.cool=0;respawnAt=0;
+  msg('Танк восстановлен! В бой!');
+ }
+}
+if(player.cool>0)player.cool--;
+if(mode==='bots'){
+ botTick();collisions();
+ if(player.hp<=0&&!respawnAt){respawnAt=Date.now()+5000;msg('Танк выведен из строя. Возрождение через 5 секунд…')}
+ if(bots.length&&bots.every(b=>b.hp<=0)){
+  waveNumber++;spawnAlly();bots=spawnEnemies(4+(waveNumber-1)*2);shots=[];
+  document.getElementById('gameInfo').textContent='Волна '+waveNumber+' · Союзники: '+allies.length+' · Противники: '+bots.length;
+  msg('ПОБЕДА! +1 помощник. Но врагов стало на 2 больше — волна '+waveNumber+'!');
+ }
+}else if(mode==='online'){onlineTick()}
+draw();
+if(mode==='bots'&&respawnAt){
+ ctx.fillStyle='#080b13cc';ctx.fillRect(250,275,460,90);
+ ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='bold 25px Arial';
+ ctx.fillText('ВОЗРОЖДЕНИЕ: '+Math.max(1,Math.ceil((respawnAt-Date.now())/1000))+' сек.',480,330);
+ ctx.textAlign='left';
+}
+raf=requestAnimationFrame(loop)}
 window.addEventListener('keydown',e=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();keys[e.key]=true});window.addEventListener('keyup',e=>keys[e.key]=false);
 document.querySelectorAll('[data-key]').forEach(b=>{let k=b.dataset.key;b.addEventListener('pointerdown',e=>{e.preventDefault();keys[k]=true});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>keys[k]=false))});
 document.getElementById('fireBtn').addEventListener('pointerdown',e=>{e.preventDefault();fireQueued=true});
