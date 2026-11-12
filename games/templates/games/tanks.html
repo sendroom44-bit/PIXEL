@@ -43,7 +43,7 @@ function chooseTeam(t){chosenTeam=t;document.querySelectorAll('.team').forEach(b
 function msg(s){document.getElementById('message').textContent=s}
 function showHelp(){msg('WASD / стрелки — движение, пробел — выстрел. На телефоне используй экранные кнопки.')}
 function enemyTeam(){return chosenTeam==='ussr'?'germany':'ussr'}
-function spawnEnemies(count){const spots=chosenTeam==='ussr'?[{x:690,y:120},{x:820,y:120},{x:690,y:520},{x:820,y:520},{x:610,y:320},{x:870,y:320}]:[{x:140,y:120},{x:270,y:120},{x:140,y:520},{x:270,y:520},{x:350,y:320},{x:90,y:320}];return Array.from({length:count},(_,i)=>{const p=spots[i%spots.length];return {x:p.x+(i>=spots.length?((i%3)-1)*22:0),y:p.y+(i>=spots.length?Math.floor(i/spots.length)*24:0),a:chosenTeam==='ussr'?180:0,hp:2,team:enemyTeam(),cool:45+i*13}})}
+function spawnEnemies(count){const spots=chosenTeam==='ussr'?[{x:850,y:160},{x:900,y:320},{x:850,y:550},{x:600,y:550},{x:560,y:160},{x:900,y:550}]:[{x:110,y:160},{x:60,y:320},{x:110,y:550},{x:270,y:550},{x:270,y:160},{x:60,y:550}];return Array.from({length:count},(_,i)=>{const p=spots[i%spots.length];return {x:p.x+(i>=spots.length?((i%3)-1)*22:0),y:p.y+(i>=spots.length?Math.floor(i/spots.length)*24:0),a:chosenTeam==='ussr'?180:0,hp:2,team:enemyTeam(),cool:45+i*13}})}
 function spawnAlly(){const x=chosenTeam==='ussr'?155:805,y=chosenTeam==='ussr'?535:105;allies.push({x,y,a:0,hp:3,team:chosenTeam,cool:28,ally:true})}
 function startBots(){leaveOnline();mode='bots';running=true;waveNumber=1;respawnAt=0;player={x:chosenTeam==='ussr'?95:865,y:chosenTeam==='ussr'?535:105,a:0,hp:3,team:chosenTeam};bots=spawnEnemies(4);allies=[];shots=[];openGame('БОТЫ • ОДИНОЧНАЯ БИТВА','Волна 1 · Союзники: 0 · Противники: 4')}
 function teamName(t){return t==='ussr'?'СССР':'ГЕРМАНИЯ'}
