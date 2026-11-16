@@ -38,6 +38,16 @@ let chosenTeam='ussr',mode='idle',running=false,keys={},player={x:90,y:90,a:0,hp
 const walls=[{x:170,y:95,w:105,h:34},{x:420,y:95,w:120,h:34},{x:700,y:95,w:105,h:34},{x:310,y:235,w:125,h:38},{x:555,y:235,w:125,h:38},{x:90,y:330,w:115,h:38},{x:755,y:330,w:115,h:38},{x:170,y:500,w:105,h:34},{x:420,y:500,w:120,h:34},{x:700,y:500,w:105,h:34}];
 const cacti=[{x:350,y:145,r:19},{x:610,y:165,r:18},{x:265,y:405,r:20},{x:845,y:430,r:19},{x:865,y:245,r:17},{x:105,y:220,r:16}];
 const ponds=[{x:570,y:380,w:220,h:100},{x:45,y:420,w:90,h:65}];
+const arenaMaps=[
+ {name:'Пустынная база',walls:[{x:170,y:95,w:105,h:34},{x:420,y:95,w:120,h:34},{x:700,y:95,w:105,h:34},{x:310,y:235,w:125,h:38},{x:555,y:235,w:125,h:38},{x:90,y:330,w:115,h:38},{x:755,y:330,w:115,h:38},{x:170,y:500,w:105,h:34},{x:420,y:500,w:120,h:34},{x:700,y:500,w:105,h:34}],cacti:[{x:350,y:145,r:19},{x:610,y:165,r:18},{x:265,y:405,r:20},{x:845,y:430,r:19},{x:865,y:245,r:17},{x:105,y:220,r:16}],ponds:[{x:570,y:380,w:220,h:100},{x:45,y:420,w:90,h:65}]},
+ {name:'Заводские руины',walls:[{x:115,y:105,w:170,h:35},{x:365,y:85,w:70,h:100},{x:535,y:85,w:70,h:100},{x:675,y:105,w:170,h:35},{x:120,y:285,w:95,h:100},{x:765,y:285,w:95,h:100},{x:335,y:280,w:115,h:35},{x:510,y:280,w:115,h:35},{x:365,y:475,w:70,h:95},{x:535,y:475,w:70,h:95}],cacti:[{x:300,y:210,r:14},{x:660,y:210,r:14},{x:280,y:430,r:16},{x:680,y:430,r:16}],ponds:[{x:35,y:455,w:170,h:95},{x:755,y:90,w:170,h:90}]},
+ {name:'Лесной рубеж',walls:[{x:230,y:95,w:80,h:38},{x:650,y:95,w:80,h:38},{x:420,y:165,w:120,h:38},{x:105,y:285,w:140,h:38},{x:715,y:285,w:140,h:38},{x:420,y:365,w:120,h:38},{x:230,y:505,w:80,h:38},{x:650,y:505,w:80,h:38}],cacti:[{x:100,y:125,r:22},{x:350,y:95,r:18},{x:610,y:130,r:22},{x:850,y:170,r:20},{x:310,y:390,r:22},{x:650,y:420,r:21},{x:105,y:520,r:18},{x:850,y:530,r:20}],ponds:[{x:340,y:245,w:110,h:70},{x:510,y:245,w:110,h:70}]},
+ {name:'Переправа',walls:[{x:95,y:95,w:115,h:34},{x:750,y:95,w:115,h:34},{x:95,y:500,w:115,h:34},{x:750,y:500,w:115,h:34},{x:300,y:150,w:75,h:130},{x:585,y:360,w:75,h:130},{x:420,y:285,w:120,h:70}],cacti:[{x:260,y:100,r:17},{x:700,y:180,r:18},{x:260,y:480,r:17},{x:700,y:540,r:18}],ponds:[{x:390,y:35,w:180,h:185},{x:390,y:420,w:180,h:185}]}
+];
+let mapIndex=0;
+function setArenaMap(index){mapIndex=(index+arenaMaps.length)%arenaMaps.length;const m=arenaMaps[mapIndex];walls.splice(0,walls.length,...m.walls);cacti.splice(0,cacti.length,...m.cacti);ponds.splice(0,ponds.length,...m.ponds);return m.name}
+function nextArenaMap(){let n=mapIndex;while(n===mapIndex)n=Math.floor(Math.random()*arenaMaps.length);return setArenaMap(n)}
+
 let pathFrame=0;
 function chooseTeam(t){chosenTeam=t;document.querySelectorAll('.team').forEach(b=>b.classList.toggle('active',b.dataset.team===t))}
 function msg(s){document.getElementById('message').textContent=s}
@@ -58,10 +68,22 @@ function spawnEnemies(count){
  return result
 }
 function spawnAlly(){
- const p=chosenTeam==='ussr'?{x:105,y:575}:{x:855,y:575};
- const alt=chosenTeam==='ussr'?{x:65,y:575}:{x:895,y:575};
- const spot=freeSpawn(p.x,p.y,allies.concat([player]))?p:alt;
- allies.push({x:spot.x,y:spot.y,a:0,hp:3,team:chosenTeam,cool:25,ally:true,pathWait:0});
+ const spots=chosenTeam==='ussr'?[{x:105,y:575},{x:65,y:575},{x:155,y:575},{x:105,y:535},{x:65,y:535}]:[{x:855,y:575},{x:895,y:575},{x:805,y:575},{x:855,y:535},{x:895,y:535}];
+ const spot=spots.find(p=>freeSpawn(p.x,p.y,allies.concat([player])))||spots[allies.length%spots.length];
+ allies.push({x:spot.x,y:spot.y,a:0,hp:3,team:chosenTeam,cool:25,ally:true,pathWait:0,respawnAt:0});
+}
+function maintainAllies(){
+ const now=Date.now();
+ allies.forEach(a=>{
+  if(a.hp>0){a.respawnAt=0;return}
+  if(!a.respawnAt)a.respawnAt=now+6500;
+  if(now>=a.respawnAt){
+   const spots=chosenTeam==='ussr'?[{x:105,y:575},{x:65,y:575},{x:155,y:575},{x:105,y:535}]:[{x:855,y:575},{x:895,y:575},{x:805,y:575},{x:855,y:535}];
+   const spot=spots.find(p=>freeSpawn(p.x,p.y,[player,...allies.filter(o=>o!==a&&o.hp>0)]))||spots[0];
+   a.x=spot.x;a.y=spot.y;a.a=0;a.hp=3;a.cool=35;a.pathWait=0;a.waypoint=null;a.respawnAt=0;
+   msg('Союзный танк вернулся в бой!');
+  }
+ });
 }
 function teamName(t){return t==='ussr'?'СССР':'ГЕРМАНИЯ'}
 function openGame(title,info){document.body.classList.add('in-game');document.getElementById('lobby').style.display='none';document.getElementById('gameArea').style.display='block';document.getElementById('modeTitle').textContent=title;document.getElementById('gameInfo').textContent=info;document.getElementById('myTeamLabel').textContent=teamName(chosenTeam);document.getElementById('enemyTeamLabel').textContent=teamName(chosenTeam==='ussr'?'germany':'ussr');document.getElementById('myFlag').className='flag'+(chosenTeam==='germany'?' de':'');document.getElementById('enemyFlag').className='flag'+(chosenTeam==='ussr'?' de':'');msg('Сражение началось!');cancelAnimationFrame(raf);loop()}
@@ -125,6 +147,7 @@ function startBots(){
   fireQueued=false;
   waveNumber=1;
   respawnAt=0;
+  const firstMap=setArenaMap(Math.floor(Math.random()*arenaMaps.length));
   player={
     x:chosenTeam==='ussr'?95:865,
     y:chosenTeam==='ussr'?535:105,
@@ -137,12 +160,13 @@ function startBots(){
   allies=[];
   bots=spawnEnemies(4);
   spawnAlly();
+  spawnAlly();
   if(!bots.length){
     msg('Не удалось разместить противников. Нажми «Начать сражение» ещё раз.');
     return;
   }
   running=true;
-  openGame('БИТВА С БОТАМИ','Волна 1 · Союзники: '+allies.length+' · Противники: '+bots.length);
+  openGame('БИТВА С БОТАМИ','Раунд 1 · '+firstMap+' · Союзники: '+allies.length+' · Противники: '+bots.length);
  }catch(error){
   console.error('PIXEL Tanks start error:',error);
   msg('Ошибка запуска: '+(error&&error.message?error.message:'неизвестная ошибка'));
@@ -171,12 +195,16 @@ function loop(){
  }
  if(player.cool>0)player.cool--;
  if(mode==='bots'){
+  maintainAllies();
   botTick();collisions();
   if(player.hp<=0&&!respawnAt){respawnAt=Date.now()+5000;msg('Танк уничтожен. Возрождение через 5 секунд…')}
   if(bots.length&&bots.every(b=>b.hp<=0)){
-   waveNumber++;spawnAlly();bots=spawnEnemies(4+(waveNumber-1)*2);shots=[];
-   document.getElementById('gameInfo').textContent='Волна '+waveNumber+' · Союзники: '+allies.length+' · Противники: '+bots.length;
-   msg('ПОБЕДА! +1 помощник. В следующей волне +2 противника!');
+   waveNumber++;
+   if(allies.filter(a=>a.hp>0).length<5)spawnAlly();
+   const mapName=nextArenaMap();
+   bots=spawnEnemies(Math.min(10,4+(waveNumber-1)*2));shots=[];mouseTarget=null;
+   document.getElementById('gameInfo').textContent='Раунд '+waveNumber+' · '+mapName+' · Союзники: '+allies.length+' · Противники: '+bots.length;
+   msg('Раунд '+(waveNumber-1)+' пройден! Новая карта: '+mapName+'. Врагов стало больше.');
   }
  }else if(mode==='online'){onlineTick()}
  draw();
