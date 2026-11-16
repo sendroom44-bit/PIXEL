@@ -202,6 +202,9 @@ function loop(){
    waveNumber++;
    if(allies.filter(a=>a.hp>0).length<5)spawnAlly();
    const mapName=nextArenaMap();
+   player.x=chosenTeam==='ussr'?95:865;player.y=chosenTeam==='ussr'?535:105;player.hp=3;player.sunk=false;respawnAt=0;
+   const allySpots=chosenTeam==='ussr'?[{x:105,y:575},{x:65,y:575},{x:155,y:575},{x:105,y:535},{x:65,y:535}]:[{x:855,y:575},{x:895,y:575},{x:805,y:575},{x:855,y:535},{x:895,y:535}];
+   allies.forEach((a,i)=>{if(a.hp>0){a.x=allySpots[i%allySpots.length].x;a.y=allySpots[i%allySpots.length].y;a.waypoint=null;a.pathWait=0}});
    bots=spawnEnemies(Math.min(10,4+(waveNumber-1)*2));shots=[];mouseTarget=null;
    document.getElementById('gameInfo').textContent='Раунд '+waveNumber+' · '+mapName+' · Союзники: '+allies.length+' · Противники: '+bots.length;
    msg('Раунд '+(waveNumber-1)+' пройден! Новая карта: '+mapName+'. Врагов стало больше.');
