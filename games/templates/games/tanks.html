@@ -55,10 +55,43 @@ function showHelp(){msg('WASD / стрелки — движение, пробе�
 function enemyTeam(){return chosenTeam==='ussr'?'germany':'ussr'}
 function freeSpawn(x,y,used){return !blocked(x,y)&&!inWater(x,y)&&(!used||used.every(p=>Math.hypot(p.x-x,p.y-y)>42))}
 function safePlayerSpawn(){
- const left=[{x:95,y:535},{x:65,y:575},{x:55,y:455},{x:120,y:575},{x:55,y:570},{x:95,y:600},{x:145,y:570},{x:55,y:400},{x:95,y:300}];
- const right=[{x:865,y:105},{x:895,y:65},{x:905,y:185},{x:840,y:65},{x:905,y:575},{x:865,y:600},{x:805,y:65},{x:905,y:300},{x:865,y:400}];
- const spots=chosenTeam==='ussr'?left:right;
- return spots.find(p=>freeSpawn(p.x,p.y,[]))||{x:chosenTeam==='ussr'?55:905,y:chosenTeam==='ussr'?600:40};
+ // Ищем точку по всей карте, а не полагаемся на несколько заранее заданных координат.
+ // Сначала предпочитаем свою половину поля, затем проверяем всю арену.
+ const preferred=[];
+ const fallback=[];
+ for(let y=42;y<=598;y+=12){
+  for(let x=42;x<=918;x+=12){
+   if(!freeSpawn(x,y,[]))continue;
+   const p={x,y};
+   const ownSide=chosenTeam==='ussr'?x<450:x>510;
+   (ownSide?preferred:fallback).push(p);
+  }
+ }
+ const pool=preferred.length?preferred:fallback;
+ if(!pool.length){
+  // Крайний запасной вариант: выбрать свободную точку с максимальным отступом от препятствий.
+  let best=null,bestScore=-Infinity;
+  for(let y=30;y<=610;y+=8)for(let x=30;x<=930;x+=8){
+   if(inWater(x,y))continue;
+   let clearance=Math.min(x-22,938-x,y-22,618-y);
+   walls.forEach(w=>{const dx=Math.max(w.x-x,0,x-(w.x+w.w)),dy=Math.max(w.y-y,0,y-(w.y+w.h));clearance=Math.min(clearance,Math.hypot(dx,dy))});
+   cacti.forEach(c=>{clearance=Math.min(clearance,Math.hypot(x-c.x,y-c.y)-c.r)});
+   if(clearance>bestScore){bestScore=clearance;best={x,y}}
+  }
+  return best||{x:480,y:400};
+ }
+ // Выбираем свободную точку ближе к своему краю, но с запасом от стен и других объектов.
+ pool.sort((a,b)=>{
+  const score=p=>{
+   const side=chosenTeam==='ussr'?p.x:960-p.x;
+   let clearance=1000;
+   walls.forEach(w=>{const dx=Math.max(w.x-p.x,0,p.x-(w.x+w.w)),dy=Math.max(w.y-p.y,0,p.y-(w.y+w.h));clearance=Math.min(clearance,Math.hypot(dx,dy))});
+   cacti.forEach(c=>{clearance=Math.min(clearance,Math.hypot(p.x-c.x,p.y-c.y)-c.r)});
+   return side*.08+Math.min(clearance,90)*.35;
+  };
+  return score(b)-score(a);
+ });
+ return pool[0];
 }
 function spawnEnemies(count){
  const candidates=[];
