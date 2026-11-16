@@ -110,6 +110,8 @@ canvas.addEventListener('pointerdown',e=>{
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 canvas.addEventListener('dblclick',e=>{if(mode==='bots'||mode==='online'){const p=canvasPoint(e);player.a=Math.atan2(p.y-player.y,p.x-player.x)*180/Math.PI;fireQueued=true}});
 function startBots(){
+ try{
+  msg('Запускаю сражение…');
   // Полностью сбрасываем состояние предыдущего боя перед новой игрой.
   cancelAnimationFrame(raf);
   leaveOnline();
@@ -141,6 +143,10 @@ function startBots(){
   }
   running=true;
   openGame('БИТВА С БОТАМИ','Волна 1 · Союзники: '+allies.length+' · Противники: '+bots.length);
+ }catch(error){
+  console.error('PIXEL Tanks start error:',error);
+  msg('Ошибка запуска: '+(error&&error.message?error.message:'неизвестная ошибка'));
+ }
 }
 function loop(){
  if(!running)return;
