@@ -1,0 +1,76 @@
+{% load static %}
+<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#090b18"><title>NEON RUNNER — PIXEL</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#080b16;color:#eef2ff;font-family:Inter,Segoe UI,Arial,sans-serif}body{background:radial-gradient(ellipse at 50% 0,#20234b 0,#0b1020 52%,#080b16 100%);padding:16px}.shell{max-width:1280px;margin:auto}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.brand{font-weight:900;letter-spacing:3px}.brand small{display:block;color:#8e9ab7;font-size:9px;letter-spacing:2px;margin-top:3px}.back{color:#cbd5ef;text-decoration:none;border:1px solid #ffffff22;padding:10px 14px;border-radius:12px;background:#ffffff08}.hero{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:20px 24px;border:1px solid #6b65a455;border-radius:20px;background:linear-gradient(110deg,#20274a,#171a35 60%,#29204a);margin-bottom:14px}.eyebrow{color:#7de9ed;font-size:10px;font-weight:900;letter-spacing:3px}.hero h1{font-size:clamp(30px,5vw,48px);margin:8px 0 4px;letter-spacing:-2px}.hero p{margin:0;color:#b5c2df;font-size:13px;line-height:1.5}.stats{display:flex;gap:9px}.stat{min-width:86px;padding:12px;border:1px solid #ffffff20;background:#080d1b66;border-radius:13px;text-align:center}.stat b{display:block;font-size:21px}.stat span{font-size:9px;color:#9eacc8;letter-spacing:1px}.panel{border:1px solid #394465;border-radius:19px;background:#10182a;padding:12px;box-shadow:0 22px 60px #0006}.hud{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 7px 12px;flex-wrap:wrap}.hud-item{font-size:12px;color:#aab8d5}.hud-item b{color:#fff;font-size:15px;margin-left:5px}.hud-center{font-weight:900;letter-spacing:2px;color:#86e9e6}.canvas-wrap{position:relative;overflow:hidden;border-radius:12px;background:#10182b;border:1px solid #50618a}canvas{display:block;width:100%;height:auto;aspect-ratio:16/9;touch-action:none}.overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#080d1bd9;backdrop-filter:blur(5px);text-align:center;padding:20px}.overlay.hidden{display:none}.modal{max-width:440px}.modal h2{font-size:clamp(26px,5vw,42px);margin:0 0 8px}.modal p{color:#b7c5e0;line-height:1.55;font-size:14px}.btn{border:0;border-radius:12px;padding:13px 20px;background:linear-gradient(135deg,#65e6df,#7668e9);color:#09111e;font-weight:900;cursor:pointer}.btn.secondary{background:#202b45;color:#e5ebff;border:1px solid #526184}.controls{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 3px 2px}.hint{font-size:12px;color:#9eacc8;line-height:1.5}.mobile{display:none;gap:8px}.mobile button{height:52px;min-width:55px;border:1px solid #4b5d80;border-radius:13px;background:#202e49;color:white;font-size:21px;font-weight:900;touch-action:none}.mobile .jump{min-width:100px;background:#3a3266;border-color:#7568bb;font-size:13px}.toast{color:#8fe8dc;font-size:12px;min-height:18px;padding:5px 4px}
+@media(max-width:700px){body{padding:9px}.hero{padding:16px;display:block}.stats{margin-top:14px}.stat{flex:1}.stat b{font-size:17px}.panel{padding:7px}.hud{gap:6px;padding:5px 4px 9px}.hud-item{font-size:10px}.hud-item b{font-size:12px}.controls{align-items:flex-start;flex-direction:column}.mobile{display:flex;align-self:stretch;justify-content:space-between}.mobile button{flex:1}.hint{font-size:10px}}
+</style></head><body><div class="shell">
+<header class="top"><div class="brand">PIXEL<small>ORIGINAL ARCADE</small></div><a class="back" href="/">← На главную</a></header>
+<section class="hero"><div><div class="eyebrow">PIXEL ORIGINAL • PLATFORM ADVENTURE</div><h1>NEON RUNNER</h1><p>Проберись через заброшенный город, собирай энергетические сферы и доберись до портала.<br>Три уровня, ловушки, дроны и секретные маршруты.</p></div><div class="stats"><div class="stat"><b>3</b><span>МИРА</span></div><div class="stat"><b>∞</b><span>ПОПЫТКИ</span></div><div class="stat"><b>★</b><span>СЕКРЕТЫ</span></div></div></section>
+<section class="panel"><div class="hud"><div class="hud-item">УРОВЕНЬ <b id="level">1 / 3</b></div><div class="hud-center">NEON RUNNER</div><div class="hud-item">СФЕРЫ <b id="coins">0</b> &nbsp; ЖИЗНИ <b id="lives">3</b></div></div>
+<div class="canvas-wrap"><canvas id="game" width="960" height="540"></canvas><div class="overlay" id="overlay"><div class="modal"><div class="eyebrow">ТВОЁ ПРИКЛЮЧЕНИЕ НАЧИНАЕТСЯ</div><h2 id="overlayTitle">Город погас.</h2><p id="overlayText">Ты — курьер Кай. Найди три энергетических ядра и запусти городской портал. Прыгай по платформам, обходи дронов и не падай в пропасть.</p><button class="btn" id="start">НАЧАТЬ ЗАБЕГ →</button></div></div></div>
+<div class="controls"><div class="hint">Клавиши: <b>A / D</b> или <b>← / →</b> — бег · <b>W / ↑ / ПРОБЕЛ</b> — прыжок<br>На телефоне используй кнопки. Прыжок можно сделать ещё раз в воздухе.</div><div class="mobile"><button data-move="left">◀</button><button data-move="right">▶</button><button class="jump" id="jump">ПРЫЖОК ↑</button></div></div><div class="toast" id="toast">Подсказка: попробуй найти верхний путь — там спрятаны дополнительные сферы.</div></section></div>
+<script>
+(function(){
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d'),W=960,H=540;
+const ui={level:document.getElementById('level'),coins:document.getElementById('coins'),lives:document.getElementById('lives'),overlay:document.getElementById('overlay'),title:document.getElementById('overlayTitle'),text:document.getElementById('overlayText'),start:document.getElementById('start'),toast:document.getElementById('toast')};
+const levels=[
+ {name:'Неоновый квартал',length:2600,platforms:[[0,470,520,70],[590,430,210,35],[880,375,190,35],[1150,455,300,55],[1530,400,190,35],[1810,340,210,35],[2110,450,490,70],[350,350,120,22],[970,270,130,22],[1660,245,150,22],[2250,330,130,22]],spikes:[[520,470,70],[800,430,80],[1450,455,80],[2020,450,90]],coins:[[260,420],[390,300],[670,380],[970,220],[1210,405],[1600,350],[1700,195],[1900,290],[2300,280],[2450,405]],enemies:[[720,398,660,790],[1320,420,1200,1410],[1900,305,1840,1990],[2350,412,2180,2510]],exit:2500},
+ {name:'Станция «Орбита»',length:2900,platforms:[[0,470,420,70],[490,420,190,30],[760,350,170,30],[1010,440,270,60],[1370,370,170,30],[1620,300,200,30],[1900,420,220,50],[2200,350,160,30],[2440,430,460,70],[250,330,120,22],[1120,260,130,22],[1770,210,140,22],[2290,250,130,22]],spikes:[[420,470,70],[680,420,80],[1280,440,90],[1820,420,80],[2360,430,80]],coins:[[280,285],[550,360],[810,290],[1160,215],[1410,310],[1680,240],[1800,160],[1960,360],[2260,290],[2520,380],[2700,380]],enemies:[[590,388,510,650],[1130,408,1040,1240],[1710,268,1650,1800],[2130,388,1950,2150],[2600,398,2490,2800]],exit:2800},
+ {name:'Сердце мегаполиса',length:3200,platforms:[[0,470,500,70],[570,410,180,30],[820,330,180,30],[1080,430,250,60],[1410,350,180,30],[1660,270,190,30],[1920,390,190,40],[2180,310,180,30],[2430,420,250,50],[2740,350,460,70],[320,320,120,22],[1170,245,120,22],[1800,180,130,22],[2290,220,120,22],[2880,270,120,22]],spikes:[[500,470,70],[750,410,70],[1330,430,80],[1850,390,70],[2370,420,60],[2670,420,70]],coins:[[280,420],[380,270],[630,350],[870,280],[1170,200],[1460,300],[1700,220],[1830,135],[1990,340],[2240,260],[2490,370],[2800,300],[3020,300]],enemies:[[660,378,590,720],[1190,398,1110,1290],[1740,238,1680,1810],[2020,358,1940,2080],[2500,388,2450,2620],[2910,318,2810,3100]],exit:3090}
+];
+let levelIndex=0,world,player,camera=0,keys={},touch={},coins=0,lives=3,playing=false,won=false,last=0,particles=[];
+function buildLevel(i){const d=levels[i];world={...d,platforms:d.platforms.map(a=>({x:a[0],y:a[1],w:a[2],h:a[3]})),spikes:d.spikes.map(a=>({x:a[0],y:a[1],w:a[2]})),coins:d.coins.map(a=>({x:a[0],y:a[1],got:false,phase:Math.random()*6})),enemies:d.enemies.map(a=>({x:a[0],y:a[1],base:a[0],min:a[2],max:a[3],dir:1,alive:true}))};player={x:55,y:410,vx:0,vy:0,w:30,h:42,ground:false,jumps:0,inv:0,checkpoint:55};camera=0;ui.level.textContent=(i+1)+' / 3';ui.coins.textContent=coins;ui.lives.textContent=lives}
+function platformAt(x,y){return world.platforms.find(p=>x+player.w>p.x&&x<p.x+p.w&&y+player.h>=p.y&&y+player.h<=p.y+18)}
+function jump(){if(!playing)return;if(player.jumps<2){player.vy=-590;player.ground=false;player.jumps++;burst(player.x+15,player.y+40,'#79f5ee',7)}}
+function burst(x,y,color,n){for(let i=0;i<n;i++)particles.push({x,y,vx:(Math.random()-.5)*190,vy:(Math.random()-.7)*170,t:.5,color})}
+function respawn(){lives--;ui.lives.textContent=lives;if(lives<=0){finish(false);return}player.x=player.checkpoint;player.y=300;player.vx=0;player.vy=0;player.inv=1.6;player.jumps=0;ui.toast.textContent='Осторожно! Попытка потеряна, но путь продолжается.'}
+function finish(success){playing=false;won=success;ui.overlay.classList.remove('hidden');ui.title.textContent=success?(levelIndex===2?'Город снова светится!':'Уровень пройден!'):'Попытки закончились';ui.text.textContent=success?(levelIndex===2?'Ты собрал ядра и восстановил портал. Отличный забег!':'Портал активирован. Впереди следующий район города.'):'Кай может попробовать ещё раз. Сферы и ловушки ждут тебя.';ui.start.textContent=success?(levelIndex===2?'ИГРАТЬ СНОВА':'СЛЕДУЮЩИЙ УРОВЕНЬ'):'ПОПРОБОВАТЬ СНОВА'}
+function begin(){if(won&&levelIndex<2){levelIndex++}else if(won||lives<=0){levelIndex=0;coins=0;lives=3}buildLevel(levelIndex);playing=true;ui.overlay.classList.add('hidden');last=0;requestAnimationFrame(loop)}
+ui.start.addEventListener('click',begin);
+function update(dt){
+ const dir=(keys.ArrowRight||keys.d||touch.right?1:0)-(keys.ArrowLeft||keys.a||touch.left?1:0);
+ player.vx=dir*250;if(dir)player.face=dir;
+ player.vy+=1450*dt;player.vy=Math.min(player.vy,850);
+ const oldBottom=player.y+player.h;player.x+=player.vx*dt;player.x=Math.max(0,Math.min(world.length-player.w,player.x));
+ const oldY=player.y;player.y+=player.vy*dt;player.ground=false;
+ if(player.vy>=0){const p=platformAt(player.x,player.y);if(p&&oldBottom<=p.y+15){player.y=p.y-player.h;player.vy=0;player.ground=true;player.jumps=0}}
+ world.platforms.forEach(p=>{if(player.x+player.w>p.x&&player.x<p.x+p.w&&player.y<p.y+p.h&&player.y+player.h>p.y+5&&player.vy<0){player.y=p.y+p.h;player.vy=0}});
+ if(player.inv>0)player.inv-=dt;
+ world.coins.forEach(c=>{if(!c.got&&Math.hypot(player.x+15-c.x,player.y+20-c.y)<31){c.got=true;coins++;ui.coins.textContent=coins;burst(c.x,c.y,'#ffe47a',12);ui.toast.textContent='Энергетическая сфера найдена!'}});
+ world.enemies.forEach(e=>{if(!e.alive)return;e.x+=e.dir*85*dt;if(e.x<e.min||e.x>e.max)e.dir*=-1;if(player.inv<=0&&player.x+player.w>e.x-15&&player.x<e.x+15&&player.y+player.h>e.y-25&&player.y<e.y+22){if(player.vy>120&&player.y+player.h<e.y+12){e.alive=false;player.vy=-360;burst(e.x,e.y,'#ff789a',15)}else respawn()}});
+ world.spikes.forEach(s=>{if(player.inv<=0&&player.x+player.w>s.x+7&&player.x<s.x+s.w-7&&player.y+player.h>s.y-5&&player.y+player.h<s.y+50)respawn()});
+ if(player.y>H+140)respawn();
+ if(player.x>player.checkpoint+420)player.checkpoint=player.x;
+ if(player.x>world.exit){if(levelIndex===2)finish(true);else finish(true)}
+ camera=Math.max(0,Math.min(world.length-W,player.x-W*.36));
+ particles.forEach(p=>{p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=250*dt;p.t-=dt});particles=particles.filter(p=>p.t>0);
+}
+function rounded(x,y,w,h,r,color){ctx.fillStyle=color;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+function draw(){
+ const sky=ctx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#111a3b');sky.addColorStop(.65,'#1c2344');sky.addColorStop(1,'#101b2d');ctx.fillStyle=sky;ctx.fillRect(0,0,W,H);
+ // skyline parallax
+ for(let i=0;i<24;i++){let x=((i*173-camera*.22)%(W+180)+W+180)%(W+180)-70,h=80+(i*47%170);ctx.fillStyle=i%2?'#192344':'#202a4e';ctx.fillRect(x,H-h-55,65,h);for(let wy=0;wy<h-15;wy+=22)for(let wx=9;wx<55;wx+=18){ctx.fillStyle=(i+wy+wx)%3?'#55b9cf55':'#f4c66a88';ctx.fillRect(x+wx,H-h-45+wy,6,9)}}
+ // stars
+ for(let i=0;i<55;i++){let x=(i*97-camera*.08)%(W+30);ctx.fillStyle='#c9efff88';ctx.fillRect(x,35+(i*71%240),2,2)}
+ ctx.save();ctx.translate(-camera,0);
+ world.platforms.forEach(p=>{rounded(p.x,p.y,p.w,p.h,8,'#263b59');rounded(p.x,p.y,p.w,7,4,'#62e4d9');ctx.fillStyle='#405d7d';for(let x=p.x+16;x<p.x+p.w-8;x+=34)ctx.fillRect(x,p.y+17,3,Math.max(5,p.h-22))});
+ world.spikes.forEach(s=>{ctx.fillStyle='#fa668d';for(let x=s.x;x<s.x+s.w;x+=18){ctx.beginPath();ctx.moveTo(x,s.y+20);ctx.lineTo(x+9,s.y-5);ctx.lineTo(x+18,s.y+20);ctx.fill()}});
+ world.coins.forEach(c=>{if(c.got)return;let bob=Math.sin(performance.now()/240+c.phase)*5;ctx.shadowColor='#ffdf72';ctx.shadowBlur=15;ctx.fillStyle='#ffdf72';ctx.beginPath();ctx.ellipse(c.x,c.y+bob,8,12,0,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.fillStyle='#fff4bd';ctx.fillRect(c.x-2,c.y-6+bob,3,12)});
+ world.enemies.forEach(e=>{if(!e.alive)return;rounded(e.x-15,e.y-20,30,28,8,'#e85e83');rounded(e.x-10,e.y-13,20,8,4,'#22243e');ctx.fillStyle='#a9f7ef';ctx.fillRect(e.x-6,e.y-12,5,4);ctx.fillRect(e.x+2,e.y-12,5,4);ctx.fillStyle='#7c345e';ctx.fillRect(e.x-11,e.y+8,7,7);ctx.fillRect(e.x+5,e.y+8,7,7)});
+ // exit portal
+ const ex=world.exit;ctx.shadowColor='#7df5e8';ctx.shadowBlur=25;ctx.strokeStyle='#7df5e8';ctx.lineWidth=7;ctx.beginPath();ctx.ellipse(ex+12,420,23,48,0,0,Math.PI*2);ctx.stroke();ctx.shadowBlur=0;ctx.fillStyle='#a8fff4';ctx.font='bold 12px Arial';ctx.fillText('ВЫХОД',ex-13,355);
+ // player robot courier
+ if(player.inv<=0||Math.floor(performance.now()/90)%2===0){ctx.save();ctx.translate(player.x+15,player.y+21);ctx.fillStyle='#10182c';ctx.fillRect(-13,-17,26,32);rounded(-13,-20,26,24,7,'#66e4dc');rounded(-9,-15,18,11,4,'#233456');ctx.fillStyle='#f8d978';ctx.fillRect(-5,-12,4,4);ctx.fillRect(3,-12,4,4);ctx.fillStyle='#d9faff';ctx.fillRect(-9,14,7,6);ctx.fillRect(3,14,7,6);ctx.fillStyle='#9d83ff';ctx.fillRect(-15,-6,4,13);ctx.restore()}
+ ctx.restore();
+ particles.forEach(p=>{ctx.globalAlpha=Math.max(0,p.t*2);ctx.fillStyle=p.color;ctx.fillRect(p.x-camera,p.y,4,4);ctx.globalAlpha=1});
+ // progress
+ rounded(18,17,180,9,5,'#ffffff24');rounded(18,17,180*Math.min(1,player.x/world.length),9,5,'#73e9df');
+}
+function loop(t){if(!playing)return;let dt=Math.min(.033,(t-(last||t))/1000);last=t;update(dt);draw();if(playing)requestAnimationFrame(loop)}
+window.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp',' ','w','W','a','A','d','D'].includes(e.key))e.preventDefault();keys[e.key]=true;if(['ArrowUp',' ','w','W'].includes(e.key)&&!e.repeat)jump()});
+window.addEventListener('keyup',e=>keys[e.key]=false);
+document.querySelectorAll('[data-move]').forEach(b=>{const k=b.dataset.move;b.addEventListener('pointerdown',e=>{e.preventDefault();touch[k]=true});['pointerup','pointerleave','pointercancel'].forEach(ev=>b.addEventListener(ev,()=>touch[k]=false))});
+document.getElementById('jump').addEventListener('pointerdown',e=>{e.preventDefault();jump()});
+buildLevel(0);draw();
+})();
+</script></body></html>
