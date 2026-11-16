@@ -109,6 +109,39 @@ canvas.addEventListener('pointerdown',e=>{
 });
 canvas.addEventListener('contextmenu',e=>e.preventDefault());
 canvas.addEventListener('dblclick',e=>{if(mode==='bots'||mode==='online'){const p=canvasPoint(e);player.a=Math.atan2(p.y-player.y,p.x-player.x)*180/Math.PI;fireQueued=true}});
+function startBots(){
+  // Полностью сбрасываем состояние предыдущего боя перед новой игрой.
+  cancelAnimationFrame(raf);
+  leaveOnline();
+  roomCode=null;
+  mode='bots';
+  running=false;
+  keys={};
+  shots=[];
+  remote=[];
+  mouseTarget=null;
+  fireQueued=false;
+  waveNumber=1;
+  respawnAt=0;
+  player={
+    x:chosenTeam==='ussr'?95:865,
+    y:chosenTeam==='ussr'?535:105,
+    a:chosenTeam==='ussr'?-90:90,
+    hp:3,
+    team:chosenTeam,
+    cool:0,
+    sunk:false
+  };
+  allies=[];
+  bots=spawnEnemies(4);
+  spawnAlly();
+  if(!bots.length){
+    msg('Не удалось разместить противников. Нажми «Начать сражение» ещё раз.');
+    return;
+  }
+  running=true;
+  openGame('БИТВА С БОТАМИ','Волна 1 · Союзники: '+allies.length+' · Противники: '+bots.length);
+}
 function loop(){
  if(!running)return;
  if(mode==='bots'&&player.hp<=0&&!respawnAt){respawnAt=Date.now()+5000;msg('Танк уничтожен. Возрождение через 5 секунд…')}
