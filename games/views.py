@@ -27,6 +27,18 @@ logger = logging.getLogger(__name__)
 
 
 def home(request):
+    Game.objects.get_or_create(
+        slug='neon_runner',
+        defaults={
+            'name': 'NEON RUNNER',
+            'description': 'Платформер о курьере Кае: три мира, ловушки, дроны и энергетические сферы.',
+            'category': 'arcade',
+            'sort_order': 45,
+            'is_visible': True,
+            'is_enabled': True,
+            'is_new': True,
+        },
+    )
     games = Game.objects.filter(is_visible=True, is_enabled=True).order_by('sort_order', 'name')
     return render(request, 'games/home.html', {'games': games})
 
