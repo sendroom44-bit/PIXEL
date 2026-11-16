@@ -288,6 +288,10 @@ def article_detail(request, slug):
 
 
 # PIXEL Tanks: room state is stored in the database so players can meet across devices.
+def neon_runner(request):
+    return render(request, 'games/neon_runner.html')
+
+
 def tanks(request):
     return render(request, 'games/tanks.html')
 
