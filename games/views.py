@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 
 def home(request):
+    Game.objects.get_or_create(slug='car-factory', defaults={'name': 'АВТОЗАВОД — Сборка машин', 'description': 'Собирай легендарные автомобили и автобусы по деталям в виртуальном гараже.', 'category': 'other', 'sort_order': 52, 'is_visible': True, 'is_enabled': True, 'is_new': True})
     Game.objects.get_or_create(
         slug='neon_runner',
         defaults={
@@ -428,3 +429,7 @@ def tanks_leave(request, code):
     else:
         room.save(update_fields=['state', 'updated_at'])
     return JsonResponse({'ok': True})
+
+
+def car_factory(request):
+    return render(request, 'games/car_factory.html')
