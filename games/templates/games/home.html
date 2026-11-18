@@ -77,6 +77,7 @@
             {% elif game.slug == "match3" %}💎
             {% elif game.slug == "puzzle" %}🧩
             {% elif game.slug == "neon_runner" %}🏃
+            {% elif game.slug == "car-factory" %}🚗
             {% else %}🎮{% endif %}
           </div>
           {% if game.is_new or game.slug == "christmas-circuit" %}<span class="new-badge">NEW</span>{% endif %}
@@ -105,6 +106,7 @@
         {% elif game.slug == "christmas-tower" %}<a class="game-open" href="{% url 'christmas_tower' %}"><span>Играть сейчас</span><span>↗</span></a>
         {% elif game.slug == "santa-delivery" %}<a class="game-open" href="{% url 'santa_delivery' %}"><span>Играть сейчас</span><span>↗</span></a>
         {% elif game.slug == "chernobyl-fishing" %}<a class="game-open" href="{% url 'chernobyl_fishing' %}"><span>Играть сейчас</span><span>↗</span></a>
+        {% elif game.slug == "car-factory" %}<a class="game-open" href="{% url "car_factory" %}"><span>Собирать машину</span><span>↗</span></a>
         {% elif game.slug == "puzzle" %}<a class="game-open" href="{% url 'puzzle' %}"><span>Играть сейчас</span><span>↗</span></a>
         {% elif game.slug == "prison-pacman" %}<a class="game-open" href="{% url 'prison_pacman' %}"><span>Играть сейчас</span><span>↗</span></a>
         {% elif game.slug == "prison-pacman-2" %}<a class="game-open" href="{% url 'prison_pacman2' %}"><span>Играть сейчас</span><span>↗</span></a>
