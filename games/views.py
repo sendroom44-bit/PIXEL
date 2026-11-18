@@ -287,7 +287,7 @@ def christmas_circuit(request):
 
 
 def puzzle(request):
-    return render(request, 'games/puzzle.html')
+    return render(request, 'games/pixel_puzzle.html')
 
 
 def articles(request):
