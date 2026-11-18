@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Автозавод — PIXEL</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#282044,#090912 70%);color:#f4f0ff;font:15px Arial}.wrap{max-width:1400px;margin:auto;padding:20px}.top{display:flex;justify-content:space-between;margin-bottom:22px}.top a{color:#c9b8ff;text-decoration:none}.layout{display:grid;grid-template-columns:245px 1fr;gap:18px}.panel,.stage{background:#151421;border:1px solid #37314d;border-radius:18px;padding:16px}.panel h3{font-size:14px;color:#c8b8ff;margin:0 0 12px}.cars{display:grid;gap:8px;max-height:700px;overflow:auto}.car{background:#211e30;border:1px solid #38324e;color:#eee8ff;padding:11px;border-radius:11px;text-align:left;cursor:pointer}.car.active{border-color:#ad91ff;background:#34294e}.car small{display:block;color:#9991ad;margin-top:4px}.stage{background:linear-gradient(#202236,#11121c);padding:12px}.stagehead{display:flex;justify-content:space-between;padding:8px}.stagehead span{color:#aaa2c0;font-size:12px}.canvasbox{background:linear-gradient(#283044 0 70%,#343947 70%);border-radius:12px;overflow:hidden}canvas{width:100%;height:auto;display:block}.progress{height:8px;background:#302b40;border-radius:9px;margin:14px 4px 7px;overflow:hidden}.bar{height:100%;background:linear-gradient(90deg,#7656d4,#c2aaff);width:0;transition:.3s}.labels{display:flex;justify-content:space-between;color:#a9a1ba;font-size:12px}.bottom{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.step{padding:11px 4px;border-radius:10px;background:#211e30;border:1px solid #39334e;color:#c3bdd0;font-size:12px;cursor:pointer}.step.done{color:#a8e8c3;border-color:#4b8b69}.step.current{color:#eee4ff;border-color:#a58aff;background:#34294e}.desc{color:#aaa3bb;font-size:13px;line-height:1.5;margin-top:12px}.btn{width:100%;padding:13px;margin-top:10px;border:0;border-radius:11px;background:linear-gradient(100deg,#7554d3,#a17bf1);color:white;font-weight:bold;cursor:pointer}.btn.alt{background:#29253b;border:1px solid #49415f}.btn:disabled{opacity:.4}.msg{color:#bcaaff;min-height:20px;margin-top:9px;font-size:13px}@media(max-width:800px){.layout{grid-template-columns:1fr}.cars{display:flex;max-height:none;overflow-x:auto}.car{min-width:150px}.bottom{grid-template-columns:1fr}.wrap{padding:12px}}@media(max-width:420px){.step{font-size:10px}}
+</style></head><body><div class="wrap"><div class="top"><a href="/">PIXEL</a><a href="/">← На главную</a></div>
+<h1>🔧 АВТОЗАВОД</h1><p style="color:#aaa2bd;margin-top:-8px">Собери легендарную машину — от рамы до последнего винта.</p>
+<div class="layout"><aside class="panel"><h3>ВЫБЕРИ МОДЕЛЬ</h3><div class="cars" id="cars"></div></aside><main>
+<section class="stage"><div class="stagehead"><b id="title">ВАЗ-2101</b><span id="stage">ЭТАП 1 / 8</span></div><div class="canvasbox"><canvas id="view" width="1100" height="520"></canvas></div><div class="progress"><div class="bar" id="bar"></div></div><div class="labels"><span id="percent">0% собрано</span><span id="count">0 / 8 деталей</span></div></section>
+<div class="bottom"><section class="panel"><h3>СБОРКА ПО ЭТАПАМ</h3><div class="steps" id="steps"></div><div class="desc" id="desc"></div><button class="btn" id="install">Установить деталь →</button><button class="btn alt" id="reset">Начать заново</button><div class="msg" id="msg"></div></section>
+<section class="panel"><h3>ПАСПОРТ АВТОМОБИЛЯ</h3><div class="desc" id="specs"></div><div class="desc">У каждой модели собственный силуэт, пропорции и характерные детали. Собирай машину последовательно — от шасси до отделки.</div></section></div></main></div></div>
+<script>
+const models=[
+['ВАЗ-2101 «Копейка»','sedan','#b9a16d','1970–1988','1.2 л, бензин','4073 мм'],
+['ВАЗ-2106','sedan6','#6486a9','1976–2006','1.6 л, бензин','4166 мм'],
+['ВАЗ-2108 «Спутник»','hatch','#a65349','1984–2003','1.3 л, бензин','4006 мм'],
+['ГАЗ-23 «Волга»','volga','#526e8c','1962–1970','5.5 л, V8','5600 мм'],
+['ГАЗ-24 «Волга»','volga24','#d0d0c2','1968–1992','2.4 л, бензин','4735 мм'],
+['Икарус-250','bus','#d3a64f','1971–2003','10.35 л, дизель','11 990 мм'],
+['УАЗ-452 «Буханка»','van','#b8b6a2','1965–н.в.','2.7 л, бензин','4360 мм'],
+['ЗИЛ-130','truck','#477eaa','1962–2014','6.0 л, V8','6675 мм'],
+['ВАЗ-2121 «Нива»','suv','#66845c','1977–н.в.','1.6 л, бензин','3740 мм'],
+['Москвич-412','sedan','#b49d73','1967–2001','1.5 л, бензин','4205 мм'],
+['Volkswagen Beetle','beetle','#d0a64f','1938–2003','1.2 л, оппозитный','4079 мм'],
+['Mercedes-Benz W123','mercedes','#7893a6','1976–1985','2.0 л, бензин','4725 мм'],
+['ГАЗ-УАЗ санитарный','van','#d9d5c0','спецверсия','бензиновый','—']
+];
+const parts=[['Рама','Установи несущую раму и основу шасси.'],['Двигатель','Поставь двигатель, коробку передач и основные агрегаты.'],['Подвеска','Добавь мосты, амортизаторы и тормозные узлы.'],['Колёса','Установи колёса и резиновые шины.'],['Кузов','Смонтируй кузовные панели выбранной модели.'],['Стёкла','Добавь лобовое, боковые и заднее стёкла.'],['Свет','Установи фары, фонари и зеркала.'],['Отделка','Добавь бамперы, решётку радиатора и хром.']];
+let model=0,stage=0;const c=document.getElementById('view'),x=c.getContext('2d'),$=id=>document.getElementById(id);
+function rr(a,b,w,h,r,fill,stroke){x.beginPath();x.roundRect(a,b,w,h,r);x.fillStyle=fill;x.fill();if(stroke){x.lineWidth=6;x.strokeStyle=stroke;x.stroke()}}
+function wheel(a,b,r){x.fillStyle='#111318';x.beginPath();x.arc(a,b,r,0,7);x.fill();x.strokeStyle='#555b62';x.lineWidth=8;x.stroke();x.fillStyle='#aeb4b9';x.beginPath();x.arc(a,b,r*.52,0,7);x.fill();x.fillStyle='#555b62';x.beginPath();x.arc(a,b,r*.27,0,7);x.fill();x.strokeStyle='#e0e2e4';x.lineWidth=3;for(let i=0;i<8;i++){let q=i*Math.PI/4;x.beginPath();x.moveTo(a+Math.cos(q)*8,b+Math.sin(q)*8);x.lineTo(a+Math.cos(q)*r*.45,b+Math.sin(q)*r*.45);x.stroke()}}
+function draw(){let m=models[model],kind=m[1],body=m[2],bus=kind==='bus',truck=kind==='truck',van=kind==='van',long=bus||truck;
+x.clearRect(0,0,1100,520);x.fillStyle='#333b4b';x.fillRect(0,420,1100,100);x.fillStyle='#858c99';x.fillRect(0,420,1100,3);x.fillStyle='#ffffff10';x.beginPath();x.ellipse(550,420,440,25,0,0,7);x.fill();
+if(stage>=1)rr(150,365,bus?800:780,26,8,'#555e68','#9aa1a9');
+if(stage>=2){rr(bus?230:270,320,bus?640:180,48,9,'#707a83','#b0b7bd');x.fillStyle='#353c45';x.fillRect(bus?260:290,334,bus?580:140,18)}
+if(stage>=3){x.strokeStyle='#aeb5bd';x.lineWidth=12;[bus?300:340,bus?790:760].forEach(a=>{x.beginPath();x.moveTo(a,350);x.lineTo(a,400);x.stroke()})}
+if(stage>=4){if(bus||truck){[270,400,740,850].forEach(a=>wheel(a,405,46))}else if(van){wheel(345,405,52);wheel(760,405,52)}else{wheel(350,405,55);wheel(755,405,55)}}
+if(stage>=5){
+if(bus){rr(125,105,850,300,30,body,'#252a33');x.fillStyle='#e7c15c';x.fillRect(135,367,830,12)}
+else if(truck){rr(205,270,500,125,16,body,'#252a33');rr(705,180,245,215,20,body,'#252a33');rr(170,175,120,215,12,'#b7b9b9','#252a33')}
+else if(van){rr(185,150,755,250,38,body,'#252a33')}
+else if(kind==='beetle'){x.beginPath();x.moveTo(180,380);x.quadraticCurveTo(175,275,300,260);x.quadraticCurveTo(340,95,550,110);x.quadraticCurveTo(770,105,825,260);x.quadraticCurveTo(930,280,920,380);x.closePath();x.fillStyle=body;x.fill();x.lineWidth=7;x.strokeStyle='#252a33';x.stroke()}
+else if(kind==='suv'){x.beginPath();x.moveTo(190,385);x.lineTo(220,245);x.lineTo(365,145);x.lineTo(690,145);x.lineTo(835,255);x.lineTo(900,290);x.lineTo(900,385);x.closePath();x.fillStyle=body;x.fill();x.lineWidth=7;x.strokeStyle='#252a33';x.stroke()}
+else{let left=(kind==='volga'||kind==='volga24')?130:185;let roof=kind==='hatch'?330:550;x.beginPath();x.moveTo(left,385);x.lineTo(left+25,285);x.lineTo(left+145,260);x.lineTo(left+250,145);x.lineTo(left+roof-left-100,145);x.lineTo(left+690,270);x.lineTo(left+750,295);x.lineTo(left+750,385);x.closePath();x.fillStyle=body;x.fill();x.lineWidth=7;x.strokeStyle='#252a33';x.stroke()}
+}
+if(stage>=6){x.fillStyle='#7996aa';x.strokeStyle='#26313a';x.lineWidth=8;
+if(bus){for(let a=155;a<900;a+=115)rr(a,125,94,145,6,'#7996aa','#26313a')}
+else if(truck)rr(730,205,185,112,8,'#7996aa','#26313a');
+else if(van){[230,425,620].forEach(a=>rr(a,180,165,105,8,'#7996aa','#26313a'))}
+else if(kind==='beetle'){x.beginPath();x.ellipse(555,230,155,88,0,Math.PI,Math.PI*2);x.fill();x.stroke()}
+else{let a=(kind==='volga'||kind==='volga24')?375:405;x.beginPath();x.moveTo(a,255);x.lineTo(a+95,160);x.lineTo(a+255,160);x.lineTo(a+345,255);x.closePath();x.fill();x.stroke();x.beginPath();x.moveTo(a+355,255);x.lineTo(a+355,160);x.lineTo(a+420,160);x.lineTo(a+505,260);x.closePath();x.fill();x.stroke()}}
+if(stage>=7){x.fillStyle='#f2e7b6';x.strokeStyle='#555';x.lineWidth=4;[bus?145:195,bus?955:900].forEach(a=>{x.beginPath();x.ellipse(a,315,20,27,0,0,7);x.fill();x.stroke()});x.fillStyle='#c64c43';x.fillRect(bus?130:920,350,25,23)}
+if(stage>=8){x.fillStyle='#c5cbd1';x.fillRect(bus?115:180,390,bus?875:760,14);x.fillStyle='#eceff1';x.fillRect(bus?135:195,393,bus?835:725,4);x.fillStyle='#252a31';x.fillRect(bus?130:205,365,bus?840:700,8);x.fillStyle='#ddd';x.font='bold 19px Arial';x.fillText('PIXEL GARAGE',455,485)}
+x.fillStyle='#e3e0ec';x.font='bold 18px Arial';x.fillText(stage===8?'АВТОМОБИЛЬ ГОТОВ':stage===0?'ШАССИ И РАМА':parts[stage-1][0].toUpperCase(),32,42)}
+function render(){let m=models[model];$('title').textContent=m[0];$('stage').textContent=stage===8?'СБОРКА ЗАВЕРШЕНА':'ЭТАП '+(stage+1)+' / 8';$('bar').style.width=(stage*12.5)+'%';$('percent').textContent=Math.round(stage/8*100)+'% собрано';$('count').textContent=stage+' / 8 этапов';$('desc').textContent=stage===8?'Отличная работа! Машина полностью собрана. Выбери другую модель или начни заново.':parts[stage][1];$('install').textContent=stage===8?'Автомобиль готов ✓':'Установить: '+(parts[stage]||[])[0]+' →';$('install').disabled=stage===8;$('specs').innerHTML='<b>'+m[0]+'</b><br>Годы выпуска: '+m[3]+'<br>Двигатель: '+m[4]+'<br>Длина: '+m[5]+'<br><br>Силуэт и пропорции адаптированы под выбранную модель.';$('steps').innerHTML='';parts.forEach((p,i)=>{let b=document.createElement('button');b.className='step '+(i<stage?'done':i===stage?'current':'');b.textContent=(i<stage?'✓ ':'')+(i+1)+'. '+p[0];b.disabled=i!==stage||stage===8;b.onclick=install;$('steps').appendChild(b)});draw()}
+models.forEach((m,i)=>{let b=document.createElement('button');b.className='car'+(i===0?' active':'');b.innerHTML='<b>'+m[0]+'</b><small>'+m[3]+'</small>';b.onclick=()=>{model=i;stage=0;document.querySelectorAll('.car').forEach((el,j)=>el.classList.toggle('active',i===j));$('msg').textContent='Выбрана модель: '+m[0];render()};$('cars').appendChild(b)});
+function install(){if(stage<8){stage++;$('msg').textContent='✓ Этап выполнен: '+parts[stage-1][0];render();if(stage===8)$('msg').textContent='🏁 Готово! Ты собрал '+models[model][0]}}
+$('install').onclick=install;$('reset').onclick=()=>{stage=0;$('msg').textContent='Сборка сброшена.';render()};render();
+</script></body></html>
