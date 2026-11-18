@@ -10,4 +10,5 @@ urlpatterns = [
     path('control-room/confirm/', admin_otp_verify, name='pixel_admin_otp'),
     path('control-room/', admin.site.urls),
     path('', include('games.urls')),
+    path('', include('games.extra_urls')),
 ]
