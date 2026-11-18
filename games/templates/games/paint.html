@@ -1385,5 +1385,22 @@ document.addEventListener("keydown", function(event) {
 setZoom(1);renderLayers();renderLayerList();
 </script>
 
+
+<div id="pixelExtraTools" style="position:fixed;left:12px;bottom:48px;z-index:50;display:flex;gap:6px;flex-wrap:wrap;max-width:calc(100vw - 24px);padding:9px;background:#191b29;border:1px solid #514477;border-radius:12px;box-shadow:0 8px 25px #0008">
+<button type="button" id="stampEmoji">✨ Штамп</button><button type="button" id="addCaption">T Надпись</button><button type="button" id="draftSave">💾 Черновик</button><button type="button" id="draftLoad">↩ Восстановить</button><button type="button" id="bgWhite">Белый фон</button><button type="button" id="bgTransparent">Прозрачный фон</button>
+</div>
+<script>
+(function(){
+const c=document.getElementById('canvas'),key='pixelPaintDraftV2';
+function commit(){renderLayers();renderLayerList();saveState()}
+document.getElementById('stampEmoji').onclick=function(){const s=prompt('Какой символ добавить на рисунок?','🚗');if(!s)return;ctx.save();ctx.globalAlpha=Number(opacityInput.value)/100;ctx.font='100px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(s,c.width/2,c.height/2);ctx.restore();commit()};
+document.getElementById('addCaption').onclick=function(){const s=prompt('Текст надписи:','PIXEL');if(!s)return;ctx.save();ctx.globalAlpha=Number(opacityInput.value)/100;ctx.fillStyle=colorInput.value;ctx.font='bold 56px '+fontSelect.value;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(s,c.width/2,c.height/2, c.width-40);ctx.restore();commit()};
+document.getElementById('draftSave').onclick=function(){try{localStorage.setItem(key,JSON.stringify({width:c.width,height:c.height,image:c.toDataURL('image/png')}));alert('Черновик сохранён в этом браузере.')}catch(e){alert('Не удалось сохранить: изображение слишком большое для памяти браузера. Используй «Сохранить проект».')}};
+document.getElementById('draftLoad').onclick=function(){try{const d=JSON.parse(localStorage.getItem(key)||'null');if(!d){alert('Сохранённого черновика нет.');return}const im=new Image();im.onload=function(){if(!confirm('Восстановить черновик поверх текущего рисунка?'))return;ctx.clearRect(0,0,c.width,c.height);ctx.drawImage(im,0,0,c.width,c.height);commit()};im.src=d.image}catch(e){alert('Черновик не удалось открыть.')}};
+document.getElementById('bgWhite').onclick=function(){ctx.save();ctx.globalCompositeOperation='destination-over';ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.restore();commit()};
+document.getElementById('bgTransparent').onclick=function(){if(!confirm('Очистить активный слой?'))return;ctx.clearRect(0,0,c.width,c.height);commit()};
+})();
+</script>
+
 </body>
 </html>
