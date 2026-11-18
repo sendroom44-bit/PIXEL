@@ -16,6 +16,8 @@
   <a class="side-link active" href="#top"><span class="side-icon">⌂</span>Главная</a>
   <a class="side-link" href="#games"><span class="side-icon">▦</span>Каталог игр</a>
   <a class="side-link" href="{% url 'articles' %}"><span class="side-icon">▤</span>Журнал PIXEL</a>
+  <a class="side-link" href="{% url 'pixel_updates' %}"><span class="side-icon">↻</span>Обновления</a>
+  <a class="side-link" href="{% url 'pixel_documents' %}"><span class="side-icon">▧</span>Документы</a>
   <a class="side-link" href="mailto:sendroom44@gmail.com?subject=Обращение%20в%20PIXEL"><span class="side-icon">✉</span>Связаться с нами</a>
   <div class="side-label">Коллекция</div>
   <a class="side-link" href="#games" data-filter-link="arcade"><span class="side-icon">👾</span>Аркады</a>
@@ -40,6 +42,12 @@
     </div>
   </section>
 
+  <section class="pixel-tools" aria-label="Новые возможности" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px;margin:22px 0">
+    <a href="{% url 'pixel_puzzle' %}" style="padding:18px;border:1px solid #514078;border-radius:16px;background:#17162d;text-decoration:none"><b>🧩 PIXEL Puzzle</b><p style="color:#b7b3d0;font-size:12px;margin-bottom:0">Настоящие пазлы из фотографий</p></a>
+    <a href="{% url 'pixel_adventure' %}" style="padding:18px;border:1px solid #315b60;border-radius:16px;background:#14252a;text-decoration:none"><b>🗺️ PIXEL Adventure</b><p style="color:#b7b3d0;font-size:12px;margin-bottom:0">Сюжетная бродилка и пять локаций</p></a>
+    <a href="{% url 'pixel_documents' %}" style="padding:18px;border:1px solid #514078;border-radius:16px;background:#17162d;text-decoration:none"><b>📝 PIXEL Документы</b><p style="color:#b7b3d0;font-size:12px;margin-bottom:0">Создавай и сохраняй тексты</p></a>
+    <a href="{% url 'pixel_updates' %}" style="padding:18px;border:1px solid #514078;border-radius:16px;background:#17162d;text-decoration:none"><b>📋 История обновлений</b><p style="color:#b7b3d0;font-size:12px;margin-bottom:0">Что нового на платформе</p></a>
+  </section>
   <section id="games">
     <div class="section-head">
       <div><h2>Игровой каталог</h2><p>Подбери игру под своё настроение</p></div>
@@ -160,5 +168,7 @@ document.querySelectorAll('[data-filter-link]').forEach(function(link){
   });
 });
 </script>
+<div id="pixelZoom" style="position:fixed;right:14px;bottom:80px;z-index:99;display:flex;gap:5px;background:#17162c;border:1px solid #514078;border-radius:14px;padding:6px;box-shadow:0 6px 24px #0008"><button type="button" id="zoomMinus" aria-label="Уменьшить" style="width:38px;height:38px;border:0;border-radius:9px;background:#30284d;color:white;font-size:20px">−</button><span id="zoomValue" style="align-self:center;min-width:44px;text-align:center;font-size:12px">100%</span><button type="button" id="zoomPlus" aria-label="Увеличить" style="width:38px;height:38px;border:0;border-radius:9px;background:#30284d;color:white;font-size:20px">+</button><button type="button" id="zoomReset" aria-label="Сбросить" style="border:0;border-radius:9px;background:#30284d;color:white;padding:0 9px">↺</button></div>
+<script>(function(){var z=Number(localStorage.getItem("pixelSiteZoom")||1);function apply(){z=Math.max(.8,Math.min(1.25,z));document.documentElement.style.zoom=z;document.getElementById("zoomValue").textContent=Math.round(z*100)+"%";localStorage.setItem("pixelSiteZoom",String(z))}document.getElementById("zoomMinus").onclick=function(){z-=.05;apply()};document.getElementById("zoomPlus").onclick=function(){z+=.05;apply()};document.getElementById("zoomReset").onclick=function(){z=1;apply()};apply()})();</script>
 </body>
 </html>
