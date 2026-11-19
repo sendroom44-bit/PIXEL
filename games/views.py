@@ -437,3 +437,13 @@ def tanks_leave(request, code):
 
 def car_factory(request):
     return render(request, 'games/car_factory.html')
+
+
+
+def bridge_builder(request):
+    return render(request, 'games/transport_games.html', {
+        'title': 'PIXEL Bridge Builder',
+        'subtitle': 'СТРОИТЕЛЬСТВО И ИСПЫТАНИЕ МОСТОВ',
+        'intro': 'Проектируй мост через широкую реку, комбинируй материалы и отправляй грузовик на испытание.',
+        'game_mode': 'bridge',
+    })
