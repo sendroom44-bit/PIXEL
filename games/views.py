@@ -290,6 +290,10 @@ def puzzle(request):
     return render(request, 'games/pixel_puzzle.html')
 
 
+def sliding_puzzle(request):
+    return render(request, 'games/puzzle.html')
+
+
 def articles(request):
     articles_list = Article.objects.filter(is_published=True)
     return render(request, 'games/articles.html', {'articles': articles_list})
