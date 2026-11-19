@@ -4,7 +4,7 @@ from .views import (
     mahjong, football, basketball, tictactoe, simpsons, chess, breakout,
     prison_pacman, prison_pacman2, paint, city_simulator, articles,
     article_detail, christmas_tower, santa_delivery, match3,
-    chernobyl_fishing, christmas_circuit, puzzle, neon_runner, tanks, tanks_rooms, tanks_join, tanks_room_state, tanks_leave, car_factory,
+    chernobyl_fishing, christmas_circuit, puzzle, sliding_puzzle, neon_runner, tanks, tanks_rooms, tanks_join, tanks_room_state, tanks_leave, car_factory,
 )
 
 urlpatterns = [
@@ -33,6 +33,7 @@ urlpatterns = [
     path('chernobyl-fishing/', chernobyl_fishing, name='chernobyl_fishing'),
     path('christmas-circuit/', christmas_circuit, name='christmas_circuit'),
     path('puzzle/', puzzle, name='puzzle'),
+    path('sliding-puzzle/', sliding_puzzle, name='sliding_puzzle'),
     path('neon-runner/', neon_runner, name='neon_runner'),
     path('tanks/', tanks, name='tanks'),
     path('car-factory/', car_factory, name='car_factory'),
