@@ -37,7 +37,7 @@ urlpatterns = [
     path('neon-runner/', neon_runner, name='neon_runner'),
     path('tanks/', tanks, name='tanks'),
     path('car-factory/', car_factory, name='car_factory'),
-    path('bridge-builder/', bridge_builder, name='bridge_builder'),
+    path('bridge-builder/', bridge_builder, name='bridge_builder'),\n    path('connect-dots/', connect_dots_page, name='connect_dots'),\n    path('connect-dots/api/', connect_dots_api, name='connect_dots_api'),
     path('tanks/api/rooms/', tanks_rooms, name='tanks_rooms'),
     path('tanks/api/rooms/<str:code>/join/', tanks_join, name='tanks_join'),
     path('tanks/api/rooms/<str:code>/state/', tanks_room_state, name='tanks_room_state'),
