@@ -4,8 +4,10 @@ from .views import (
     mahjong, football, basketball, tictactoe, simpsons, chess, breakout,
     prison_pacman, prison_pacman2, paint, city_simulator, articles,
     article_detail, christmas_tower, santa_delivery, match3,
-    chernobyl_fishing, christmas_circuit, puzzle, sliding_puzzle, neon_runner, tanks, tanks_rooms, tanks_join, tanks_room_state, tanks_leave, car_factory, bridge_builder,
+    chernobyl_fishing, christmas_circuit, puzzle, sliding_puzzle, neon_runner,
+    tanks, tanks_rooms, tanks_join, tanks_room_state, tanks_leave, car_factory, bridge_builder,
 )
+from .connect_dots import connect_dots_page, connect_dots_api
 
 urlpatterns = [
     path('', home, name='home'),
@@ -37,7 +39,9 @@ urlpatterns = [
     path('neon-runner/', neon_runner, name='neon_runner'),
     path('tanks/', tanks, name='tanks'),
     path('car-factory/', car_factory, name='car_factory'),
-    path('bridge-builder/', bridge_builder, name='bridge_builder'),\n    path('connect-dots/', connect_dots_page, name='connect_dots'),\n    path('connect-dots/api/', connect_dots_api, name='connect_dots_api'),
+    path('bridge-builder/', bridge_builder, name='bridge_builder'),
+    path('connect-dots/', connect_dots_page, name='connect_dots'),
+    path('connect-dots/api/', connect_dots_api, name='connect_dots_api'),
     path('tanks/api/rooms/', tanks_rooms, name='tanks_rooms'),
     path('tanks/api/rooms/<str:code>/join/', tanks_join, name='tanks_join'),
     path('tanks/api/rooms/<str:code>/state/', tanks_room_state, name='tanks_room_state'),
