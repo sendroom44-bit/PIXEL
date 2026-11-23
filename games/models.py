@@ -92,3 +92,19 @@ class TankRoom(models.Model):
 
     def __str__(self):
         return 'Танки — ' + self.code
+
+
+class ConnectDotsProgress(models.Model):
+    user = models.OneToOneField('auth.User', on_delete=models.CASCADE, related_name='connect_dots_progress')
+    energy = models.PositiveSmallIntegerField(default=5, verbose_name="Энергия")
+    energy_updated_at = models.DateTimeField(auto_now_add=True)
+    unlocked_level = models.PositiveSmallIntegerField(default=1)
+    completed_levels = models.JSONField(default=list, blank=True)
+    total_stars = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name = "Прогресс PIXEL: CONNECT"
+        verbose_name_plural = "Прогресс PIXEL: CONNECT"
+
+    def __str__(self):
+        return "Соедини точки — " + self.user.username
