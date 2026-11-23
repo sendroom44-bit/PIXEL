@@ -27,7 +27,7 @@ a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
 <div class="panel"><div class="panel-head"><div><h2>Карта уровней</h2><div class="sub">Открывай уровни один за другим</div></div><span class="pill" id="levelProgress">0 / 150</span></div><div class="chapters" id="chapters"></div><div class="level-grid" id="levelGrid"></div></div>
 <aside class="side-stack"><div class="energy-card"><div class="energy-top"><b>⚡ Энергия</b><div class="energy-num"><em id="energyValue">5</em><span style="color:#9e97bd"> / 5</span></div></div><div class="energy-icons" id="energyBars"></div><div class="energy-note" id="energyNote">Ошибки расходуют энергию. Одна единица восстанавливается каждые 5 минут.</div></div><div class="panel"><h2>Твоя статистика</h2><div class="sub" style="margin-top:12px">Открытый уровень</div><div style="font-size:30px;font-weight:900;margin-top:3px" id="unlockedValue">1</div><div class="sub" style="margin-top:12px">Пройдено уровней</div><div style="font-size:24px;font-weight:900;margin-top:3px" id="completedValue">0</div></div><div class="tip"><b>Как играть</b><br>Нажимай на точки строго по номерам. Ошибка отнимает одну энергию. Если энергия закончится, следующая единица появится через 5 минут. Повторное прохождение уже закрытого уровня тоже стоит одну энергию.</div></aside>
 </section>
-<section id="playView" class="panel" style="margin-top:18px"><div class="game-head"><div><div class="game-title" id="gameLevelTitle">Уровень 1</div><div class="sub" id="gameLevelSub">Глава 1 · Лёгкая</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="pill" id="dotCounter">0 / 0 точек</span><span class="pill">⚡ <span id="playEnergy">5</span></span></div></div><div class="progress-line"><div class="progress-fill" id="progressFill"></div></div><div class="board-wrap"><svg id="board" class="board" viewBox="0 0 100 100" role="img" aria-label="Игровое поле с пронумерованными точками"><polyline id="guideLine" class="guide" points=""></polyline><polyline id="drawnLine" class="drawn" points=""></polyline><g id="dots"></g></svg></div><div class="notice" id="notice">Найди точку №1 и начинай соединять!</div><div class="game-controls"><button class="btn" id="backToMap">← Уровни</button><button class="btn" id="restartLevel">↻ Сначала</button><button class="btn primary" id="nextLevel" style="display:none">Следующий уровень →</button></div></section>
+<section id="playView" class="panel" style="margin-top:18px"><div class="game-head"><div><div class="game-title" id="gameLevelTitle">Уровень 1</div><div class="sub" id="gameLevelSub">Глава 1 · Лёгкая</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="pill" id="dotCounter">0 / 0 точек</span><span class="pill">⚡ <span id="playEnergy">5</span><span id="playTimer"></span></span></div></div><div class="progress-line"><div class="progress-fill" id="progressFill"></div></div><div class="board-wrap"><svg id="board" class="board" viewBox="0 0 100 100" role="img" aria-label="Игровое поле с пронумерованными точками"><polyline id="guideLine" class="guide" points=""></polyline><polyline id="drawnLine" class="drawn" points=""></polyline><g id="dots"></g></svg></div><div class="notice" id="notice">Найди точку №1 и начинай соединять!</div><div class="game-controls"><button class="btn" id="backToMap">← Уровни</button><button class="btn" id="restartLevel">↻ Сначала</button><button class="btn primary" id="nextLevel" style="display:none">Следующий уровень →</button></div></section>
 </div>
 <div class="overlay" id="winOverlay"><div class="modal"><div class="big">✨</div><h2>Рисунок готов!</h2><div class="stars" id="winStars">★★★</div><p id="winText">Уровень пройден. Отличная работа!</p><button class="btn primary" id="winNext">Продолжить →</button><button class="btn" id="winMap" style="margin-left:6px">К карте</button></div></div>
 <form style="display:none">{% csrf_token %}</form>
@@ -77,7 +77,7 @@ async function api(action,level,extra){
 }
 function renderEnergy(){
  waitLeft=server.wait_seconds||0;
- $('energyValue').textContent=server.energy;$('playEnergy').textContent=server.energy;
+ $('energyValue').textContent=server.energy;$('playEnergy').textContent=server.energy;$('playTimer').textContent=server.energy<MAX_ENERGY?' · '+formatTime(waitLeft):'';
  $('energyBars').innerHTML='';
  for(let i=0;i<MAX_ENERGY;i++){let b=document.createElement('div');b.className='battery'+(i<server.energy?' on':'');$('energyBars').appendChild(b)}
  if(server.energy>=MAX_ENERGY){$('energyNote').textContent='Полный запас! Ошибки расходуют энергию. Восстановление: 1 единица каждые 5 минут.'}
@@ -149,10 +149,10 @@ $('backToMap').onclick=backMap;$('winMap').onclick=()=>{$('winOverlay').style.di
 $('winNext').onclick=()=>{$('winOverlay').style.display='none';if(currentLevel<MAX)startLevel(currentLevel+1);else backMap()};
 $('nextLevel').onclick=()=>{if(currentLevel<MAX)startLevel(currentLevel+1)};
 $('restartLevel').onclick=()=>{if(server.completed_levels.includes(currentLevel)){startLevel(currentLevel)}else{points=makePoints(currentLevel);step=0;mistakes=0;locked=false;drawBoard();setNotice('Начни заново с точки №1.')}};
-async function refresh(){try{let d=await api();server=d;renderStats()}catch(e){console.error(e)}}
+async function refresh(){try{let d=await api();server=d;renderStats();if($('playView').style.display!=='none'&&locked&&server.energy>0){locked=false;setNotice('Энергия восстановилась! Продолжай с точки '+(step+1)+'.','good')}}catch(e){console.error(e)}}
 function tick(){
  if(server.energy>=MAX_ENERGY)return;
- waitLeft=Math.max(0,waitLeft-1);let el=$('energyTimer');if(el)el.textContent=formatTime(waitLeft);
+ waitLeft=Math.max(0,waitLeft-1);let el=$('energyTimer');if(el)el.textContent=formatTime(waitLeft);let playTimer=$('playTimer');if(playTimer)playTimer.textContent=' · '+formatTime(waitLeft);
  if(waitLeft===0)refresh();
 }
 refresh().then(()=>{waitLeft=server.wait_seconds});timer=setInterval(tick,1000);
