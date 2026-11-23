@@ -65,7 +65,7 @@ function makePoints(level){
   for(let j=0;j<divisions;j++){let t=j/divisions;out.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]);}
  }
  out.push(raw[raw.length-1]);
- if(level%7===0)out=out.concat([[out[out.length-1][0]+2,out[out.length-1][1]+2]]);
+ out=out.filter((p,i)=>i===0||Math.hypot(p[0]-out[i-1][0],p[1]-out[i-1][1])>0.1);
  return out;
 }
 function csrf(){const el=document.querySelector('[name=csrfmiddlewaretoken]');return el?el.value:''}
@@ -74,6 +74,7 @@ async function api(action,level,extra){
  const r=await fetch(API,opt),d=await r.json();if(!r.ok)throw d;return d;
 }
 function renderEnergy(){
+ waitLeft=server.wait_seconds||0;
  $('energyValue').textContent=server.energy;$('playEnergy').textContent=server.energy;
  $('energyBars').innerHTML='';
  for(let i=0;i<MAX_ENERGY;i++){let b=document.createElement('div');b.className='battery'+(i<server.energy?' on':'');$('energyBars').appendChild(b)}
@@ -113,8 +114,8 @@ async function startLevel(level){
  if(locked)return;
  if(level>server.unlocked_level)return;
  const replay=server.completed_levels.includes(level);
- if(replay){try{let d=await api('replay',level);server=d.state;renderStats()}catch(e){if(e.state){server=e.state;renderStats()}alert(e.error||'Не удалось начать уровень');return}}
  if(server.energy<=0){alert('Энергия закончилась. Подожди восстановления.');return}
+ if(replay){try{let d=await api('replay',level);server=d.state;renderStats()}catch(e){if(e.state){server=e.state;renderStats()}alert(e.error||'Не удалось начать уровень');return}}
  currentLevel=level;points=makePoints(level);step=0;mistakes=0;locked=false;
  $('mapView').style.display='none';$('playView').style.display='block';
  const diff=['Лёгкая','Средняя','Сложная','Эксперт','Легенда'][Math.floor((level-1)/30)];
