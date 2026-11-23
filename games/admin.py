@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Game, Article, SiteSettings, PlayerProfile
+from .models import Game, Article, SiteSettings, PlayerProfile, ConnectDotsProgress
 
 
 @admin.register(Game)
@@ -42,3 +42,11 @@ class PlayerProfileAdmin(admin.ModelAdmin):
     search_fields = ('nickname', 'user__email', 'user__username')
     readonly_fields = ('user', 'google_sub', 'avatar_url', 'created_at', 'nickname_changed_at')
     ordering = ('-created_at',)
+
+
+
+@admin.register(ConnectDotsProgress)
+class ConnectDotsProgressAdmin(admin.ModelAdmin):
+    list_display = ('user', 'energy', 'unlocked_level', 'total_stars')
+    search_fields = ('user__username', 'user__email')
+    list_filter = ('energy', 'unlocked_level')
