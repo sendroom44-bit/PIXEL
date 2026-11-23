@@ -1,0 +1,159 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#090914">
+<title>PIXEL: CONNECT — Соедини точки</title>
+<style>
+:root{--bg:#090914;--panel:#151529;--panel2:#1d1b36;--line:#302c50;--text:#f3efff;--muted:#a7a1c4;--violet:#9b7bff;--cyan:#63e4df;--green:#5be0a0;--red:#ff718f}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 15% 0%,#29204a 0,transparent 34%),radial-gradient(circle at 90% 15%,#12313e 0,transparent 30%),var(--bg);color:var(--text);font-family:Inter,Segoe UI,Arial,sans-serif;min-height:100vh}
+a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
+.shell{max-width:1240px;margin:auto;padding:22px 24px 48px}.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}.brand{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:1px}.brand-mark{width:42px;height:42px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(135deg,#9b7bff,#54d8d9);color:#100e20;font-size:23px;box-shadow:0 8px 25px #8c70ff55}.brand small{display:block;color:var(--muted);font-size:9px;letter-spacing:2px;margin-top:3px}.back{border:1px solid var(--line);background:#ffffff08;border-radius:12px;padding:10px 14px;color:#d9d1ff;font-weight:700}
+.hero{padding:26px 28px;border:1px solid #514575;border-radius:24px;background:linear-gradient(115deg,#211b3eec,#132c39e8);box-shadow:0 18px 60px #0005;position:relative;overflow:hidden}.hero:after{content:"✦";position:absolute;right:7%;top:-45px;font-size:190px;color:#ffffff08}.eyebrow{color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:2.4px}.hero h1{font-size:clamp(32px,5vw,54px);margin:10px 0 8px;letter-spacing:-1.8px}.hero p{max-width:660px;color:#c2bdd9;line-height:1.6;margin:0}.hero-bottom{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.stat{padding:10px 14px;background:#0d0c1e88;border:1px solid #ffffff18;border-radius:12px;font-weight:800}.stat span{color:var(--cyan)}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;margin-top:18px}.panel{background:linear-gradient(160deg,#19182f,#111120);border:1px solid var(--line);border-radius:20px;padding:20px;box-shadow:0 12px 35px #0003}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}.panel h2{font-size:19px;margin:0}.sub{color:var(--muted);font-size:12px;margin-top:5px}.chapters{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px;margin-bottom:16px}.chapter{border:1px solid var(--line);border-radius:12px;background:#ffffff05;padding:11px 8px;text-align:center;color:#aaa4c6;font-size:11px;font-weight:800}.chapter.active{border-color:#9276ff;background:#9276ff20;color:white}.chapter b{display:block;font-size:15px;margin-bottom:4px}.level-grid{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));gap:7px}.level{aspect-ratio:1;border:1px solid #393553;border-radius:10px;background:#211f37;color:#e8e2ff;font-weight:800;font-size:12px;position:relative}.level.done{border-color:#4bba91;background:#123b34}.level.current{border-color:var(--violet);box-shadow:0 0 0 2px #9b7bff33;background:#392b60}.level:disabled{opacity:.28;cursor:not-allowed}.level .mini-star{position:absolute;right:3px;top:1px;color:#ffdb70;font-size:8px}
+.side-stack{display:grid;gap:14px;align-content:start}.energy-card{background:linear-gradient(145deg,#262044,#17162c);border:1px solid #5b4c83;border-radius:18px;padding:18px}.energy-top{display:flex;justify-content:space-between;align-items:center}.energy-num{font-size:24px;font-weight:900}.energy-num em{font-style:normal;color:#ff789b}.energy-icons{display:flex;gap:6px;margin:14px 0 9px}.battery{height:9px;flex:1;border-radius:20px;background:#39344f;overflow:hidden}.battery.on{background:linear-gradient(90deg,#9a7aff,#65e2dc);box-shadow:0 0 12px #9b7bff55}.energy-note{font-size:12px;color:#bcb5d7;line-height:1.5}.timer{font-variant-numeric:tabular-nums;color:#fff;font-weight:900}.tip{padding:16px;border:1px solid var(--line);border-radius:16px;background:#ffffff05;color:#aaa4c6;font-size:12px;line-height:1.6}.tip b{color:#eee8ff}
+#playView{display:none}.game-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px}.game-title{font-size:22px;font-weight:900}.pill{background:#282344;border:1px solid #514575;border-radius:99px;padding:8px 12px;color:#dcd3ff;font-size:12px;font-weight:800}.board-wrap{max-width:640px;margin:0 auto;background:radial-gradient(circle at 50% 42%,#282348,#10101f 75%);border:1px solid #484064;border-radius:22px;padding:12px;position:relative}.board{width:100%;display:block;touch-action:manipulation}.board .guide{fill:none;stroke:#655a83;stroke-width:.55;stroke-dasharray:1.6 2.5;opacity:.5}.board .drawn{fill:none;stroke:#62e4df;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 2px #62e4df)}.board .dot{fill:#25213c;stroke:#b6a6ff;stroke-width:.8;cursor:pointer}.board .dot.next{fill:#a78bfa;stroke:#fff;stroke-width:1.2;filter:drop-shadow(0 0 3px #a78bfa)}.board .dot.used{fill:#5be0a0;stroke:#e5fff3}.board .num{fill:#f6f2ff;font-size:3.6px;font-weight:900;text-anchor:middle;pointer-events:none}.game-controls{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin-top:15px}.btn{border:1px solid #544878;border-radius:12px;background:#292344;color:#eee8ff;padding:11px 17px;font-weight:800}.btn.primary{background:linear-gradient(100deg,#9575ff,#58d9dc);border:0;color:#100f20}.btn:disabled{opacity:.4;cursor:not-allowed}.progress-line{height:7px;background:#302b48;border-radius:9px;overflow:hidden;margin:12px 0 18px}.progress-fill{height:100%;width:0;background:linear-gradient(90deg,#9b7bff,#62e4df);transition:width .2s}.notice{text-align:center;min-height:22px;color:#bcb5d7;font-size:13px;margin-top:12px}.notice.bad{color:#ff91a8}.notice.good{color:#69e4a9}.overlay{position:fixed;inset:0;background:#080713d9;display:none;align-items:center;justify-content:center;padding:20px;z-index:20}.modal{width:min(420px,100%);background:linear-gradient(145deg,#262044,#141326);border:1px solid #66558d;border-radius:22px;padding:28px;text-align:center;box-shadow:0 20px 80px #0009}.modal .big{font-size:50px}.modal h2{margin:8px 0}.modal p{color:#bcb5d7;line-height:1.5}.stars{font-size:28px;color:#ffd66e;letter-spacing:5px;margin:12px}.locked{opacity:.5}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.side-stack{grid-template-columns:1fr 1fr}.chapters{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:560px){.shell{padding:14px 12px 34px}.top{margin-bottom:14px}.hero{padding:20px;border-radius:18px}.hero h1{font-size:36px}.panel{padding:14px}.side-stack{grid-template-columns:1fr}.level-grid{grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}.level{border-radius:8px}.chapters{grid-template-columns:repeat(2,1fr)}.board-wrap{padding:5px;border-radius:15px}.game-title{font-size:19px}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="top"><a class="brand" href="{% url 'home' %}"><span class="brand-mark">P</span><span>PIXEL<small>МИР ИГР — БЕЗ ГРАНИЦ</small></span></a><a class="back" href="{% url 'home' %}">← В каталог</a></header>
+<section class="hero"><div class="eyebrow">PIXEL ORIGINAL · ЛОГИЧЕСКАЯ КАМПАНИЯ</div><h1>CONNECT<span style="color:var(--cyan)">.</span></h1><p>Соединяй точки по порядку, открывай силуэты и проходи 150 уровней. Чем дальше — тем хитрее рисунки.</p><div class="hero-bottom"><div class="stat">Уровней: <span>150</span></div><div class="stat">Глав: <span>5</span></div><div class="stat">Твои звёзды: <span id="heroStars">0</span> ★</div></div></section>
+<section id="mapView" class="layout">
+<div class="panel"><div class="panel-head"><div><h2>Карта уровней</h2><div class="sub">Открывай уровни один за другим</div></div><span class="pill" id="levelProgress">0 / 150</span></div><div class="chapters" id="chapters"></div><div class="level-grid" id="levelGrid"></div></div>
+<aside class="side-stack"><div class="energy-card"><div class="energy-top"><b>⚡ Энергия</b><div class="energy-num"><em id="energyValue">5</em><span style="color:#9e97bd"> / 5</span></div></div><div class="energy-icons" id="energyBars"></div><div class="energy-note" id="energyNote">Ошибки расходуют энергию. Одна единица восстанавливается каждые 5 минут.</div></div><div class="panel"><h2>Твоя статистика</h2><div class="sub" style="margin-top:12px">Открытый уровень</div><div style="font-size:30px;font-weight:900;margin-top:3px" id="unlockedValue">1</div><div class="sub" style="margin-top:12px">Пройдено уровней</div><div style="font-size:24px;font-weight:900;margin-top:3px" id="completedValue">0</div></div><div class="tip"><b>Как играть</b><br>Нажимай на точки строго по номерам. Ошибка отнимает одну энергию. Если энергия закончится, следующая единица появится через 5 минут. Повторное прохождение уже закрытого уровня тоже стоит одну энергию.</div></aside>
+</section>
+<section id="playView" class="panel" style="margin-top:18px"><div class="game-head"><div><div class="game-title" id="gameLevelTitle">Уровень 1</div><div class="sub" id="gameLevelSub">Глава 1 · Лёгкая</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><span class="pill" id="dotCounter">0 / 0 точек</span><span class="pill">⚡ <span id="playEnergy">5</span></span></div></div><div class="progress-line"><div class="progress-fill" id="progressFill"></div></div><div class="board-wrap"><svg id="board" class="board" viewBox="0 0 100 100" role="img" aria-label="Игровое поле с пронумерованными точками"><polyline id="guideLine" class="guide" points=""></polyline><polyline id="drawnLine" class="drawn" points=""></polyline><g id="dots"></g></svg></div><div class="notice" id="notice">Найди точку №1 и начинай соединять!</div><div class="game-controls"><button class="btn" id="backToMap">← Уровни</button><button class="btn" id="restartLevel">↻ Сначала</button><button class="btn primary" id="nextLevel" style="display:none">Следующий уровень →</button></div></section>
+</div>
+<div class="overlay" id="winOverlay"><div class="modal"><div class="big">✨</div><h2>Рисунок готов!</h2><div class="stars" id="winStars">★★★</div><p id="winText">Уровень пройден. Отличная работа!</p><button class="btn primary" id="winNext">Продолжить →</button><button class="btn" id="winMap" style="margin-left:6px">К карте</button></div></div>
+<form style="display:none">{% csrf_token %}</form>
+<script>
+(function(){
+'use strict';
+const API="{% url 'connect_dots_api' %}";
+const MAX=150,MAX_ENERGY=5;
+let server={energy:5,wait_seconds:0,unlocked_level:1,completed_levels:[],total_stars:0};
+let selectedChapter=1,currentLevel=1,points=[],step=0,mistakes=0,locked=false,timer=null,waitLeft=0;
+const $=id=>document.getElementById(id);
+const shapes=[
+{name:'Домик',p:[[18,72],[18,43],[50,18],[82,43],[82,72],[62,72],[62,52],[38,52],[38,72],[18,72]]},
+{name:'Звезда',p:[[50,12],[60,39],[89,39],[66,56],[75,84],[50,67],[25,84],[34,56],[11,39],[40,39],[50,12]]},
+{name:'Ракета',p:[[50,10],[66,31],[65,61],[79,78],[61,72],[50,91],[39,72],[21,78],[35,61],[34,31],[50,10]]},
+{name:'Рыбка',p:[[12,50],[30,31],[56,25],[76,39],[91,50],[76,61],[56,75],[30,69],[12,50],[24,34],[24,66]]},
+{name:'Корона',p:[[12,73],[19,28],[39,52],[50,18],[62,52],[82,28],[89,73],[12,73],[18,84],[83,84],[89,73]]},
+{name:'Бабочка',p:[[50,50],[24,20],[10,25],[16,52],[37,61],[50,50],[76,20],[90,25],[84,52],[63,61],[50,50],[50,50],[35,82],[50,69],[65,82],[50,50]]},
+{name:'Кот',p:[[22,42],[20,16],[42,31],[58,31],[80,16],[78,42],[85,58],[72,77],[50,84],[28,77],[15,58],[22,42],[38,54],[39,55],[61,55],[62,54]]},
+{name:'Машина',p:[[12,67],[17,48],[32,45],[43,28],[68,28],[80,47],[88,51],[91,67],[12,67],[23,68],[23,78],[38,78],[38,68],[65,68],[65,78],[80,78],[80,68],[88,67]]},
+{name:'Луна',p:[[66,15],[48,19],[31,34],[25,54],[33,73],[51,84],[70,82],[84,68],[72,70],[58,64],[49,51],[49,36],[55,23],[66,15]]},
+{name:'Замок',p:[[15,82],[15,42],[28,42],[28,28],[40,28],[40,42],[60,42],[60,28],[72,28],[72,42],[85,42],[85,82],[15,82],[35,82],[35,62],[48,62],[48,82],[65,82],[65,62],[76,62],[76,82]]},
+{name:'Сердце',p:[[50,82],[17,52],[12,34],[22,19],[38,18],[50,34],[62,18],[78,19],[88,34],[83,52],[50,82]]},
+{name:'Чашка',p:[[25,25],[72,25],[68,69],[60,81],[38,81],[30,69],[25,25],[72,37],[88,37],[90,52],[84,62],[70,62],[38,91],[62,91]]},
+{name:'Лис',p:[[50,14],[69,34],[84,28],[79,55],[69,72],[50,86],[31,72],[21,55],[16,28],[31,34],[50,14],[39,53],[50,60],[61,53]]},
+{name:'Алмаз',p:[[50,12],[82,34],[70,78],[50,90],[30,78],[18,34],[50,12],[50,90]]},
+{name:'Ёлка',p:[[50,10],[25,42],[39,42],[17,68],[37,68],[30,86],[70,86],[63,68],[83,68],[61,42],[75,42],[50,10],[50,86],[50,94]]}
+];
+function makePoints(level){
+ const shape=shapes[(level-1)%shapes.length], raw=shape.p, difficulty=Math.floor((level-1)/30);
+ const divisions=[1,1,2,2,3][difficulty] + (Math.floor((level-1)/15)%2);
+ let out=[];
+ for(let i=0;i<raw.length-1;i++){
+  const a=raw[i],b=raw[i+1];
+  for(let j=0;j<divisions;j++){let t=j/divisions;out.push([a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t]);}
+ }
+ out.push(raw[raw.length-1]);
+ if(level%7===0)out=out.concat([[out[out.length-1][0]+2,out[out.length-1][1]+2]]);
+ return out;
+}
+function csrf(){const el=document.querySelector('[name=csrfmiddlewaretoken]');return el?el.value:''}
+async function api(action,level,extra){
+ const opt=action?{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':csrf()},body:JSON.stringify(Object.assign({action:action,level:level},extra||{}))}:{method:'GET'};
+ const r=await fetch(API,opt),d=await r.json();if(!r.ok)throw d;return d;
+}
+function renderEnergy(){
+ $('energyValue').textContent=server.energy;$('playEnergy').textContent=server.energy;
+ $('energyBars').innerHTML='';
+ for(let i=0;i<MAX_ENERGY;i++){let b=document.createElement('div');b.className='battery'+(i<server.energy?' on':'');$('energyBars').appendChild(b)}
+ if(server.energy>=MAX_ENERGY){$('energyNote').textContent='Полный запас! Ошибки расходуют энергию. Восстановление: 1 единица каждые 5 минут.'}
+ else{$('energyNote').innerHTML='Следующая энергия через <span class="timer" id="energyTimer">'+formatTime(server.wait_seconds)+'</span>. Восстанавливается по одной единице каждые 5 минут.'}
+}
+function formatTime(s){s=Math.max(0,s|0);return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function renderStats(){
+ $('heroStars').textContent=server.total_stars;$('unlockedValue').textContent=server.unlocked_level;
+ $('completedValue').textContent=server.completed_levels.length;$('levelProgress').textContent=server.completed_levels.length+' / '+MAX;
+ renderEnergy();renderMap();
+}
+function renderMap(){
+ const ch=$('chapters');ch.innerHTML='';
+ const names=['Старт','Фигуры','Контуры','Мастер','Легенда'];
+ names.forEach((n,i)=>{let b=document.createElement('button');b.className='chapter'+(selectedChapter===i+1?' active':'');b.innerHTML='<b>0'+(i+1)+'</b>'+n;b.onclick=()=>{selectedChapter=i+1;renderMap()};ch.appendChild(b)});
+ const grid=$('levelGrid');grid.innerHTML='';
+ let start=(selectedChapter-1)*30+1;
+ for(let n=start;n<start+30;n++){let b=document.createElement('button');let done=server.completed_levels.includes(n),open=n<=server.unlocked_level;b.className='level'+(done?' done':'')+(n===server.unlocked_level?' current':'');b.disabled=!open;b.textContent=n;if(done){let s=document.createElement('span');s.className='mini-star';s.textContent='★';b.appendChild(s)}b.onclick=()=>startLevel(n);grid.appendChild(b)}
+}
+function setNotice(text,type){$('notice').textContent=text;$('notice').className='notice '+(type||'')}
+function drawBoard(){
+ const svg=$('dots');svg.innerHTML='';let coords=points.map(p=>p[0]+','+p[1]).join(' ');
+ $('guideLine').setAttribute('points',coords);$('drawnLine').setAttribute('points','');
+ points.forEach((p,i)=>{
+  const ns='http://www.w3.org/2000/svg',g=document.createElementNS(ns,'g'),c=document.createElementNS(ns,'circle'),t=document.createElementNS(ns,'text');
+  c.setAttribute('cx',p[0]);c.setAttribute('cy',p[1]);c.setAttribute('r',i===step?3.5:2.6);c.setAttribute('class','dot'+(i===step?' next':''));
+  t.setAttribute('x',p[0]);t.setAttribute('y',p[1]+1.25);t.setAttribute('class','num');t.textContent=i+1;
+  g.appendChild(c);g.appendChild(t);g.style.cursor='pointer';g.addEventListener('click',()=>chooseDot(i));svg.appendChild(g);
+ });
+ updateProgress();
+}
+function updateProgress(){
+ $('dotCounter').textContent=step+' / '+points.length+' точек';$('progressFill').style.width=(step/points.length*100)+'%';
+}
+async function startLevel(level){
+ if(locked)return;
+ if(level>server.unlocked_level)return;
+ const replay=server.completed_levels.includes(level);
+ if(replay){try{let d=await api('replay',level);server=d.state;renderStats()}catch(e){if(e.state){server=e.state;renderStats()}alert(e.error||'Не удалось начать уровень');return}}
+ if(server.energy<=0){alert('Энергия закончилась. Подожди восстановления.');return}
+ currentLevel=level;points=makePoints(level);step=0;mistakes=0;locked=false;
+ $('mapView').style.display='none';$('playView').style.display='block';
+ const diff=['Лёгкая','Средняя','Сложная','Эксперт','Легенда'][Math.floor((level-1)/30)];
+ $('gameLevelTitle').textContent='Уровень '+level+' · '+shapes[(level-1)%shapes.length].name;
+ $('gameLevelSub').textContent='Глава '+Math.ceil(level/30)+' · '+diff+(replay?' · повторное прохождение':'');
+ $('nextLevel').style.display='none';setNotice('Найди точку №1 и начинай соединять!');drawBoard();renderEnergy();
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+async function chooseDot(index){
+ if(locked||$('playView').style.display==='none')return;
+ if(index!==step){
+  mistakes++;setNotice('Не та точка! Ищи номер '+(step+1)+'. Энергия −1.','bad');
+  try{let d=await api('mistake',currentLevel);server=d.state;renderEnergy();if(server.energy===0){locked=true;setNotice('Энергия закончилась. Возвращайся через '+formatTime(server.wait_seconds)+'.','bad')}}catch(e){if(e.state){server=e.state;renderEnergy()}locked=true;setNotice(e.error||'Энергия закончилась. Подожди восстановления.','bad')}
+  return;
+ }
+ step++;let coords=points.slice(0,step).map(p=>p[0]+','+p[1]).join(' ');$('drawnLine').setAttribute('points',coords);drawBoard();
+ if(step>=points.length)finishLevel();
+ else setNotice('Отлично! Следующая точка: '+(step+1),'good');
+}
+async function finishLevel(){
+ locked=true;let stars=mistakes===0?3:(mistakes<=2?2:1);
+ try{let d=await api('complete',currentLevel,{stars:stars});server=d.state;renderStats()}catch(e){setNotice('Не удалось сохранить прохождение. Проверь соединение и попробуй ещё раз.','bad');locked=false;return}
+ $('winStars').textContent='★'.repeat(stars)+'☆'.repeat(3-stars);
+ $('winText').textContent='Уровень '+currentLevel+' пройден! Получено звёзд: '+stars+'.';
+ $('winOverlay').style.display='flex';$('nextLevel').style.display=currentLevel<MAX?'inline-block':'none';
+}
+function backMap(){$('playView').style.display='none';$('mapView').style.display='grid';renderStats();window.scrollTo({top:0,behavior:'smooth'})}
+$('backToMap').onclick=backMap;$('winMap').onclick=()=>{$('winOverlay').style.display='none';backMap()};
+$('winNext').onclick=()=>{$('winOverlay').style.display='none';if(currentLevel<MAX)startLevel(currentLevel+1);else backMap()};
+$('nextLevel').onclick=()=>{if(currentLevel<MAX)startLevel(currentLevel+1)};
+$('restartLevel').onclick=()=>{if(server.completed_levels.includes(currentLevel)){startLevel(currentLevel)}else{points=makePoints(currentLevel);step=0;mistakes=0;locked=false;drawBoard();setNotice('Начни заново с точки №1.')}};
+async function refresh(){try{let d=await api();server=d;renderStats()}catch(e){console.error(e)}}
+function tick(){
+ if(server.energy>=MAX_ENERGY)return;
+ waitLeft=Math.max(0,waitLeft-1);let el=$('energyTimer');if(el)el.textContent=formatTime(waitLeft);
+ if(waitLeft===0)refresh();
+}
+refresh().then(()=>{waitLeft=server.wait_seconds});timer=setInterval(tick,1000);
+})();
+</script>
+</body>
+</html>
