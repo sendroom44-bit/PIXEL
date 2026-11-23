@@ -3,7 +3,7 @@ from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.http import JsonResponse
+from django.http import JsonResponse\nfrom django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
@@ -99,3 +99,9 @@ def connect_dots_api(request):
             return JsonResponse({'ok': True, 'state': _state(progress)})
 
         return JsonResponse({'error': 'Неизвестное действие'}, status=400)
+
+
+
+@login_required(login_url='login')
+def connect_dots_page(request):
+    return render(request, 'games/connect_dots.html')
