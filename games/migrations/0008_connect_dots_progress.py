@@ -4,6 +4,22 @@ from django.db import migrations, models
 import django.db.models.deletion
 
 
+def add_connect_dots_to_catalog(apps, schema_editor):
+    Game = apps.get_model('games', 'Game')
+    Game.objects.get_or_create(
+        slug='connect-dots',
+        defaults={
+            'name': 'PIXEL: CONNECT',
+            'description': '150 уровней: соединяй точки по порядку, открывай рисунки и собирай звёзды.',
+            'category': 'logic',
+            'sort_order': 60,
+            'is_visible': True,
+            'is_enabled': True,
+            'is_new': True,
+        },
+    )
+
+
 class Migration(migrations.Migration):
     dependencies = [
         ('games', '0007_tankroom'),
@@ -27,5 +43,6 @@ class Migration(migrations.Migration):
                 'verbose_name_plural': 'Прогресс PIXEL: CONNECT',
             },
         ),
+        migrations.RunPython(add_connect_dots_to_catalog, migrations.RunPython.noop),
     ]
 }
