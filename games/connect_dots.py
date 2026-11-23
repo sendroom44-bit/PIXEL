@@ -3,7 +3,8 @@ from datetime import timedelta
 
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.http import JsonResponse\nfrom django.shortcuts import render
+from django.http import JsonResponse
+from django.shortcuts import render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
