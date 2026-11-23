@@ -37,7 +37,7 @@ a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}
 const API="{% url 'connect_dots_api' %}";
 const MAX=150,MAX_ENERGY=5;
 let server={energy:5,wait_seconds:0,unlocked_level:1,completed_levels:[],total_stars:0};
-let selectedChapter=1,currentLevel=1,points=[],step=0,mistakes=0,locked=false,timer=null,waitLeft=0;
+let selectedChapter=1,currentLevel=1,points=[],step=0,mistakes=0,locked=false,busy=false,timer=null,waitLeft=0;
 const $=id=>document.getElementById(id);
 const shapes=[
 {name:'Домик',p:[[18,72],[18,43],[50,18],[82,43],[82,72],[62,72],[62,52],[38,52],[38,72],[18,72]]},
@@ -57,7 +57,9 @@ const shapes=[
 {name:'Ёлка',p:[[50,10],[25,42],[39,42],[17,68],[37,68],[30,86],[70,86],[63,68],[83,68],[61,42],[75,42],[50,10],[50,86],[50,94]]}
 ];
 function makePoints(level){
- const shape=shapes[(level-1)%shapes.length], raw=shape.p, difficulty=Math.floor((level-1)/30);
+ const shape=shapes[(level-1)%shapes.length], variant=Math.floor((level-1)/15)%4;
+ const raw=shape.p.map(p=>{let x=(p[0]-50)*.82,y=(p[1]-50)*.82,q;if(variant===1)q=[-y,x];else if(variant===2)q=[-x,-y];else if(variant===3)q=[y,-x];else q=[x,y];return [50+q[0],50+q[1]]});
+ const difficulty=Math.floor((level-1)/30);
  const divisions=[1,1,2,2,3][difficulty] + (Math.floor((level-1)/15)%2);
  let out=[];
  for(let i=0;i<raw.length-1;i++){
@@ -125,10 +127,10 @@ async function startLevel(level){
  window.scrollTo({top:0,behavior:'smooth'});
 }
 async function chooseDot(index){
- if(locked||$('playView').style.display==='none')return;
+ if(locked||busy||$('playView').style.display==='none')return;
  if(index!==step){
-  mistakes++;setNotice('Не та точка! Ищи номер '+(step+1)+'. Энергия −1.','bad');
-  try{let d=await api('mistake',currentLevel);server=d.state;renderEnergy();if(server.energy===0){locked=true;setNotice('Энергия закончилась. Возвращайся через '+formatTime(server.wait_seconds)+'.','bad')}}catch(e){if(e.state){server=e.state;renderEnergy()}locked=true;setNotice(e.error||'Энергия закончилась. Подожди восстановления.','bad')}
+  busy=true;mistakes++;setNotice('Не та точка! Ищи номер '+(step+1)+'. Энергия −1.','bad');
+  try{let d=await api('mistake',currentLevel);server=d.state;renderEnergy();if(server.energy===0){locked=true;setNotice('Энергия закончилась. Возвращайся через '+formatTime(server.wait_seconds)+'.','bad')}}catch(e){if(e.state){server=e.state;renderEnergy()}locked=true;setNotice(e.error||'Энергия закончилась. Подожди восстановления.','bad')}finally{busy=false}
   return;
  }
  step++;let coords=points.slice(0,step).map(p=>p[0]+','+p[1]).join(' ');$('drawnLine').setAttribute('points',coords);drawBoard();
